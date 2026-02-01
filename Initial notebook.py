@@ -746,8 +746,9 @@ plt.show()
 
 # In[71]:
 
-
-get_ipython().system('pip install kmodes')
+# Only need to install once in your environment
+# pip install kmodes
+import kmodes
 
 
 # In[72]:
@@ -908,6 +909,7 @@ for col in categorical_features:
 
 
 # In[ ]:
+
 
 
 
