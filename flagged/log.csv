@@ -1,0 +1,3 @@
+Age,Number of Active Accounts,Employment Status,Validation Result,flag,username,timestamp
+0,0,,,,,2026-02-01 23:03:40.788144
+70,0,,"{""Eligibility"": ""REJECT"", ""Reason"": ""Non-Existing Customer"", ""Loan Decision"": ""Rejected""}",,,2026-02-01 23:13:20.673955
