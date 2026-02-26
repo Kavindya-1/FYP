@@ -1349,3 +1349,96 @@
 2026-02-27 00:35:13,458:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
   warnings.warn(
 
+2026-02-27 00:37:26,424:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-02-27 00:39:47,598:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:47,646:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:47,721:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:49,380:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:49,411:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:50,069:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-02-27 00:39:50,917:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:39:54,325:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:39:58,984:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:42:09,947:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-02-27 00:44:56,115:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:44:56,149:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:44:56,235:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:44:57,839:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:44:57,882:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:44:58,553:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-02-27 00:44:59,383:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:45:02,139:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:45:07,172:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:47:18,530:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-02-27 00:50:57,343:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:50:57,381:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:50:57,497:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:50:59,594:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:50:59,654:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:51:00,337:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-02-27 00:51:01,275:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-02-27 00:51:04,204:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:51:09,438:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but LogisticRegression was fitted with feature names
+  warnings.warn(
+
+2026-02-27 00:53:24,230:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_23704\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
