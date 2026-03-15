@@ -23,17 +23,25 @@ html, body, .stApp {
 .block-container {padding-top: 4rem !important; max-width: 480px !important;}
 
 .stTextInput input {
-    background: rgba(255,255,255,0.1) !important;
+    background: white !important;
     border: 1px solid rgba(255,255,255,0.2) !important;
     border-radius: 10px !important;
-    color: white !important;
-    -webkit-text-fill-color: white !important;
-    caret-color: white !important;
+    color: #042C53 !important;
+    -webkit-text-fill-color: #042C53 !important;
+    caret-color: #042C53 !important;
     font-size: 15px !important;
     padding: 14px !important;
 }
-.stTextInput input::placeholder {color: rgba(255,255,255,0.35) !important; -webkit-text-fill-color: rgba(255,255,255,0.35) !important;}
-.stTextInput label {color: rgba(255,255,255,0.6) !important; letter-spacing: 2px; font-size: 12px !important; text-transform: uppercase;}
+.stTextInput input::placeholder {
+    color: rgba(4,44,83,0.4) !important;
+    -webkit-text-fill-color: rgba(4,44,83,0.4) !important;
+}
+.stTextInput label {
+    color: rgba(255,255,255,0.6) !important;
+    letter-spacing: 2px;
+    font-size: 12px !important;
+    text-transform: uppercase;
+}
 
 .stButton > button {
     background: white !important;
