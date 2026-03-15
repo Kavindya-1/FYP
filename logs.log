@@ -4863,3 +4863,891 @@ Parameters: { "use_label_encoder" } are not used.
 
   warnings.warn(smsg, UserWarning)
 
+2026-03-10 23:41:45,669:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:41:45,670:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:41:45,670:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:41:45,670:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:41:49,780:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:49,888:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:50,048:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:52,202:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:52,284:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:52,765:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:41:59,293:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:41:59] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-10 23:48:46,052:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:48:46,052:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:48:46,052:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:48:46,052:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:48:47,102:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:47,141:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:47,302:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:48,908:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:48,967:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:49,344:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:48:56,949:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:48:56] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-10 23:50:16,523:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:50:16,523:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:50:16,523:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:50:16,523:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:50:17,204:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:17,240:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:17,390:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:19,004:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:19,043:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:19,417:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:50:25,275:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:50:25] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-10 23:55:08,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:55:08,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:55:08,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:55:08,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-10 23:55:09,224:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:09,267:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:09,421:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:10,944:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:10,990:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:11,467:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-10 23:55:17,474:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:55:17] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:19:24,586:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:19:24,587:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:19:24,587:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:19:24,587:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:19:29,069:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:19:29,178:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:19:29,354:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:19:31,044:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:19:31,115:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:19:31,894:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_29064\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-11 23:19:33,371:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:20:14,554:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:15,228:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:15,847:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,000:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,134:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,296:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,433:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,555:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:20:19,684:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:20:19] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:11,908:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:21:11,908:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:21:11,908:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:21:11,908:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:21:12,760:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:12,828:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:13,012:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:14,581:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:14,636:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:15,288:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_25840\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-11 23:21:16,374:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:21:52,757:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:52] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:53,371:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:53] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:54,014:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:54] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,008:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,146:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,278:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,427:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,543:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:21:57,664:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:21:57] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:26:53,353:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_25840\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-03-11 23:36:07,986:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:36:07,986:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:36:07,986:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:36:07,986:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:36:09,419:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:09,472:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:09,550:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:11,188:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:11,240:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:11,896:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_25540\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-11 23:36:12,994:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:36:48,922:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:48] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:49,557:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:49] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:50,274:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:50] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:53,563:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:53] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:53,691:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:53] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:53,800:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:53] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:53,914:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:53] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:54,113:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:54] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:36:54,253:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:36:54] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:39:13,227:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_25540\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-03-11 23:46:27,693:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:46:27,693:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:46:27,693:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:46:27,693:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:46:28,942:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:46:29,012:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:46:29,129:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:46:31,986:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:46:32,032:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:46:32,110:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:30,513:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:30,513:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:30,513:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:30,513:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:31,681:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:31,793:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:31,904:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:34,251:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:34,307:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:34,376:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:40,095:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:40,095:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:40,095:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:40,095:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:50:41,288:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:41,337:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:41,417:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:42,990:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:43,035:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:50:43,112:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:21,207:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:51:21,207:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:51:21,207:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:51:21,207:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:51:22,335:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:22,371:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:22,464:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:24,533:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:24,584:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:51:24,647:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:32,789:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:52:32,789:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:52:32,789:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:52:32,789:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:52:34,061:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:34,122:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:34,293:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:36,119:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:36,155:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:36,221:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:52:36,782:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:52:36] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:53:24,060:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:53:24,060:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:53:24,060:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:53:24,060:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:53:25,145:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:25,176:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:25,249:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:26,771:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:26,823:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:26,904:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:53:27,431:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:53:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:55:06,049:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:55:06,049:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:55:06,049:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:55:06,049:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:55:07,259:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:07,383:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:07,577:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:09,179:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:09,236:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:09,310:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:55:09,903:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:55:09] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-11 23:57:10,817:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:57:10,817:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:57:10,817:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:57:10,817:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-11 23:57:11,975:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:12,025:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:12,100:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:13,673:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:13,718:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:13,790:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-11 23:57:14,429:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [23:57:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:06:21,616:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 00:06:21,616:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 00:06:21,616:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 00:06:21,616:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 00:06:23,250:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:06:23,336:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:06:23,571:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:06:27,176:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:06:27,255:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:06:28,858:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_37380\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-12 00:06:32,173:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 00:07:22,492:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:22] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:23,126:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:23] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:23,828:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:23] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:26,757:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:26] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:26,939:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:26] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:27,048:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:27,171:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:27,403:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:07:27,531:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [00:07:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 00:09:44,788:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_37380\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-03-12 21:00:22,999:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 21:00:23,000:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 21:00:23,000:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 21:00:23,000:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 21:00:27,682:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:00:27,820:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:00:28,079:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:00:30,180:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:00:30,238:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:00:31,221:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_26100\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-12 21:00:33,182:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 21:01:25,339:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:25] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:26,316:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:26] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:27,229:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:27] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:31,531:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:31] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:31,829:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:31] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:31,987:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:31] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:32,163:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:32] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:32,397:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:32] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:01:32,626:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [21:01:32] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 21:04:43,304:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_26100\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-03-12 22:24:07,305:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:24:07,305:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:24:07,305:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:24:07,305:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:24:11,521:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:24:11,571:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:24:11,672:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:24:14,602:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:24:14,647:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:24:15,535:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_33408\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-12 22:24:17,328:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:25:09,457:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:09] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:10,403:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:10] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:11,305:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:11] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:15,228:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:15,419:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:15,593:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:15,770:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:15,928:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:15] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:25:16,107:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:25:16] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:31:08,149:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_33408\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
+2026-03-12 22:34:12,746:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:34:12,746:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:34:12,746:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:34:12,746:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-12 22:34:14,079:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:34:14,144:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:34:14,355:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:34:16,629:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:34:16,677:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:34:17,609:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_33368\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-03-12 22:34:19,189:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-03-12 22:35:08,423:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:08] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:09,298:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:09] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:10,198:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:10] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:13,963:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:13] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:14,175:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:14,337:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:14,527:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:14,677:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:35:14,864:WARNING:C:\Users\savan\AppData\Roaming\Python\Python39\site-packages\xgboost\core.py:158: UserWarning: [22:35:14] WARNING: C:\buildkite-agent\builds\buildkite-windows-cpu-autoscaling-group-i-08cbc0333d8d4aae1-1\xgboost\xgboost-ci-windows\src\learner.cc:740: 
+Parameters: { "use_label_encoder" } are not used.
+
+  warnings.warn(smsg, UserWarning)
+
+2026-03-12 22:38:28,389:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_33368\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
