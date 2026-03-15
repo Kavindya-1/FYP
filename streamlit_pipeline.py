@@ -625,11 +625,11 @@ payment_features["TOTAL_PAID"] = (
     payment_features["INTEREST_PAIED"]
 )
 
-import joblib
+# import joblib
 
-# eligible_cus_df is your cleaned DataFrame
-import joblib
-joblib.dump(eligible_cus_df, "eligible_customers.pkl", protocol=5)
+# # eligible_cus_df is your cleaned DataFrame
+# import joblib
+# joblib.dump(eligible_cus_df, "eligible_customers.pkl", protocol=4)
 
 # In[55]:
 
@@ -807,11 +807,11 @@ xgb_reg_full.fit(X_full, y)
 # In[72]:
 
 
-import joblib
+# import joblib
 
-# ----- SAVE THE MODEL -----
-joblib.dump(xgb_reg_full, "credit_model.pkl")
-print("Model saved as credit_model.pkl")
+# # ----- SAVE THE MODEL -----
+# joblib.dump(xgb_reg_full, "credit_model.pkl", protocol=4)
+# print("Model saved as credit_model.pkl")
 
 
 # In[73]:
@@ -946,14 +946,14 @@ kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
 cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
 
 
-# In[89]:
+# # In[89]:
 
 
-import joblib
+# import joblib
 
-# ----- SAVE THE CLUSTER MODEL -----
-joblib.dump(kproto_final, "kproto_cluster_model.pkl")
-print("K-Prototypes cluster model saved as kproto_cluster_model.pkl")
+# # ----- SAVE THE CLUSTER MODEL -----
+# joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
+# print("K-Prototypes cluster model saved as kproto_cluster_model.pkl")
 
 
 # In[90]:
@@ -984,4 +984,16 @@ customer_full_df = customer_basic.merge(
     on='MASKED_ID',
     how='left'  # keeps all customers from customer_basic
 )
+
+
+import joblib
+
+joblib.dump(customer_full_df, "eligible_customers.pkl", protocol=4)
+print("eligible_customers.pkl saved successfully!")
+
+joblib.dump(xgb_reg_full, "credit_model.pkl", protocol=4)
+print("credit_model.pkl saved successfully!")
+
+joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
+print("kproto_cluster_model.pkl saved successfully!")
 
