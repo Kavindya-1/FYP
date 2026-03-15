@@ -1,13 +1,12 @@
-import sys
-import streamlit as st
 import subprocess
+import sys
 
-result = subprocess.run(
-    [sys.executable, "-m", "pip", "list"],
-    capture_output=True, text=True
-)
-st.code(result.stdout)
-st.stop()
+subprocess.check_call([
+    sys.executable, "-m", "pip", "install",
+    "joblib", "scikit-learn", "xgboost", "lightgbm",
+    "catboost", "imbalanced-learn", "scipy", "kmodes",
+    "matplotlib", "seaborn", "plotly"
+])
 
 
 
