@@ -1,2 +1,8 @@
 [global]
    packageManager = "pip"
+
+   [theme]
+backgroundColor = "#042C53"
+secondaryBackgroundColor = "#0C447C"
+textColor = "#FFFFFF"
+primaryColor = "#FFFFFF"
