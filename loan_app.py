@@ -1,3 +1,18 @@
+import sys
+import streamlit as st
+st.write(sys.path)
+st.write(sys.version)
+
+try:
+    import joblib
+    st.success("joblib imported successfully")
+except ImportError as e:
+    st.error(f"joblib import failed: {e}")
+
+st.stop()
+
+
+
 # app.py
 import streamlit as st
 import joblib

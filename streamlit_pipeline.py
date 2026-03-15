@@ -504,7 +504,7 @@ txn_features[num_cols] = txn_features[num_cols].fillna(0)
 # In[49]:
 
 
-# Ensure numeric columns
+# Ensure numeric columns in loan_cashflow
 loan_cashflow_df["CAPITAL_TO_BE_PAIED"] = pd.to_numeric(
     loan_cashflow_df["CAPITAL_TO_BE_PAIED"].astype(str).str.replace(",", "").str.replace(" ", ""),
     errors='coerce'
@@ -520,8 +520,41 @@ loan_cashflow_df["TERM_AMOUNT"] = pd.to_numeric(
     errors='coerce'
 ).fillna(0)
 
-# Payment ratio per installment
-loan_cashflow_df["PAYMENT_RATIO"] = loan_cashflow_df["CAPITAL_TO_BE_PAIED"] / loan_cashflow_df["TERM_AMOUNT"]
+
+# Total scheduled per customer
+scheduled = loan_cashflow_df.groupby("MASKED_ID").agg(
+    TOTAL_CAPITAL_SCHEDULED=("CAPITAL_TO_BE_PAIED", "sum"),
+    TOTAL_INTEREST_SCHEDULED=("INTEREST_TO_BE_PAIED", "sum"),
+    TOTAL_AMOUNT_SCHEDULED=("TERM_AMOUNT", "sum")
+).reset_index()
+
+
+
+# Total actually paid from repayment table
+actually_paid = repayment_df.groupby("MASKED_ID").agg(
+    TOTAL_CAPITAL_PAID=("CAPITAL_PAIED", "sum"),
+    TOTAL_INTEREST_PAID=("INTEREST_PAIED", "sum")
+).reset_index()
+
+
+# Merge
+cash_features = scheduled.merge(actually_paid, on="MASKED_ID", how="left")
+
+# ── Fix: force all columns to numeric BEFORE doing subtraction ──
+cash_features["TOTAL_CAPITAL_PAID"]      = pd.to_numeric(cash_features["TOTAL_CAPITAL_PAID"],      errors='coerce').fillna(0)
+cash_features["TOTAL_INTEREST_PAID"]     = pd.to_numeric(cash_features["TOTAL_INTEREST_PAID"],     errors='coerce').fillna(0)
+cash_features["TOTAL_CAPITAL_SCHEDULED"] = pd.to_numeric(cash_features["TOTAL_CAPITAL_SCHEDULED"], errors='coerce').fillna(0)
+cash_features["TOTAL_INTEREST_SCHEDULED"]= pd.to_numeric(cash_features["TOTAL_INTEREST_SCHEDULED"],errors='coerce').fillna(0)
+cash_features["TOTAL_AMOUNT_SCHEDULED"]  = pd.to_numeric(cash_features["TOTAL_AMOUNT_SCHEDULED"],  errors='coerce').fillna(0)
+
+# Due = Scheduled - Already Paid
+cash_features["TOTAL_CAPITAL_DUE"]  = cash_features["TOTAL_CAPITAL_SCHEDULED"]  - cash_features["TOTAL_CAPITAL_PAID"]
+cash_features["TOTAL_INTEREST_DUE"] = cash_features["TOTAL_INTEREST_SCHEDULED"] - cash_features["TOTAL_INTEREST_PAID"]
+cash_features["AVG_PAYMENT_RATIO"]  = cash_features["TOTAL_CAPITAL_PAID"] / cash_features["TOTAL_AMOUNT_SCHEDULED"].replace(0, 1)
+
+# Keep only your original columns
+cash_features = cash_features[["MASKED_ID", "TOTAL_CAPITAL_DUE", "TOTAL_INTEREST_DUE", "AVG_PAYMENT_RATIO"]]
+cash_features = cash_features.fillna(0)
 
 # Aggregate per customer
 cash_features = loan_cashflow_df.groupby("MASKED_ID").agg({
