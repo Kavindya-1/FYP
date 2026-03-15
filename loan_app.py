@@ -5,7 +5,11 @@ import time
 
 st.set_page_config(page_title="Loan Eligibility Portal", page_icon="🏦", layout="centered")
 
-# Force the background and styling
+# Load models
+xgb_model = joblib.load("credit_model.pkl")
+kproto_model = joblib.load("kproto_cluster_model.pkl")
+eligible_customers = joblib.load("eligible_customers.pkl")
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap');
@@ -15,23 +19,22 @@ html, body, .stApp {
     font-family: 'DM Sans', sans-serif !important;
 }
 
-/* Hide streamlit default elements */
 #MainMenu, footer, header {visibility: hidden;}
 .block-container {padding-top: 4rem !important; max-width: 480px !important;}
 
-/* Input styling */
 .stTextInput input {
     background: rgba(255,255,255,0.1) !important;
     border: 1px solid rgba(255,255,255,0.2) !important;
     border-radius: 10px !important;
     color: white !important;
+    -webkit-text-fill-color: white !important;
+    caret-color: white !important;
     font-size: 15px !important;
     padding: 14px !important;
 }
-.stTextInput input::placeholder {color: rgba(255,255,255,0.35) !important;}
+.stTextInput input::placeholder {color: rgba(255,255,255,0.35) !important; -webkit-text-fill-color: rgba(255,255,255,0.35) !important;}
 .stTextInput label {color: rgba(255,255,255,0.6) !important; letter-spacing: 2px; font-size: 12px !important; text-transform: uppercase;}
 
-/* Button styling */
 .stButton > button {
     background: white !important;
     color: #042C53 !important;
@@ -44,16 +47,12 @@ html, body, .stApp {
     transition: opacity 0.2s !important;
 }
 .stButton > button:hover {opacity: 0.9 !important;}
-
-/* Alert styling */
 .stAlert {border-radius: 10px !important;}
 </style>
 
-<!-- Background circles -->
 <div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
 <div style="position:fixed;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;z-index:0"></div>
 
-<!-- Card -->
 <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:20px;padding:2.5rem 2rem;margin-bottom:1.5rem">
     <p style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:1.2rem">National Bank &bull; Loan Portal</p>
     <h1 style="font-family:'DM Serif Display',serif;font-size:32px;color:white;line-height:1.2;margin-bottom:0.75rem">Check your loan eligibility</h1>
