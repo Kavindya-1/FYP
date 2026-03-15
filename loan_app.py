@@ -1,4 +1,15 @@
+import subprocess
+import sys
+import streamlit as st
 
+result = subprocess.run(
+    [sys.executable, "-m", "pip", "list"],
+    capture_output=True, text=True
+)
+st.code(result.stdout)
+st.write("Python:", sys.version)
+st.write("Executable:", sys.executable)
+st.stop()
 
 # app.py
 import streamlit as st
