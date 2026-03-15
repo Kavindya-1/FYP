@@ -1,13 +1,3 @@
-import subprocess
-import sys
-
-subprocess.check_call([
-    sys.executable, "-m", "pip", "install",
-    "joblib", "scikit-learn", "xgboost", "lightgbm",
-    "catboost", "imbalanced-learn", "scipy", "kmodes",
-    "matplotlib", "seaborn", "plotly"
-])
-
 
 
 # app.py
