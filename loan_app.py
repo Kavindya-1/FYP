@@ -1,14 +1,12 @@
 import sys
 import streamlit as st
-st.write(sys.path)
-st.write(sys.version)
+import subprocess
 
-try:
-    import joblib
-    st.success("joblib imported successfully")
-except ImportError as e:
-    st.error(f"joblib import failed: {e}")
-
+result = subprocess.run(
+    [sys.executable, "-m", "pip", "list"],
+    capture_output=True, text=True
+)
+st.code(result.stdout)
 st.stop()
 
 
