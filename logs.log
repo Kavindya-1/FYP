@@ -5969,3 +5969,89 @@ Parameters: { "use_label_encoder" } are not used.
 2026-03-15 15:33:48,904:WARNING:C:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
   warnings.warn(
 
+2026-03-15 19:42:33,955:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:42:33,955:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:42:33,955:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:42:33,955:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:42:39,032:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:30: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  customer_df = pd.read_sql("SELECT * FROM CUSTOMER_DETAILS", conn)
+
+2026-03-15 19:42:39,097:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:31: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  account_df = pd.read_sql("SELECT * FROM ACCOUNT_DETAILS", conn)
+
+2026-03-15 19:42:39,180:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:32: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  transaction_df = pd.read_sql("SELECT * FROM TRANSACTION_DETAILS", conn)
+
+2026-03-15 19:42:41,085:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:33: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  loan_cashflow_df = pd.read_sql("SELECT * FROM LOAN_CASHFLOW", conn)
+
+2026-03-15 19:42:41,161:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:34: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  repayment_df = pd.read_sql("SELECT * FROM REPAYMENT", conn)
+
+2026-03-15 19:42:41,243:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:176: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  valid_employment_status = pd.read_sql(
+
+2026-03-15 19:45:46,217:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:45:46,217:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:45:46,217:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:45:46,217:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:45:47,475:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:30: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  customer_df = pd.read_sql("SELECT * FROM CUSTOMER_DETAILS", conn)
+
+2026-03-15 19:45:47,576:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:31: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  account_df = pd.read_sql("SELECT * FROM ACCOUNT_DETAILS", conn)
+
+2026-03-15 19:45:47,721:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:32: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  transaction_df = pd.read_sql("SELECT * FROM TRANSACTION_DETAILS", conn)
+
+2026-03-15 19:45:49,831:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:33: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  loan_cashflow_df = pd.read_sql("SELECT * FROM LOAN_CASHFLOW", conn)
+
+2026-03-15 19:45:49,867:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:34: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  repayment_df = pd.read_sql("SELECT * FROM REPAYMENT", conn)
+
+2026-03-15 19:45:49,926:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:176: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  valid_employment_status = pd.read_sql(
+
+2026-03-15 19:46:48,829:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:46:48,830:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:46:48,830:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:46:48,830:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-03-15 19:46:50,173:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:30: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  customer_df = pd.read_sql("SELECT * FROM CUSTOMER_DETAILS", conn)
+
+2026-03-15 19:46:50,228:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:31: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  account_df = pd.read_sql("SELECT * FROM ACCOUNT_DETAILS", conn)
+
+2026-03-15 19:46:50,326:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:32: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  transaction_df = pd.read_sql("SELECT * FROM TRANSACTION_DETAILS", conn)
+
+2026-03-15 19:46:52,351:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:33: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  loan_cashflow_df = pd.read_sql("SELECT * FROM LOAN_CASHFLOW", conn)
+
+2026-03-15 19:46:52,409:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:34: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  repayment_df = pd.read_sql("SELECT * FROM REPAYMENT", conn)
+
+2026-03-15 19:46:52,499:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:176: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  valid_employment_status = pd.read_sql(
+
+2026-03-15 19:46:52,843:WARNING:C:\Users\savan\Downloads\FYP\streamlit_pipeline.py:731: DeprecationWarning: is_categorical_dtype is deprecated and will be removed in a future version. Use isinstance(dtype, pd.CategoricalDtype) instead
+  if pd.api.types.is_categorical_dtype(model_data[col]):
+
+2026-03-15 19:46:53,336:WARNING:C:\Users\savan\AppData\Local\Programs\Python\Python311\Lib\site-packages\xgboost\training.py:200: UserWarning: [19:46:53] WARNING: C:\actions-runner\_work\xgboost\xgboost\src\learner.cc:782: 
+Parameters: { "use_label_encoder" } are not used.
+
+  bst.update(dtrain, iteration=i, fobj=obj)
+

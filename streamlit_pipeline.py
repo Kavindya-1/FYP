@@ -556,12 +556,12 @@ cash_features["AVG_PAYMENT_RATIO"]  = cash_features["TOTAL_CAPITAL_PAID"] / cash
 cash_features = cash_features[["MASKED_ID", "TOTAL_CAPITAL_DUE", "TOTAL_INTEREST_DUE", "AVG_PAYMENT_RATIO"]]
 cash_features = cash_features.fillna(0)
 
-# Aggregate per customer
-cash_features = loan_cashflow_df.groupby("MASKED_ID").agg({
-    "CAPITAL_TO_BE_PAIED": "sum",
-    "INTEREST_TO_BE_PAIED": "sum",
-    "PAYMENT_RATIO": "mean"
-}).reset_index()
+# # Aggregate per customer
+# cash_features = loan_cashflow_df.groupby("MASKED_ID").agg({
+#     "CAPITAL_TO_BE_PAIED": "sum",
+#     "INTEREST_TO_BE_PAIED": "sum",
+#     "PAYMENT_RATIO": "mean"
+# }).reset_index()
 
 # Rename columns
 cash_features.columns = [
@@ -602,7 +602,8 @@ reference_date = pd.to_datetime("2026-01-31")
 account_df["END_DATE"] = account_df["ACCT_CLOSE_DATE"].fillna(reference_date)
 
 # Calculate account age in months
-account_df["ACCOUNT_AGE_MONTHS"] = ((account_df["END_DATE"] - account_df["ORIG_CONTRACT_DATE"]) / np.timedelta64(1, "M")).round(0)
+# account_df["ACCOUNT_AGE_MONTHS"] = ((account_df["END_DATE"] - account_df["ORIG_CONTRACT_DATE"]) / np.timedelta64(1, "M")).round(0)
+account_df["ACCOUNT_AGE_MONTHS"] = ((account_df["END_DATE"] - account_df["ORIG_CONTRACT_DATE"]) / np.timedelta64(1, "D") / 30).round(0)
 
 # Aggregate per customer if multiple accounts
 acc_features = account_df.groupby("MASKED_ID").agg({
