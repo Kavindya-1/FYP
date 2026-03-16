@@ -177,6 +177,8 @@ if st.session_state.step == 1:
 
                 if customer_record['Eligibility_Flag'] == 'REJECT':
                     st.error("❌ You are not eligible to apply for a loan at this time.")
+                elif int(customer_record.get('Number_of_Active_Accounts', 0)) == 0:
+                    st.error("❌ Sorry, we could not find any active accounts linked to your NIC. Please visit your nearest branch for assistance.")
                 else:
                     st.session_state.customer_record = customer_record
                     st.session_state.nic_value = nic
