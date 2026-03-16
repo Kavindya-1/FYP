@@ -55,16 +55,20 @@ html, body, .stApp {
     transition: opacity 0.2s !important;
 }
 .stButton > button:hover {opacity: 0.9 !important;}
-.stAlert {
+.stAlert,
+div[data-testid="stAlert"],
+div[data-testid="stAlert"] > div,
+.element-container div[data-testid="stAlert"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
     border-radius: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
     box-sizing: border-box !important;
-}
-div[data-testid="stAlert"] {
-    width: 100% !important;
-    max-width: 100% !important;
     display: block !important;
+    float: none !important;
+}
+.element-container {
+    width: 100% !important;
 }
 
 .step-badge {
@@ -199,39 +203,44 @@ elif st.session_state.step == 2:
         placeholder="e.g. 75000.00"
     )
 
+    # Store error in session so it renders outside columns
+    if "step2_error" not in st.session_state:
+        st.session_state.step2_error = ""
+
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("← Back"):
+            st.session_state.step2_error = ""
             st.session_state.step = 1
             st.rerun()
     with col2:
         if st.button("Verify & Continue"):
+            st.session_state.step2_error = ""
             if age_input is None or salary_input is None:
-                st.error("Please fill in both your age and monthly salary.")
+                st.session_state.step2_error = "fill"
             else:
-                # ── Age: must match exactly ────────────────────
                 stored_age = int(record['AGE'])
                 if int(age_input) != stored_age:
-                    st.error(
-                        "❌ The age you entered does not match our records. "
-                        "Please ensure you enter your correct age."
-                    )
-
+                    st.session_state.step2_error = "age"
                 else:
-                    # ── Salary: allow ±20% tolerance ──────────
                     stored_salary = float(record['Avg_Monthly_Credit'])
                     tolerance     = 0.20
                     lower         = stored_salary * (1 - tolerance)
                     upper         = stored_salary * (1 + tolerance)
-
                     if not (lower <= float(salary_input) <= upper):
-                        st.error(
-                            "❌ The salary you entered could not be verified against our records. "
-                            "Please ensure it reflects your true average monthly income."
-                        )
+                        st.session_state.step2_error = "salary"
                     else:
+                        st.session_state.step2_error = ""
                         st.session_state.step = 3
                         st.rerun()
+
+    # Render error OUTSIDE columns — full width
+    if st.session_state.step2_error == "fill":
+        st.error("Please fill in both your age and monthly salary.")
+    elif st.session_state.step2_error == "age":
+        st.error("❌ The age you entered does not match our records. Please ensure you enter your correct age.")
+    elif st.session_state.step2_error == "salary":
+        st.error("❌ The salary you entered could not be verified against our records. Please ensure it reflects your true average monthly income.")
 
 # ══════════════════════════════════════════════════════════════
 # STEP 3 — Result
