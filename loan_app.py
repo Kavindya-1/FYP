@@ -466,7 +466,6 @@ elif st.session_state.step == 4:
     with col1:
         if st.button("\u2190 Back"):
             st.session_state.step4_error = ""
-            st.session_state.typed_loan_amount = 0.0
             st.session_state.step = 3
             st.rerun()
     with col2:
@@ -474,7 +473,6 @@ elif st.session_state.step == 4:
             st.session_state.step4_error = ""
             entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
             max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
-            st.write(f"DEBUG: entered={entered_amount}, max={max_eligible}, band={band}, product={loan_product}")
 
             if loan_product == "\u2014 Select a loan product \u2014" or not loan_product:
                 st.session_state.step4_error = "product"
@@ -486,7 +484,6 @@ elif st.session_state.step == 4:
             else:
                 st.session_state.loan_product = loan_product
                 st.session_state.loan_amount  = entered_amount
-                st.session_state.typed_loan_amount = 0.0
                 st.session_state.step = 5
                 st.rerun()
 
