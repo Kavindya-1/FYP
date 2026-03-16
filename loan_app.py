@@ -105,6 +105,20 @@ div[data-testid="stAlert"] > div,
     color: white;
     font-weight: 500;
 }
+
+.stSelectbox label {
+    color: rgba(255,255,255,0.6) !important;
+    letter-spacing: 2px;
+    font-size: 12px !important;
+    text-transform: uppercase;
+}
+.stSelectbox > div > div {
+    background: white !important;
+    border-radius: 10px !important;
+    color: #042C53 !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    font-size: 15px !important;
+}
 </style>
 
 <div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;
@@ -120,6 +134,14 @@ if "customer_record" not in st.session_state:
     st.session_state.customer_record = None
 if "nic_value" not in st.session_state:
     st.session_state.nic_value = ""
+if "step2_error" not in st.session_state:
+    st.session_state.step2_error = ""
+if "step4_error" not in st.session_state:
+    st.session_state.step4_error = ""
+if "loan_amount" not in st.session_state:
+    st.session_state.loan_amount = None
+if "loan_product" not in st.session_state:
+    st.session_state.loan_product = ""
 
 # ══════════════════════════════════════════════════════════════
 # STEP 1 — NIC Entry
@@ -128,7 +150,7 @@ if st.session_state.step == 1:
     st.markdown("""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2.5rem 2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 1 of 3</div>
+        <div class="step-badge">Step 1 of 4</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:32px;color:white;
         line-height:1.2;margin-bottom:0.75rem">Check your loan eligibility</h1>
         <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0">
@@ -170,7 +192,7 @@ elif st.session_state.step == 2:
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 2 of 3</div>
+        <div class="step-badge">Step 2 of 4</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Verify your details</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
@@ -202,10 +224,6 @@ elif st.session_state.step == 2:
         value=None,
         placeholder="e.g. 75000.00"
     )
-
-    # Store error in session so it renders outside columns
-    if "step2_error" not in st.session_state:
-        st.session_state.step2_error = ""
 
     col1, col2 = st.columns([1, 1])
     with col1:
@@ -243,7 +261,7 @@ elif st.session_state.step == 2:
         st.error("❌ The salary you entered could not be verified against our records. Please ensure it reflects your true average monthly income.")
 
 # ══════════════════════════════════════════════════════════════
-# STEP 3 — Result
+# STEP 3 — Eligibility Result + Proceed to Loan Details
 # ══════════════════════════════════════════════════════════════
 elif st.session_state.step == 3:
     record = st.session_state.customer_record
@@ -252,9 +270,9 @@ elif st.session_state.step == 3:
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 3 of 3</div>
+        <div class="step-badge">Step 3 of 4</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
-        line-height:1.2;margin-bottom:0.5rem">Your result</h1>
+        line-height:1.2;margin-bottom:0.5rem">Eligibility result</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
         Based on your verified profile.</p>
     </div>
@@ -274,18 +292,160 @@ elif st.session_state.step == 3:
     """, unsafe_allow_html=True)
 
     if band in ["Very Low Risk", "Low Risk"]:
-        st.success("✅ Congratulations! Your loan application can proceed.")
+        st.success("✅ You are eligible! Please proceed to select your loan product.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("← Start Over"):
+                st.session_state.step = 1
+                st.session_state.customer_record = None
+                st.session_state.nic_value = ""
+                st.rerun()
+        with col2:
+            if st.button("Continue →"):
+                st.session_state.step = 4
+                st.rerun()
     elif band == "Medium Risk":
         st.warning("⚠️ Your application is under review. A loan officer will contact you shortly.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        if st.button("← Start Over"):
+            st.session_state.step = 1
+            st.session_state.customer_record = None
+            st.session_state.nic_value = ""
+            st.rerun()
     else:
         st.error("❌ Unfortunately, your loan application cannot be approved at this time.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        if st.button("← Start Over"):
+            st.session_state.step = 1
+            st.session_state.customer_record = None
+            st.session_state.nic_value = ""
+            st.rerun()
+
+# ══════════════════════════════════════════════════════════════
+# STEP 4 — Loan Product & Amount
+# ══════════════════════════════════════════════════════════════
+elif st.session_state.step == 4:
+
+    LOAN_PRODUCTS = {
+        "🎓  Personal Education Loan": "Fund your own tuition, professional certifications, or short courses to advance your career.",
+        "🏥  Personal Medical Loan": "Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.",
+        "✈️  Personal Travel Loan": "Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",
+        "💍  Personal Wedding Loan": "Fund wedding expenses including venue, catering, and arrangements without straining your savings.",
+        "🛋️  Personal Home Improvement Loan": "Renovate, furnish, or upgrade your home with a flexible personal loan.",
+    }
+
+    st.markdown(f"""
+    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
+    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
+        <div class="step-badge">Step 4 of 4</div>
+        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
+        line-height:1.2;margin-bottom:0.5rem">Loan details</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
+        Select a loan product and enter the amount you require.</p>
+    </div>
+
+    <div class="verified-card">
+        <div class="verified-label">NIC Verified</div>
+        <div class="verified-value">✅ &nbsp;{st.session_state.nic_value}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+    loan_product = st.selectbox(
+        "LOAN PRODUCT",
+        options=["— Select a loan product —"] + list(LOAN_PRODUCTS.keys()),
+    )
+
+    # Show description card for selected product
+    if loan_product and loan_product != "— Select a loan product —":
+        desc = LOAN_PRODUCTS[loan_product]
+        st.markdown(f"""
+        <div style="background:rgba(255,255,255,0.05);border-left:3px solid rgba(255,255,255,0.3);
+        border-radius:8px;padding:0.9rem 1.1rem;margin:0.5rem 0 1rem 0">
+            <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;line-height:1.6">{desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    loan_amount = st.number_input(
+        "REQUIRED LOAN AMOUNT (LKR)",
+        min_value=0.0,
+        step=10000.0,
+        format="%.2f",
+        value=None,
+        placeholder="e.g. 500000.00"
+    )
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("← Back"):
+            st.session_state.step4_error = ""
+            st.session_state.step = 3
+            st.rerun()
+    with col2:
+        if st.button("Submit Application"):
+            if loan_product == "— Select a loan product —" or not loan_product:
+                st.session_state.step4_error = "product"
+            elif loan_amount is None or loan_amount <= 0:
+                st.session_state.step4_error = "amount"
+            else:
+                st.session_state.loan_product = loan_product
+                st.session_state.loan_amount  = loan_amount
+                st.session_state.step4_error  = ""
+                st.session_state.step = 5
+                st.rerun()
+
+    if st.session_state.step4_error == "product":
+        st.error("❌ Please select a loan product to continue.")
+    elif st.session_state.step4_error == "amount":
+        st.error("❌ Please enter a valid loan amount to continue.")
+
+# ══════════════════════════════════════════════════════════════
+# STEP 5 — Final Confirmation Summary
+# ══════════════════════════════════════════════════════════════
+elif st.session_state.step == 5:
+    record = st.session_state.customer_record
+    band   = record['Score_Band']
+
+    st.markdown(f"""
+    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
+    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
+        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
+        line-height:1.2;margin-bottom:0.5rem">Application submitted</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
+        Here is a summary of your loan request.</p>
+    </div>
+
+    <div class="verified-card">
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">NIC</div>
+            <div class="verified-value">{st.session_state.nic_value}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Loan Product</div>
+            <div class="verified-value">{st.session_state.loan_product}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Requested Amount</div>
+            <div class="verified-value">LKR {st.session_state.loan_amount:,.2f}</div>
+        </div>
+        <div>
+            <div class="verified-label">Risk Band</div>
+            <div class="verified-value">{band}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.success("✅ Your application has been received. A loan officer will be in touch within 2 business days.")
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     if st.button("← Start Over"):
-        st.session_state.step = 1
-        st.session_state.customer_record = None
-        st.session_state.nic_value = ""
+        for key in ["step","customer_record","nic_value","step2_error",
+                    "step4_error","loan_amount","loan_product"]:
+            if key in st.session_state:
+                del st.session_state[key]
         st.rerun()
 
 st.markdown(
