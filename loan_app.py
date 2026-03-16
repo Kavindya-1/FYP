@@ -278,16 +278,8 @@ elif st.session_state.step == 3:
     </div>
 
     <div class="verified-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-                <div class="verified-label">NIC</div>
-                <div class="verified-value">{st.session_state.nic_value}</div>
-            </div>
-            <div style="text-align:right">
-                <div class="verified-label">Risk Band</div>
-                <div class="verified-value">{band}</div>
-            </div>
-        </div>
+        <div class="verified-label">NIC</div>
+        <div class="verified-value">{st.session_state.nic_value}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -429,10 +421,6 @@ elif st.session_state.step == 5:
         <div style="margin-bottom:1rem">
             <div class="verified-label">Requested Amount</div>
             <div class="verified-value">LKR {st.session_state.loan_amount:,.2f}</div>
-        </div>
-        <div>
-            <div class="verified-label">Risk Band</div>
-            <div class="verified-value">{band}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
