@@ -219,6 +219,10 @@ defaults = {
     "step2_error": "", "step4_error": "",
     "loan_amount": None, "loan_product": "",
     "decision": None,   # stores compute_max_eligible result
+    "loan_term":     None,
+    "loan_rate":     None,
+    "loan_emi":      None,
+    "emi_details":   {},
     "suggested_amount": None,
 }
 for k, v in defaults.items():
@@ -406,14 +410,29 @@ elif st.session_state.step == 4:
     record = st.session_state.customer_record
     dec    = st.session_state.decision
     band   = str(record['Score_Band'])
+    salary = float(record.get('Avg_Monthly_Credit', 0))
 
+    # ── Product catalogue with rates ──
     LOAN_PRODUCTS = {
-        "🎓  Personal Education Loan":        "Fund your own tuition, professional certifications, or short courses to advance your career.",
-        "🏥  Personal Medical Loan":          "Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.",
-        "✈️  Personal Travel Loan":           "Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",
-        "💍  Personal Wedding Loan":          "Fund wedding expenses including venue, catering, and arrangements without straining your savings.",
-        "🛋️  Personal Home Improvement Loan": "Renovate, furnish, or upgrade your home with a flexible personal loan.",
+        "🎓  Personal Education Loan — 12% p.a.":        ("Fund your own tuition, professional certifications, or short courses to advance your career.",  12.0),
+        "🏥  Personal Medical Loan — 10% p.a.":          ("Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.", 10.0),
+        "✈️  Personal Travel Loan — 15% p.a.":           ("Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",   15.0),
+        "💍  Personal Wedding Loan — 13% p.a.":          ("Fund wedding expenses including venue, catering, and arrangements without straining your savings.", 13.0),
+        "🛋️  Personal Home Improvement Loan — 11% p.a.": ("Renovate, furnish, or upgrade your home with a flexible personal loan.",                         11.0),
     }
+    TERM_OPTIONS = [12, 24, 36, 48, 60]
+
+    def calc_emi(principal, annual_rate_pct, months):
+        r = (annual_rate_pct / 100) / 12
+        if r == 0:
+            return principal / months
+        return principal * r * (1 + r)**months / ((1 + r)**months - 1)
+
+    def max_affordable_principal(annual_rate_pct, months, max_emi):
+        r = (annual_rate_pct / 100) / 12
+        if r == 0:
+            return max_emi * months
+        return max_emi * ((1 + r)**months - 1) / (r * (1 + r)**months)
 
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
@@ -422,7 +441,7 @@ elif st.session_state.step == 4:
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Loan details</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Select a loan product and enter the amount you require.</p>
+        Select a product, enter the amount you need, and choose your repayment term.</p>
     </div>
     <div class="verified-card">
         <div class="verified-label">NIC Verified</div>
@@ -434,16 +453,19 @@ elif st.session_state.step == 4:
         "LOAN PRODUCT",
         options=["— Select a loan product —"] + list(LOAN_PRODUCTS.keys()),
     )
+
+    selected_rate = None
     if loan_product and loan_product != "— Select a loan product —":
+        desc, selected_rate = LOAN_PRODUCTS[loan_product]
         st.markdown(f"""
         <div style="background:rgba(255,255,255,0.05);border-left:3px solid rgba(255,255,255,0.3);
         border-radius:8px;padding:0.9rem 1.1rem;margin:0.5rem 0 1rem 0">
             <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;line-height:1.6">
-            {LOAN_PRODUCTS[loan_product]}</p>
+            {desc}</p>
         </div>
         """, unsafe_allow_html=True)
 
-    # For Medium Risk the amount is already fixed
+    # For Medium Risk the amount is already fixed — only ask for term
     if band == "Medium Risk":
         loan_amount = st.session_state.suggested_amount
         st.markdown(f"""
@@ -460,11 +482,35 @@ elif st.session_state.step == 4:
             min_value=0.0, step=10000.0, format="%.2f",
             key="typed_loan_amount"
         )
-        loan_amount = st.session_state.typed_loan_amount
+
+    loan_term = st.selectbox(
+        "REPAYMENT TERM",
+        options=["— Select a term —"] + [f"{t} months" for t in TERM_OPTIONS],
+    )
+
+    # Live EMI preview
+    preview_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.get("suggested_amount", 0.0)
+    if (selected_rate is not None and loan_term != "— Select a term —"
+            and preview_amount and preview_amount > 0):
+        term_months = int(loan_term.split()[0])
+        emi         = calc_emi(preview_amount, selected_rate, term_months)
+        max_emi     = salary * 0.40
+        emi_ratio   = (emi / salary * 100) if salary > 0 else 0
+        color       = "rgba(100,220,130,0.85)" if emi <= max_emi else "rgba(255,100,100,0.85)"
+        st.markdown(f"""
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;
+        padding:1rem 1.2rem;margin:0.8rem 0">
+            <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);
+            margin-bottom:6px">ESTIMATED MONTHLY REPAYMENT</div>
+            <div style="font-size:26px;font-weight:700;color:{color}">{fmt(emi)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:4px">
+            {emi_ratio:.1f}% of your monthly salary &nbsp;·&nbsp; max allowed 40%</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        if st.button("\u2190 Back"):
+        if st.button("← Back"):
             st.session_state.step4_error = ""
             st.session_state.step = 3
             st.rerun()
@@ -472,37 +518,94 @@ elif st.session_state.step == 4:
         if st.button("Submit Application"):
             st.session_state.step4_error = ""
             entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
-            max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
+            max_eligible   = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
 
-            if loan_product == "\u2014 Select a loan product \u2014" or not loan_product:
+            if loan_product == "— Select a loan product —" or not loan_product:
                 st.session_state.step4_error = "product"
+            elif loan_term == "— Select a term —":
+                st.session_state.step4_error = "term"
             elif band != "Medium Risk" and (entered_amount is None or entered_amount <= 0):
                 st.session_state.step4_error = "amount"
-            elif band != "Medium Risk" and entered_amount > max_eligible:
-                st.session_state.step4_error = "over"
-                st.session_state.suggested_amount = round(max_eligible, -3)
             else:
-                st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = entered_amount
-                st.session_state.step = 5
-                st.rerun()
+                term_months  = int(loan_term.split()[0])
+                _, rate      = LOAN_PRODUCTS[loan_product]
+                emi          = calc_emi(entered_amount, rate, term_months)
+                max_emi      = salary * 0.40
+                max_afford   = round(max_affordable_principal(rate, term_months, max_emi), 2)
+                true_max     = round(min(max_eligible, max_afford), -3)
+                true_max     = max(true_max, 0)
 
+                if emi > max_emi and entered_amount > max_afford:
+                    # EMI unaffordable
+                    st.session_state.step4_error    = "emi"
+                    st.session_state.suggested_amount = true_max
+                    st.session_state.emi_details    = {
+                        "emi": emi, "max_emi": max_emi,
+                        "max_afford": max_afford, "true_max": true_max,
+                        "rate": rate, "term": term_months,
+                    }
+                elif band != "Medium Risk" and entered_amount > max_eligible:
+                    # Score-based cap exceeded
+                    st.session_state.step4_error    = "over"
+                    st.session_state.suggested_amount = round(min(max_eligible, max_afford), -3)
+                else:
+                    st.session_state.loan_product  = loan_product
+                    st.session_state.loan_amount   = entered_amount
+                    st.session_state.loan_term     = term_months
+                    st.session_state.loan_rate     = rate
+                    st.session_state.loan_emi      = round(calc_emi(entered_amount, rate, term_months), 2)
+                    st.session_state.step = 5
+                    st.rerun()
+
+    # ── Error / warning blocks ──
     if st.session_state.step4_error == "product":
         st.error("❌ Please select a loan product to continue.")
+    elif st.session_state.step4_error == "term":
+        st.error("❌ Please select a repayment term to continue.")
     elif st.session_state.step4_error == "amount":
         st.error("❌ Please enter a valid loan amount to continue.")
+    elif st.session_state.step4_error == "emi":
+        ed  = st.session_state.emi_details
+        sug = st.session_state.suggested_amount
+        st.warning(
+            f"⚠️ Your monthly repayment of **{fmt(ed['emi'])}** would exceed 40% of your salary "
+            f"(**{fmt(ed['max_emi'])}**). "
+            f"The maximum you can borrow over {ed['term']} months is **{fmt(sug)}**."
+        )
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("No thanks", key="emi_no"):
+                start_over(); st.rerun()
+        with col2:
+            if st.button(f"Proceed with {fmt(sug)}", key="emi_yes"):
+                _, rate = LOAN_PRODUCTS[loan_product]
+                term_m  = int(loan_term.split()[0])
+                st.session_state.loan_product = loan_product
+                st.session_state.loan_amount  = sug
+                st.session_state.loan_term    = term_m
+                st.session_state.loan_rate    = rate
+                st.session_state.loan_emi     = round(calc_emi(sug, rate, term_m), 2)
+                st.session_state.step4_error  = ""
+                st.session_state.step = 5
+                st.rerun()
     elif st.session_state.step4_error == "over":
         suggested = st.session_state.suggested_amount
         st.warning(f"⚠️ The amount you entered exceeds what you qualify for. The maximum we can offer you is **{fmt(suggested)}**.")
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("No thanks"):
+            if st.button("No thanks", key="over_no"):
                 start_over(); st.rerun()
         with col2:
-            if st.button(f"Proceed with {fmt(suggested)}"):
+            if st.button(f"Proceed with {fmt(suggested)}", key="over_yes"):
+                _, rate = LOAN_PRODUCTS[loan_product]
+                term_m  = int(loan_term.split()[0])
                 st.session_state.loan_product = loan_product
                 st.session_state.loan_amount  = suggested
+                st.session_state.loan_term    = term_m
+                st.session_state.loan_rate    = rate
+                st.session_state.loan_emi     = round(calc_emi(suggested, rate, term_m), 2)
                 st.session_state.step4_error  = ""
                 st.session_state.step = 5
                 st.rerun()
@@ -533,52 +636,20 @@ elif st.session_state.step == 5:
             <div class="verified-value">{st.session_state.loan_product}</div>
         </div>
         <div style="margin-bottom:1rem">
-            <div class="verified-label">Requested Amount</div>
+            <div class="verified-label">Loan Amount</div>
             <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
         </div>
         <div style="margin-bottom:1rem">
-            <div class="verified-label">Maximum Eligible Amount</div>
-            <div class="verified-value">{fmt(dec['max_eligible'])}</div>
+            <div class="verified-label">Repayment Term</div>
+            <div class="verified-value">{st.session_state.loan_term} months</div>
         </div>
-    </div>
-
-    <div class="verified-card">
-        <div class="verified-label" style="margin-bottom:10px">How your limit was calculated</div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Credit score</span>
-            <span class="breakdown-val">{int(dec['score'])} / 850</span>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Interest Rate</div>
+            <div class="verified-value">{st.session_state.loan_rate}% p.a.</div>
         </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Score position in band</span>
-            <span class="breakdown-val">{int(dec['score_ratio']*100)}%</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Salary multiplier applied</span>
-            <span class="breakdown-val">× {dec['adj_multiplier']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Max by salary</span>
-            <span class="breakdown-val">{fmt(dec['max_by_salary'])}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Age group ceiling ({dec['age_bucket']})</span>
-            <span class="breakdown-val">{fmt(dec['age_ceiling'])}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Employment adjustment ({dec['emp_segment']})</span>
-            <span class="breakdown-val">× {dec['emp_factor']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Overdue penalty</span>
-            <span class="breakdown-val">{dec['ood_penalty_label']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Cash flow penalty</span>
-            <span class="breakdown-val">{dec['net_penalty_label']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Existing debt deducted</span>
-            <span class="breakdown-val">− {fmt(dec['capital_due'])}</span>
+        <div style="margin-bottom:0">
+            <div class="verified-label">Estimated Monthly Repayment</div>
+            <div class="verified-value" style="color:rgba(100,220,130,0.95)">{fmt(st.session_state.loan_emi)}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
