@@ -599,6 +599,8 @@ elif st.session_state.step == 4:
 
         # ── Repayment breakdown preview ──
         if sug > 0 and rate > 0 and term_m > 0:
+            monthly_capital = sug / term_m
+            monthly_int     = sug_emi - monthly_capital
             st.markdown(f"""
             <div style="background:rgba(255,255,255,0.05);border-radius:14px;
             padding:1.2rem 1.4rem;margin:0.8rem 0 0.5rem 0">
@@ -609,16 +611,24 @@ elif st.session_state.step == 4:
                     <span class="breakdown-val">{fmt(sug)}</span>
                 </div>
                 <div class="breakdown-row">
-                    <span class="breakdown-key">Monthly repayment</span>
-                    <span class="breakdown-val" style="color:rgba(100,220,130,0.9)">{fmt(sug_emi)}</span>
-                </div>
-                <div class="breakdown-row">
                     <span class="breakdown-key">Total interest payable</span>
                     <span class="breakdown-val">{fmt(tot_int)}</span>
                 </div>
-                <div class="breakdown-row" style="border-bottom:none;padding-bottom:0">
+                <div class="breakdown-row" style="border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:10px;margin-bottom:10px">
                     <span class="breakdown-key" style="font-weight:600;color:white">Total repayment</span>
                     <span class="breakdown-val" style="font-weight:600;color:white">{fmt(tot_pay)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly capital repayment</span>
+                    <span class="breakdown-val">{fmt(monthly_capital)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly interest</span>
+                    <span class="breakdown-val">{fmt(monthly_int)}</span>
+                </div>
+                <div class="breakdown-row" style="border-bottom:none;padding-bottom:0">
+                    <span class="breakdown-key" style="font-weight:600;color:rgba(100,220,130,0.95)">Monthly repayment (EMI)</span>
+                    <span class="breakdown-val" style="font-weight:600;color:rgba(100,220,130,0.95)">{fmt(sug_emi)}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -679,16 +689,28 @@ elif st.session_state.step == 5:
             <div class="verified-value">{st.session_state.loan_rate}% p.a.</div>
         </div>
         <div style="margin-bottom:1rem">
-            <div class="verified-label">Estimated Monthly Repayment</div>
-            <div class="verified-value" style="color:rgba(100,220,130,0.95)">{fmt(st.session_state.loan_emi)}</div>
+            <div class="verified-label">Loan Amount (Capital)</div>
+            <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
         </div>
         <div style="margin-bottom:1rem">
             <div class="verified-label">Total Interest Payable</div>
             <div class="verified-value">{fmt(st.session_state.loan_total_int)}</div>
         </div>
-        <div style="margin-bottom:0">
+        <div style="margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(255,255,255,0.1)">
             <div class="verified-label">Total Repayment</div>
             <div class="verified-value" style="font-weight:700">{fmt(st.session_state.loan_total_pay)}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Monthly Capital Repayment</div>
+            <div class="verified-value">{fmt(st.session_state.loan_amount / st.session_state.loan_term)}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Monthly Interest</div>
+            <div class="verified-value">{fmt(st.session_state.loan_emi - (st.session_state.loan_amount / st.session_state.loan_term))}</div>
+        </div>
+        <div style="margin-bottom:0">
+            <div class="verified-label">Monthly Repayment (EMI)</div>
+            <div class="verified-value" style="color:rgba(100,220,130,0.95);font-weight:700">{fmt(st.session_state.loan_emi)}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
