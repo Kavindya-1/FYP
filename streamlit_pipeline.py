@@ -473,14 +473,23 @@ elif st.session_state.step == 4:
             elif band != "Medium Risk" and (loan_amount is None or loan_amount <= 0):
                 st.session_state.step4_error = "amount"
             else:
-                max_eligible = dec["max_eligible"]
+                # Recompute fresh to avoid stale session state
+                max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
                 # Amount check for Low/Very Low Risk
-                if band != "Medium Risk" and loan_amount > max_eligible:
-                    st.session_state.step4_error = "over"
-                    st.session_state.suggested_amount = round(max_eligible, -3)
+                if band != "Medium Risk":
+                    if loan_amount is None or loan_amount <= 0:
+                        st.session_state.step4_error = "amount"
+                    elif loan_amount > max_eligible:
+                        st.session_state.step4_error = "over"
+                        st.session_state.suggested_amount = round(max_eligible, -3)
+                    else:
+                        st.session_state.loan_product = loan_product
+                        st.session_state.loan_amount  = loan_amount
+                        st.session_state.step = 5
+                        st.rerun()
                 else:
                     st.session_state.loan_product = loan_product
-                    st.session_state.loan_amount  = loan_amount if band != "Medium Risk" else st.session_state.suggested_amount
+                    st.session_state.loan_amount  = st.session_state.suggested_amount
                     st.session_state.step = 5
                     st.rerun()
 
@@ -514,6 +523,7 @@ elif st.session_state.step == 5:
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
+        <div class="step-badge">Step 5 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Application submitted</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
