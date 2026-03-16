@@ -453,45 +453,41 @@ elif st.session_state.step == 4:
         </div>
         """, unsafe_allow_html=True)
     else:
-        loan_amount = st.number_input(
+        if "typed_loan_amount" not in st.session_state:
+            st.session_state.typed_loan_amount = 0.0
+        st.number_input(
             "REQUIRED LOAN AMOUNT (LKR)",
             min_value=0.0, step=10000.0, format="%.2f",
-            value=None, placeholder="e.g. 500000.00"
+            key="typed_loan_amount"
         )
+        loan_amount = st.session_state.typed_loan_amount
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        if st.button("← Back"):
+        if st.button("\u2190 Back"):
             st.session_state.step4_error = ""
+            st.session_state.typed_loan_amount = 0.0
             st.session_state.step = 3
             st.rerun()
     with col2:
         if st.button("Submit Application"):
             st.session_state.step4_error = ""
-            if loan_product == "— Select a loan product —" or not loan_product:
+            entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
+            max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
+
+            if loan_product == "\u2014 Select a loan product \u2014" or not loan_product:
                 st.session_state.step4_error = "product"
-            elif band != "Medium Risk" and (loan_amount is None or loan_amount <= 0):
+            elif band != "Medium Risk" and (entered_amount is None or entered_amount <= 0):
                 st.session_state.step4_error = "amount"
+            elif band != "Medium Risk" and entered_amount > max_eligible:
+                st.session_state.step4_error = "over"
+                st.session_state.suggested_amount = round(max_eligible, -3)
             else:
-                # Recompute fresh to avoid stale session state
-                max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
-                # Amount check for Low/Very Low Risk
-                if band != "Medium Risk":
-                    if loan_amount is None or loan_amount <= 0:
-                        st.session_state.step4_error = "amount"
-                    elif loan_amount > max_eligible:
-                        st.session_state.step4_error = "over"
-                        st.session_state.suggested_amount = round(max_eligible, -3)
-                    else:
-                        st.session_state.loan_product = loan_product
-                        st.session_state.loan_amount  = loan_amount
-                        st.session_state.step = 5
-                        st.rerun()
-                else:
-                    st.session_state.loan_product = loan_product
-                    st.session_state.loan_amount  = st.session_state.suggested_amount
-                    st.session_state.step = 5
-                    st.rerun()
+                st.session_state.loan_product = loan_product
+                st.session_state.loan_amount  = entered_amount
+                st.session_state.typed_loan_amount = 0.0
+                st.session_state.step = 5
+                st.rerun()
 
     if st.session_state.step4_error == "product":
         st.error("❌ Please select a loan product to continue.")
