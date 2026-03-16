@@ -223,6 +223,8 @@ defaults = {
     "loan_rate":     None,
     "loan_emi":      None,
     "emi_details":   {},
+    "loan_total_int":  None,
+    "loan_total_pay":  None,
     "suggested_amount": None,
 }
 for k, v in defaults.items():
@@ -232,6 +234,9 @@ for k, v in defaults.items():
 def start_over():
     for k in defaults:
         st.session_state[k] = defaults[k]
+    for k in ["typed_loan_amount", "emi_details"]:
+        if k in st.session_state:
+            del st.session_state[k]
 
 def fmt(n):
     return f"LKR {n:,.0f}"
@@ -549,11 +554,15 @@ elif st.session_state.step == 4:
                     st.session_state.step4_error    = "over"
                     st.session_state.suggested_amount = round(min(max_eligible, max_afford), -3)
                 else:
-                    st.session_state.loan_product  = loan_product
-                    st.session_state.loan_amount   = entered_amount
-                    st.session_state.loan_term     = term_months
-                    st.session_state.loan_rate     = rate
-                    st.session_state.loan_emi      = round(calc_emi(entered_amount, rate, term_months), 2)
+                    _emi     = calc_emi(entered_amount, rate, term_months)
+                    _totpay  = _emi * term_months
+                    st.session_state.loan_product      = loan_product
+                    st.session_state.loan_amount       = entered_amount
+                    st.session_state.loan_term         = term_months
+                    st.session_state.loan_rate         = rate
+                    st.session_state.loan_emi          = round(_emi, 2)
+                    st.session_state.loan_total_int    = round(_totpay - entered_amount, 2)
+                    st.session_state.loan_total_pay    = round(_totpay, 2)
                     st.session_state.step = 5
                     st.rerun()
 
@@ -564,49 +573,71 @@ elif st.session_state.step == 4:
         st.error("❌ Please select a repayment term to continue.")
     elif st.session_state.step4_error == "amount":
         st.error("❌ Please enter a valid loan amount to continue.")
-    elif st.session_state.step4_error == "emi":
-        ed  = st.session_state.emi_details
-        sug = st.session_state.suggested_amount
-        st.warning(
-            f"⚠️ Your monthly repayment of **{fmt(ed['emi'])}** would exceed 40% of your salary "
-            f"(**{fmt(ed['max_emi'])}**). "
-            f"The maximum you can borrow over {ed['term']} months is **{fmt(sug)}**."
-        )
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+    elif st.session_state.step4_error in ("emi", "over"):
+        ed       = st.session_state.get("emi_details", {})
+        sug      = st.session_state.suggested_amount
+        rate     = ed.get("rate", 0)
+        term_m   = ed.get("term", 0)
+        sug_emi  = calc_emi(sug, rate, term_m) if (rate and term_m) else 0
+        tot_pay  = sug_emi * term_m
+        tot_int  = tot_pay - sug
+
+        if st.session_state.step4_error == "emi":
+            msg = (
+                f"Based on your monthly income, we'd like to suggest a loan amount that keeps "
+                f"your repayments comfortable. We recommend **{fmt(sug)}** over {term_m} months, "
+                f"which brings your monthly repayment to **{fmt(sug_emi)}** — well within a "
+                f"manageable range for your salary. Would you like to proceed with this instead?"
+            )
+        else:
+            msg = (
+                f"The amount you entered is a little above what we can offer based on your profile. "
+                f"We'd be happy to proceed with **{fmt(sug)}** — would that work for you?"
+            )
+        st.warning(f"⚠️ {msg}")
+
+        # ── Repayment breakdown preview ──
+        if sug > 0 and rate > 0 and term_m > 0:
+            st.markdown(f"""
+            <div style="background:rgba(255,255,255,0.05);border-radius:14px;
+            padding:1.2rem 1.4rem;margin:0.8rem 0 0.5rem 0">
+                <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);
+                margin-bottom:12px">REPAYMENT BREAKDOWN</div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Loan amount (capital)</span>
+                    <span class="breakdown-val">{fmt(sug)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly repayment</span>
+                    <span class="breakdown-val" style="color:rgba(100,220,130,0.9)">{fmt(sug_emi)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Total interest payable</span>
+                    <span class="breakdown-val">{fmt(tot_int)}</span>
+                </div>
+                <div class="breakdown-row" style="border-bottom:none;padding-bottom:0">
+                    <span class="breakdown-key" style="font-weight:600;color:white">Total repayment</span>
+                    <span class="breakdown-val" style="font-weight:600;color:white">{fmt(tot_pay)}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("No thanks", key="emi_no"):
+            if st.button("No thanks", key="warn_no"):
                 start_over(); st.rerun()
         with col2:
-            if st.button(f"Proceed with {fmt(sug)}", key="emi_yes"):
-                _, rate = LOAN_PRODUCTS[loan_product]
-                term_m  = int(loan_term.split()[0])
-                st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = sug
-                st.session_state.loan_term    = term_m
-                st.session_state.loan_rate    = rate
-                st.session_state.loan_emi     = round(calc_emi(sug, rate, term_m), 2)
-                st.session_state.step4_error  = ""
-                st.session_state.step = 5
-                st.rerun()
-    elif st.session_state.step4_error == "over":
-        suggested = st.session_state.suggested_amount
-        st.warning(f"⚠️ The amount you entered exceeds what you qualify for. The maximum we can offer you is **{fmt(suggested)}**.")
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("No thanks", key="over_no"):
-                start_over(); st.rerun()
-        with col2:
-            if st.button(f"Proceed with {fmt(suggested)}", key="over_yes"):
-                _, rate = LOAN_PRODUCTS[loan_product]
-                term_m  = int(loan_term.split()[0])
-                st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = suggested
-                st.session_state.loan_term    = term_m
-                st.session_state.loan_rate    = rate
-                st.session_state.loan_emi     = round(calc_emi(suggested, rate, term_m), 2)
-                st.session_state.step4_error  = ""
+            if st.button(f"Confirm & proceed →", key="warn_yes"):
+                st.session_state.loan_product      = loan_product
+                st.session_state.loan_amount       = sug
+                st.session_state.loan_term         = term_m
+                st.session_state.loan_rate         = rate
+                st.session_state.loan_emi          = round(sug_emi, 2)
+                st.session_state.loan_total_int    = round(tot_int, 2)
+                st.session_state.loan_total_pay    = round(tot_pay, 2)
+                st.session_state.step4_error       = ""
                 st.session_state.step = 5
                 st.rerun()
 
@@ -647,9 +678,17 @@ elif st.session_state.step == 5:
             <div class="verified-label">Interest Rate</div>
             <div class="verified-value">{st.session_state.loan_rate}% p.a.</div>
         </div>
-        <div style="margin-bottom:0">
+        <div style="margin-bottom:1rem">
             <div class="verified-label">Estimated Monthly Repayment</div>
             <div class="verified-value" style="color:rgba(100,220,130,0.95)">{fmt(st.session_state.loan_emi)}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Total Interest Payable</div>
+            <div class="verified-value">{fmt(st.session_state.loan_total_int)}</div>
+        </div>
+        <div style="margin-bottom:0">
+            <div class="verified-label">Total Repayment</div>
+            <div class="verified-value" style="font-weight:700">{fmt(st.session_state.loan_total_pay)}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
