@@ -55,7 +55,17 @@ html, body, .stApp {
     transition: opacity 0.2s !important;
 }
 .stButton > button:hover {opacity: 0.9 !important;}
-.stAlert {border-radius: 10px !important;}
+.stAlert {
+    border-radius: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+div[data-testid="stAlert"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+}
 
 .step-badge {
     display: inline-block;
@@ -216,9 +226,8 @@ elif st.session_state.step == 2:
 
                     if not (lower <= float(salary_input) <= upper):
                         st.error(
-                            f"❌ The salary you entered could not be verified against our records. "
-                            f"Please ensure it reflects your true average monthly income. "
-                            f"Accepted range: **LKR {lower:,.0f} – LKR {upper:,.0f}**"
+                            "❌ The salary you entered could not be verified against our records. "
+                            "Please ensure it reflects your true average monthly income."
                         )
                     else:
                         st.session_state.step = 3
