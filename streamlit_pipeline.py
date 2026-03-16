@@ -1,598 +1,1033 @@
-import streamlit as st
-import joblib
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import pyodbc
 import pandas as pd
-import time
+from pycaret.classification import setup, compare_models
+import numpy as np
 
-st.set_page_config(page_title="Loan Eligibility Portal", page_icon="🏦", layout="centered")
 
-# Load models
-xgb_model       = joblib.load("credit_model.pkl")
-kproto_model     = joblib.load("kproto_cluster_model.pkl")
-eligible_customers = joblib.load("eligible_customers.pkl")
+# In[2]:
 
-# ══════════════════════════════════════════════════════════════
-# DECISION ENGINE
-# ══════════════════════════════════════════════════════════════
 
-AGE_CEILINGS = {
-    "Young Adult":   500_000,
-    "Adult":       2_000_000,
-    "Middle-Aged": 1_500_000,
-    "Senior":        750_000,
-}
+import pyodbc
+import pandas as pd
 
-BAND_CONFIG = {
-    "Very Low Risk": {"base_multiplier": 36, "band_floor": 750, "band_ceiling": 850},
-    "Low Risk":      {"base_multiplier": 24, "band_floor": 650, "band_ceiling": 750},
-    "Medium Risk":   {"base_multiplier": 12, "band_floor": 550, "band_ceiling": 650},
-    "High Risk":     {"base_multiplier":  0, "band_floor": 300, "band_ceiling": 550},
-}
-
-EMPLOYMENT_FACTORS = {
-    "Core Working Group": 1.0,
-    "Special Segment":    0.8,
-    "Other":              0.6,
-    "Not valid segment":  0.6,
-}
-
-def compute_max_eligible(record):
-    """
-    Returns a dict with max_eligible and all the intermediate
-    values so the UI can explain the breakdown.
-    """
-    band          = str(record.get("Score_Band", "High Risk"))
-    score         = float(record.get("Internal_Bank_Default_Score", 300))
-    salary        = float(record.get("Avg_Monthly_Credit", 0))
-    age_bucket    = str(record.get("Age_Bucket", "Adult"))
-    emp_segment   = str(record.get("Employment_Segment", "Other"))
-    max_ood       = float(record.get("MAX_OOD", 0))
-    capital_due   = float(record.get("TOTAL_CAPITAL_DUE", 0))
-    net_ratio     = float(record.get("NET_RATIO", 0))
-
-    cfg           = BAND_CONFIG.get(band, BAND_CONFIG["High Risk"])
-    base_mult     = cfg["base_multiplier"]
-    band_floor    = cfg["band_floor"]
-    band_ceiling  = cfg["band_ceiling"]
-
-    # 1 — Score ratio within band (0.0 → 1.0)
-    score_ratio   = (score - band_floor) / max(band_ceiling - band_floor, 1)
-    score_ratio   = max(0.0, min(1.0, score_ratio))
-
-    # 2 — Adjusted multiplier
-    adj_mult      = base_mult * (0.85 + 0.30 * score_ratio)
-
-    # 3 — Max by salary
-    max_by_salary = salary * adj_mult
-
-    # 4 — Age ceiling
-    age_ceiling   = AGE_CEILINGS.get(age_bucket, 1_000_000)
-
-    # 5 — Raw max before adjustments
-    raw_max       = min(max_by_salary, age_ceiling)
-
-    # 6 — Employment factor
-    emp_factor    = EMPLOYMENT_FACTORS.get(emp_segment, 0.6)
-
-    # 7 — OOD penalty
-    if max_ood >= 60:
-        ood_penalty      = -1          # signals hard reject
-        ood_penalty_label = "Rejected (≥60 days overdue)"
-    elif max_ood >= 30:
-        ood_penalty      = 0.70
-        ood_penalty_label = "×0.70 (30–59 days overdue)"
-    else:
-        ood_penalty      = 1.0
-        ood_penalty_label = "No penalty"
-
-    # 8 — Net ratio penalty
-    if net_ratio < 0:
-        net_penalty       = 0.80
-        net_penalty_label = "×0.80 (spending > income)"
-    else:
-        net_penalty       = 1.0
-        net_penalty_label = "No penalty"
-
-    # 9 — Apply all factors
-    if ood_penalty == -1:
-        max_eligible = 0
-    else:
-        max_eligible = (raw_max * emp_factor * ood_penalty * net_penalty) - max(capital_due, 0)
-        max_eligible = max(0, max_eligible)
-
-    return {
-        "band":               band,
-        "score":              score,
-        "score_ratio":        round(score_ratio, 3),
-        "base_multiplier":    base_mult,
-        "adj_multiplier":     round(adj_mult, 2),
-        "salary":             salary,
-        "max_by_salary":      round(max_by_salary, 2),
-        "age_ceiling":        age_ceiling,
-        "age_bucket":         age_bucket,
-        "raw_max":            round(raw_max, 2),
-        "emp_segment":        emp_segment,
-        "emp_factor":         emp_factor,
-        "max_ood":            max_ood,
-        "ood_penalty":        ood_penalty,
-        "ood_penalty_label":  ood_penalty_label,
-        "net_ratio":          round(net_ratio, 3),
-        "net_penalty":        net_penalty,
-        "net_penalty_label":  net_penalty_label,
-        "capital_due":        capital_due,
-        "max_eligible":       round(max_eligible, 2),
-        "hard_ood_reject":    ood_penalty == -1,
-    }
-
-# ══════════════════════════════════════════════════════════════
-# CSS
-# ══════════════════════════════════════════════════════════════
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap');
-
-html, body, .stApp {
-    background: linear-gradient(160deg, #1a5a9a 0%, #0C447C 40%, #042C53 100%) !important;
-    font-family: 'DM Sans', sans-serif !important;
-}
-#MainMenu, footer, header {visibility: hidden;}
-.block-container {padding-top: 4rem !important; max-width: 480px !important;}
-
-.stTextInput input, .stNumberInput input {
-    background: white !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    border-radius: 10px !important;
-    color: #042C53 !important;
-    -webkit-text-fill-color: #042C53 !important;
-    caret-color: #042C53 !important;
-    font-size: 15px !important;
-    padding: 14px !important;
-}
-.stTextInput input::placeholder, .stNumberInput input::placeholder {
-    color: rgba(4,44,83,0.4) !important;
-    -webkit-text-fill-color: rgba(4,44,83,0.4) !important;
-}
-.stTextInput label, .stNumberInput label {
-    color: rgba(255,255,255,0.6) !important;
-    letter-spacing: 2px; font-size: 12px !important; text-transform: uppercase;
-}
-.stButton > button {
-    background: white !important; color: #042C53 !important;
-    border: none !important; border-radius: 10px !important;
-    font-weight: 600 !important; font-size: 15px !important;
-    padding: 14px !important; width: 100% !important;
-    transition: opacity 0.2s !important;
-}
-.stButton > button:hover {opacity: 0.9 !important;}
-.stAlert, div[data-testid="stAlert"],
-div[data-testid="stAlert"] > div,
-.element-container div[data-testid="stAlert"] {
-    width: 100% !important; max-width: 100% !important;
-    min-width: 100% !important; border-radius: 10px !important;
-    box-sizing: border-box !important; display: block !important; float: none !important;
-}
-.element-container { width: 100% !important; }
-.step-badge {
-    display: inline-block; background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
-    padding: 4px 14px; font-size: 11px; letter-spacing: 2px;
-    color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 1rem;
-}
-.verified-card {
-    background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.15);
-    border-radius: 20px; padding: 1.2rem 1.5rem; margin-bottom: 1rem;
-}
-.verified-label {
-    font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.45);
-    text-transform: uppercase; margin-bottom: 4px;
-}
-.verified-value { font-size: 15px; color: white; font-weight: 500; }
-.breakdown-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 7px 0; border-bottom: 0.5px solid rgba(255,255,255,0.08);
-    font-size: 13px;
-}
-.breakdown-row:last-child { border-bottom: none; }
-.breakdown-key { color: rgba(255,255,255,0.55); }
-.breakdown-val { color: white; font-weight: 500; text-align: right; }
-.stSelectbox label {
-    color: rgba(255,255,255,0.6) !important; letter-spacing: 2px;
-    font-size: 12px !important; text-transform: uppercase;
-}
-.stSelectbox > div > div {
-    background: white !important; border-radius: 10px !important;
-    color: #042C53 !important; border: 1px solid rgba(255,255,255,0.2) !important;
-    font-size: 15px !important;
-}
-</style>
-
-<div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;
-background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
-<div style="position:fixed;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;
-background:rgba(255,255,255,0.04);pointer-events:none;z-index:0"></div>
-""", unsafe_allow_html=True)
-
-# ══════════════════════════════════════════════════════════════
-# SESSION STATE
-# ══════════════════════════════════════════════════════════════
-defaults = {
-    "step": 1, "customer_record": None, "nic_value": "",
-    "step2_error": "", "step4_error": "",
-    "loan_amount": None, "loan_product": "",
-    "decision": None,   # stores compute_max_eligible result
-    "suggested_amount": None,
-}
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-def start_over():
-    for k in defaults:
-        st.session_state[k] = defaults[k]
-
-def fmt(n):
-    return f"LKR {n:,.0f}"
-
-# ══════════════════════════════════════════════════════════════
-# STEP 1 — NIC Entry
-# ══════════════════════════════════════════════════════════════
-if st.session_state.step == 1:
-    st.markdown("""
-    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:2.5rem 2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 1 of 5</div>
-        <h1 style="font-family:'DM Serif Display',serif;font-size:32px;color:white;
-        line-height:1.2;margin-bottom:0.75rem">Check your loan eligibility</h1>
-        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0">
-        Enter your NIC number to instantly verify your eligibility.
-        Your data is secure and confidential.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    nic = st.text_input("NIC NUMBER", placeholder="e.g. 199012345678")
-
-    if st.button("Proceed"):
-        if not nic:
-            st.error("Please enter your NIC number to proceed.")
-        else:
-            with st.spinner("Verifying your NIC..."):
-                time.sleep(2)
-            matched = eligible_customers[eligible_customers['MASKED_LEGAL_ID'] == nic]
-            if matched.empty:
-                st.error("❌ NIC number not found in our records. Please contact your nearest branch.")
-            else:
-                rec = matched.iloc[0]
-                if rec['Eligibility_Flag'] == 'REJECT':
-                    st.error("❌ You are not eligible to apply for a loan at this time.")
-                elif int(rec.get('Number_of_Active_Accounts', 0)) == 0:
-                    st.error("❌ Sorry, we could not find any active accounts linked to your NIC. Please visit your nearest branch for assistance.")
-                else:
-                    st.session_state.customer_record = rec
-                    st.session_state.nic_value = nic
-                    st.session_state.step = 2
-                    st.rerun()
-
-# ══════════════════════════════════════════════════════════════
-# STEP 2 — Age & Salary Verification
-# ══════════════════════════════════════════════════════════════
-elif st.session_state.step == 2:
-    record = st.session_state.customer_record
-
-    st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 2 of 5</div>
-        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
-        line-height:1.2;margin-bottom:0.5rem">Verify your details</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Please confirm your personal details to continue.</p>
-    </div>
-    <div class="verified-card">
-        <div class="verified-label">NIC Verified</div>
-        <div class="verified-value">✅ &nbsp;{st.session_state.nic_value}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    age_input    = st.number_input("YOUR AGE", min_value=1, max_value=120,
-                                    step=1, value=None, placeholder="Enter your age")
-    salary_input = st.number_input("AVERAGE MONTHLY SALARY (LKR)", min_value=0.0,
-                                    step=1000.0, format="%.2f", value=None,
-                                    placeholder="e.g. 75000.00")
-
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("← Back"):
-            st.session_state.step2_error = ""
-            st.session_state.step = 1
-            st.rerun()
-    with col2:
-        if st.button("Verify & Continue"):
-            st.session_state.step2_error = ""
-            if age_input is None or salary_input is None:
-                st.session_state.step2_error = "fill"
-            else:
-                if int(age_input) != int(record['AGE']):
-                    st.session_state.step2_error = "age"
-                else:
-                    stored_salary = float(record['Avg_Monthly_Credit'])
-                    lower = stored_salary * 0.80
-                    upper = stored_salary * 1.20
-                    if not (lower <= float(salary_input) <= upper):
-                        st.session_state.step2_error = "salary"
-                    else:
-                        st.session_state.step2_error = ""
-                        st.session_state.step = 3
-                        st.rerun()
-
-    if st.session_state.step2_error == "fill":
-        st.error("Please fill in both your age and monthly salary.")
-    elif st.session_state.step2_error == "age":
-        st.error("❌ The age you entered does not match our records. Please ensure you enter your correct age.")
-    elif st.session_state.step2_error == "salary":
-        st.error("❌ The salary you entered could not be verified against our records. Please ensure it reflects your true average monthly income.")
-
-# ══════════════════════════════════════════════════════════════
-# STEP 3 — Eligibility Check (Score Band + Decision Engine)
-# ══════════════════════════════════════════════════════════════
-elif st.session_state.step == 3:
-    record  = st.session_state.customer_record
-    band    = str(record['Score_Band'])
-    dec     = compute_max_eligible(record)
-    st.session_state.decision = dec
-
-    st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 3 of 5</div>
-        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
-        line-height:1.2;margin-bottom:0.5rem">Eligibility result</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Based on your verified profile.</p>
-    </div>
-    <div class="verified-card">
-        <div class="verified-label">NIC</div>
-        <div class="verified-value">{st.session_state.nic_value}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── Hard reject: High Risk or OOD ≥ 60
-    if band == "High Risk" or dec["hard_ood_reject"]:
-        st.error("❌ Unfortunately, your loan application cannot be approved at this time.")
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-        if st.button("← Start Over"):
-            start_over(); st.rerun()
-
-    # ── Medium Risk: suggest conservative amount
-    elif band == "Medium Risk":
-        suggested = round(dec["max_eligible"] * 0.70, -3)   # 0.7 buffer, round to nearest 1000
-        suggested = max(suggested, 0)
-        st.session_state.suggested_amount = suggested
-        st.warning("⚠️ Based on your profile, you may qualify for a limited loan amount.")
-        st.markdown(f"""
-        <div class="verified-card" style="margin-top:1rem">
-            <div class="verified-label">Suggested loan amount</div>
-            <div class="verified-value" style="font-size:22px">{fmt(suggested)}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:6px">
-            A loan officer will review and confirm your final offer.</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("No thanks"):
-                start_over(); st.rerun()
-        with col2:
-            if st.button(f"Proceed →"):
-                st.session_state.loan_amount = suggested
-                st.session_state.step = 4
-                st.rerun()
-
-    # ── Low / Very Low Risk: full eligibility, proceed to loan selection
-    else:
-        st.success("✅ You are eligible! Please proceed to select your loan product.")
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("← Start Over"):
-                start_over(); st.rerun()
-        with col2:
-            if st.button("Continue →"):
-                st.session_state.step = 4
-                st.rerun()
-
-# ══════════════════════════════════════════════════════════════
-# STEP 4 — Loan Product & Amount
-# ══════════════════════════════════════════════════════════════
-elif st.session_state.step == 4:
-    record = st.session_state.customer_record
-    dec    = st.session_state.decision
-    band   = str(record['Score_Band'])
-
-    LOAN_PRODUCTS = {
-        "🎓  Personal Education Loan":        "Fund your own tuition, professional certifications, or short courses to advance your career.",
-        "🏥  Personal Medical Loan":          "Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.",
-        "✈️  Personal Travel Loan":           "Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",
-        "💍  Personal Wedding Loan":          "Fund wedding expenses including venue, catering, and arrangements without straining your savings.",
-        "🛋️  Personal Home Improvement Loan": "Renovate, furnish, or upgrade your home with a flexible personal loan.",
-    }
-
-    st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 4 of 5</div>
-        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
-        line-height:1.2;margin-bottom:0.5rem">Loan details</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Select a loan product and enter the amount you require.</p>
-    </div>
-    <div class="verified-card">
-        <div class="verified-label">NIC Verified</div>
-        <div class="verified-value">✅ &nbsp;{st.session_state.nic_value}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    loan_product = st.selectbox(
-        "LOAN PRODUCT",
-        options=["— Select a loan product —"] + list(LOAN_PRODUCTS.keys()),
-    )
-    if loan_product and loan_product != "— Select a loan product —":
-        st.markdown(f"""
-        <div style="background:rgba(255,255,255,0.05);border-left:3px solid rgba(255,255,255,0.3);
-        border-radius:8px;padding:0.9rem 1.1rem;margin:0.5rem 0 1rem 0">
-            <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;line-height:1.6">
-            {LOAN_PRODUCTS[loan_product]}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # For Medium Risk the amount is already fixed
-    if band == "Medium Risk":
-        loan_amount = st.session_state.suggested_amount
-        st.markdown(f"""
-        <div class="verified-card">
-            <div class="verified-label">Approved loan amount</div>
-            <div class="verified-value">{fmt(loan_amount)}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        if "typed_loan_amount" not in st.session_state:
-            st.session_state.typed_loan_amount = 0.0
-        st.number_input(
-            "REQUIRED LOAN AMOUNT (LKR)",
-            min_value=0.0, step=10000.0, format="%.2f",
-            key="typed_loan_amount"
-        )
-        loan_amount = st.session_state.typed_loan_amount
-
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("\u2190 Back"):
-            st.session_state.step4_error = ""
-            st.session_state.typed_loan_amount = 0.0
-            st.session_state.step = 3
-            st.rerun()
-    with col2:
-        if st.button("Submit Application"):
-            st.session_state.step4_error = ""
-            entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
-            max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
-
-            if loan_product == "\u2014 Select a loan product \u2014" or not loan_product:
-                st.session_state.step4_error = "product"
-            elif band != "Medium Risk" and (entered_amount is None or entered_amount <= 0):
-                st.session_state.step4_error = "amount"
-            elif band != "Medium Risk" and entered_amount > max_eligible:
-                st.session_state.step4_error = "over"
-                st.session_state.suggested_amount = round(max_eligible, -3)
-            else:
-                st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = entered_amount
-                st.session_state.typed_loan_amount = 0.0
-                st.session_state.step = 5
-                st.rerun()
-
-    if st.session_state.step4_error == "product":
-        st.error("❌ Please select a loan product to continue.")
-    elif st.session_state.step4_error == "amount":
-        st.error("❌ Please enter a valid loan amount to continue.")
-    elif st.session_state.step4_error == "over":
-        suggested = st.session_state.suggested_amount
-        st.warning(f"⚠️ The amount you entered exceeds what you qualify for. The maximum we can offer you is **{fmt(suggested)}**.")
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("No thanks"):
-                start_over(); st.rerun()
-        with col2:
-            if st.button(f"Proceed with {fmt(suggested)}"):
-                st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = suggested
-                st.session_state.step4_error  = ""
-                st.session_state.step = 5
-                st.rerun()
-
-# ══════════════════════════════════════════════════════════════
-# STEP 5 — Final Confirmation Summary
-# ══════════════════════════════════════════════════════════════
-elif st.session_state.step == 5:
-    record = st.session_state.customer_record
-    dec    = st.session_state.decision
-
-    st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 5 of 5</div>
-        <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
-        line-height:1.2;margin-bottom:0.5rem">Application submitted</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Here is a summary of your loan request.</p>
-    </div>
-    <div class="verified-card">
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">NIC</div>
-            <div class="verified-value">{st.session_state.nic_value}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Loan Product</div>
-            <div class="verified-value">{st.session_state.loan_product}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Requested Amount</div>
-            <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Maximum Eligible Amount</div>
-            <div class="verified-value">{fmt(dec['max_eligible'])}</div>
-        </div>
-    </div>
-
-    <div class="verified-card">
-        <div class="verified-label" style="margin-bottom:10px">How your limit was calculated</div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Credit score</span>
-            <span class="breakdown-val">{int(dec['score'])} / 850</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Score position in band</span>
-            <span class="breakdown-val">{int(dec['score_ratio']*100)}%</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Salary multiplier applied</span>
-            <span class="breakdown-val">× {dec['adj_multiplier']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Max by salary</span>
-            <span class="breakdown-val">{fmt(dec['max_by_salary'])}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Age group ceiling ({dec['age_bucket']})</span>
-            <span class="breakdown-val">{fmt(dec['age_ceiling'])}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Employment adjustment ({dec['emp_segment']})</span>
-            <span class="breakdown-val">× {dec['emp_factor']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Overdue penalty</span>
-            <span class="breakdown-val">{dec['ood_penalty_label']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Cash flow penalty</span>
-            <span class="breakdown-val">{dec['net_penalty_label']}</span>
-        </div>
-        <div class="breakdown-row">
-            <span class="breakdown-key">Existing debt deducted</span>
-            <span class="breakdown-val">− {fmt(dec['capital_due'])}</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.success("✅ Your application has been received. A loan officer will be in touch within 2 business days.")
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
-    if st.button("← Start Over"):
-        start_over(); st.rerun()
-
-st.markdown(
-    '<p style="text-align:center;color:rgba(255,255,255,0.3);font-size:12px;margin-top:1rem">'
-    'Secured · Confidential · Instant results</p>',
-    unsafe_allow_html=True
+conn = pyodbc.connect(
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    "SERVER=localhost;"        # default instance
+    "DATABASE=LOAN_PORTFOLIO_DB;"
+    "Trusted_Connection=yes"   # use Windows Authentication
 )
+
+
+# In[3]:
+
+
+customer_df = pd.read_sql("SELECT * FROM CUSTOMER_DETAILS", conn)
+account_df = pd.read_sql("SELECT * FROM ACCOUNT_DETAILS", conn)
+transaction_df = pd.read_sql("SELECT * FROM TRANSACTION_DETAILS", conn)
+loan_cashflow_df = pd.read_sql("SELECT * FROM LOAN_CASHFLOW", conn)
+repayment_df = pd.read_sql("SELECT * FROM REPAYMENT", conn)
+
+
+# In[4]:
+
+
+customer_df['MARITAL_STATUS'].fillna('Unknown', inplace=True)
+customer_df['EMPLOYMENT_STATUS'].fillna('Unknown', inplace=True)
+customer_df['DISTRICT'].fillna('Unknown', inplace=True)
+customer_df['OCCUPATION'].fillna('Unknown', inplace=True)
+median_risk = customer_df['CUSTOMER_RISK'].median()
+customer_df['CUSTOMER_RISK'].fillna(median_risk, inplace=True)
+
+
+# In[5]:
+
+
+accts_numeric_cols = ['TERM', 'TERM_AMOUNT', 'OOD', 'MONTHEND_CONVERTED_BALANCE', 'CONVERTED_BALANCE',
+                'JUN_25','JUL_25','AUG_25','SEP_25','OCT_25','NOV_25']
+
+account_df[accts_numeric_cols] = account_df[accts_numeric_cols].fillna(0)
+
+account_df['ACCT_CLOSE_DATE'] = pd.to_datetime(account_df['ACCT_CLOSE_DATE'], errors='coerce')
+
+
+# In[6]:
+
+
+loan_numeric_cols = ['OOD', 'CAPITAL_TO_BE_PAIED', 'INTEREST_TO_BE_PAIED']
+loan_cashflow_df[loan_numeric_cols] = loan_cashflow_df[loan_numeric_cols].fillna(0)
+
+loan_cashflow_df['TO_BE_PAYMENT_DATE'] = pd.to_datetime(loan_cashflow_df['TO_BE_PAYMENT_DATE'], errors='coerce')
+
+
+# In[7]:
+
+
+repayment_numeric_cols = ['OOD', 'CAPITAL_PAIED']
+repayment_df[repayment_numeric_cols] = repayment_df[repayment_numeric_cols].fillna(0)
+
+
+# In[8]:
+
+
+# Rule 1 - Hard Eligibility & Regulatory Rules
+
+
+# In[9]:
+
+
+## Regulatory Age Check
+
+
+# In[10]:
+
+
+customer_df['Eligibility_Flag'] = 'ELIGIBLE'
+customer_df['Rejection_Reason'] = None
+
+
+# In[11]:
+
+
+customer_df.loc[
+    (customer_df['AGE'] < 18) | (customer_df['AGE'] > 80),
+    ['Eligibility_Flag', 'Rejection_Reason']
+] = ['REJECT', 'Regulatory Age Restriction']
+
+
+# In[12]:
+
+
+eligible_cus_df = customer_df.copy()
+
+
+# In[13]:
+
+
+## Account Eligibility Check
+
+
+# In[14]:
+
+
+active_accounts = account_df[
+    (account_df['ACCT_STATUS'] == 'ACTIVE') |
+    (account_df['ACCT_CLOSE_DATE'].isna())
+]
+
+active_account_count = (
+    active_accounts
+    .groupby('MASKED_ID')
+    .size()
+    .reset_index(name='Number_of_Active_Accounts')
+)
+
+
+# In[15]:
+
+
+eligible_cus_df = eligible_cus_df.merge(
+    active_account_count,
+    on='MASKED_ID',
+    how='left'
+)
+
+
+# In[16]:
+
+
+
+# if no accounts isnted of Nan use 0 
+eligible_cus_df['Number_of_Active_Accounts'] = (
+    eligible_cus_df['Number_of_Active_Accounts']
+    .fillna(0)
+    .astype(int)
+)
+
+
+# In[17]:
+
+
+# Step 1: Set ELSE condition (default)
+eligible_cus_df['Eligibility_Flag'] = 'ELIGIBLE'
+eligible_cus_df['Rejection_Reason'] = 'Existing Customer'
+
+# Step 2: Apply IF condition
+eligible_cus_df.loc[
+    eligible_cus_df['Number_of_Active_Accounts'] == 0,
+    ['Eligibility_Flag', 'Rejection_Reason']
+] = ['REJECT', 'Non-Existing Customer']
+
+
+# In[18]:
+
+
+## Employment Status Validation
+
+
+# In[19]:
+
+
+valid_employment_status = pd.read_sql(
+    "SELECT DISTINCT EMPLOYMENT_STATUS FROM CUSTOMER_DETAILS",
+    conn
+)['EMPLOYMENT_STATUS'].dropna().tolist()
+
+
+# In[20]:
+
+
+eligible_cus_df['Employment_Status_Flag'] = 'Valid Employment Status'
+
+eligible_cus_df.loc[
+    ~eligible_cus_df['EMPLOYMENT_STATUS'].isin(valid_employment_status),
+    'Employment_Status_Flag'
+] = 'Invalid Employment Status'
+
+
+# In[21]:
+
+
+# Rule 2 - Employment-Based Routing & Participation Rules
+
+
+# In[22]:
+
+
+## Routing & Participation 
+
+
+# In[23]:
+
+
+eligible_cus_df['Employment_Segment'] = 'Other'
+
+
+# In[24]:
+
+
+eligible_cus_df.loc[
+    (eligible_cus_df['EMPLOYMENT_STATUS'].isin(['EMPLOYED', 'SELF-EMPLOYED', 'BUSINESS'])) &
+    (eligible_cus_df['AGE'].between(18, 60)),
+    'Employment_Segment'
+] = 'Core Working Group'
+
+
+# In[25]:
+
+
+eligible_cus_df.loc[
+    (eligible_cus_df['EMPLOYMENT_STATUS'].isin(['UNEMPLOYED	', 'RETIRED', 'STUDENT', 'FREELANCE'])) &
+    (eligible_cus_df['AGE'].between(18, 65)),
+    'Employment_Segment'
+] = 'Special Segment'
+
+
+# In[26]:
+
+
+eligible_cus_df.loc[
+    (eligible_cus_df['EMPLOYMENT_STATUS'].isin([
+        'UNEMPLOYED', 'RETIRED', 'STUDENT', 'FREELANCE', 
+        'EMPLOYED', 'SELF-EMPLOYED', 'BUSINESS'
+    ])) &
+    (~eligible_cus_df['AGE'].between(18, 60)),  # not between 18 and 60
+    'Employment_Segment'
+] = 'Not valid segment'
+
+
+# In[27]:
+
+
+# Rule 3 - Age-Based Segments
+
+
+# In[28]:
+
+
+eligible_cus_df['Age_Bucket'] = pd.cut(
+    eligible_cus_df['AGE'],
+    bins=[17, 25, 40, 60, 80],
+    labels=['Young Adult', 'Adult', 'Middle-Aged', 'Senior']
+)
+
+
+# In[29]:
+
+
+# Rule 4 - Financial capacity
+
+
+# In[30]:
+
+
+balance_cols = ['JUN_25', 'JUL_25', 'AUG_25', 'SEP_25', 'OCT_25', 'NOV_25']
+
+
+# In[31]:
+
+
+account_df['Monthly_Avg_Balance'] = account_df[balance_cols].mean(axis=1)
+
+
+# In[32]:
+
+
+customer_balance_df = (
+    account_df
+    .groupby('MASKED_ID', as_index=False)['Monthly_Avg_Balance']
+    .mean()
+)
+
+
+# In[33]:
+
+
+eligible_cus_df = eligible_cus_df.merge(
+    customer_balance_df,
+    on='MASKED_ID',
+    how='left'
+)
+
+
+# In[34]:
+
+
+eligible_cus_df['Financial_Capacity'] = 'Unknown / Missing Balance Data'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Monthly_Avg_Balance'] >= 100000,
+    'Financial_Capacity'
+] = 'High Financial Capacity'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Monthly_Avg_Balance'].between(50000, 99999),
+    'Financial_Capacity'
+] = 'Medium Financial Capacity'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Monthly_Avg_Balance'] < 50000,
+    'Financial_Capacity'
+] = 'Low Financial Capacity'
+
+
+# In[35]:
+
+
+# Rule 6 - Salary Verification Check
+
+
+# In[36]:
+
+
+transaction_df['AMOUNT_LCY'] = pd.to_numeric(
+    transaction_df['AMOUNT_LCY'],
+    errors='coerce'
+)
+
+
+# In[37]:
+
+
+credit_df = transaction_df[
+    transaction_df['AMOUNT_LCY'] > 0
+].copy()
+
+
+# In[38]:
+
+
+credit_df['Month'] = pd.to_datetime(
+    credit_df['BOOKING_DATE']
+).dt.to_period('M')
+
+
+# In[39]:
+
+
+monthly_credit = (
+    credit_df
+    .groupby(['MASKED_ID', 'Month'], as_index=False)['AMOUNT_LCY']
+    .sum()
+)
+
+
+# In[40]:
+
+
+avg_monthly_income = (
+    monthly_credit
+    .groupby('MASKED_ID', as_index=False)['AMOUNT_LCY']
+    .mean()
+    .rename(columns={'AMOUNT_LCY': 'Avg_Monthly_Credit'})
+)
+
+
+# In[41]:
+
+
+eligible_cus_df['MASKED_ID'] = eligible_cus_df['MASKED_ID'].astype(str)
+
+
+# In[42]:
+
+
+avg_monthly_income['MASKED_ID'] = avg_monthly_income['MASKED_ID'].astype(str)
+
+
+# In[43]:
+
+
+eligible_cus_df = eligible_cus_df.merge(
+    avg_monthly_income,
+    on='MASKED_ID',
+    how='left'
+)
+
+
+# In[44]:
+
+
+mask = (
+    eligible_cus_df['Avg_Monthly_Credit'].isna() &
+    (eligible_cus_df['Monthly_Avg_Balance'] > 0)
+)
+
+eligible_cus_df.loc[mask, 'Avg_Monthly_Credit'] = (
+    eligible_cus_df.loc[mask, 'Monthly_Avg_Balance']
+)
+
+
+# In[45]:
+
+
+
+eligible_cus_df['Cluster_Name'] = 'Unknown / Missing Salary'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Avg_Monthly_Credit'] >= 100000,
+    'Cluster_Name'
+] = 'High Salary'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Avg_Monthly_Credit'].between(50000, 99999),
+    'Cluster_Name'
+] = 'Medium Salary'
+
+eligible_cus_df.loc[
+    eligible_cus_df['Avg_Monthly_Credit'] < 50000,
+    'Cluster_Name'  
+] = 'Low Salary'
+
+
+# In[46]:
+
+
+#Creating Credit scores
+
+
+# In[47]:
+
+
+
+# # Ensure AMOUNT_LCY is numeric
+
+# transaction_df["AMOUNT_LCY"] = pd.to_numeric(transaction_df["AMOUNT_LCY"], errors='coerce').fillna(0)
+
+
+# Create inflow, outflow, net, and absolute activity
+
+transaction_df["INFLOW"] = transaction_df["AMOUNT_LCY"].apply(lambda x: x if x > 0 else 0)
+transaction_df["OUTFLOW"] = transaction_df["AMOUNT_LCY"].apply(lambda x: abs(x) if x < 0 else 0)
+transaction_df["NET_AMOUNT"] = transaction_df["AMOUNT_LCY"]  # keeps signs
+transaction_df["ABS_ACTIVITY"] = transaction_df["AMOUNT_LCY"].abs()
+
+
+#  Aggregate per customer
+
+txn_features = transaction_df.groupby("MASKED_ID").agg({
+    "INFLOW": "sum",
+    "OUTFLOW": "sum",
+    "NET_AMOUNT": "sum",
+    "ABS_ACTIVITY": "sum",
+    "AMOUNT_LCY": ["mean", "std", "count"]  # original avg/std/count
+}).reset_index()
+
+
+# Flatten MultiIndex columns from aggregation
+
+txn_features.columns = [
+    "MASKED_ID",
+    "TOTAL_INFLOW",
+    "TOTAL_OUTFLOW",
+    "NET_TRANSACTION_SUM",
+    "ABS_ACTIVITY",
+    "AVG_TRANSACTION",
+    "STD_TRANSACTION",
+    "TXN_COUNT"
+]
+
+txn_features["INFLOW_RATIO"] = txn_features["TOTAL_INFLOW"] / (txn_features["ABS_ACTIVITY"] + 1)
+txn_features["OUTFLOW_RATIO"] = txn_features["TOTAL_OUTFLOW"] / (txn_features["ABS_ACTIVITY"] + 1)
+txn_features["NET_RATIO"] = txn_features["NET_TRANSACTION_SUM"] / (txn_features["ABS_ACTIVITY"] + 1)
+
+
+# Average transaction per day (assuming 30 days)
+txn_features["AVG_TXN_PER_DAY"] = txn_features["TXN_COUNT"] / 30
+
+# Transaction volatility: std relative to average
+txn_features["TRANSACTION_VOLATILITY"] = txn_features["STD_TRANSACTION"] / (txn_features["AVG_TRANSACTION"] + 1)
+
+
+# Average monthly inflow as income proxy
+txn_features["AVG_MONTHLY_INFLOW"] = txn_features["TOTAL_INFLOW"] / 12
+
+# Log-transformed average inflow for modeling stability
+txn_features["LOG_AVG_INFLOW"] = np.log1p(txn_features["AVG_MONTHLY_INFLOW"])
+
+
+# In[48]:
+
+
+
+# Fill missing values with 0
+
+num_cols = txn_features.select_dtypes(include=["float64", "int64"]).columns
+txn_features[num_cols] = txn_features[num_cols].fillna(0)
+
+
+# In[49]:
+
+
+# Ensure numeric columns in loan_cashflow
+loan_cashflow_df["CAPITAL_TO_BE_PAIED"] = pd.to_numeric(
+    loan_cashflow_df["CAPITAL_TO_BE_PAIED"].astype(str).str.replace(",", "").str.replace(" ", ""),
+    errors='coerce'
+).fillna(0)
+
+loan_cashflow_df["INTEREST_TO_BE_PAIED"] = pd.to_numeric(
+    loan_cashflow_df["INTEREST_TO_BE_PAIED"].astype(str).str.replace(",", "").str.replace(" ", ""),
+    errors='coerce'
+).fillna(0)
+
+loan_cashflow_df["TERM_AMOUNT"] = pd.to_numeric(
+    loan_cashflow_df["TERM_AMOUNT"].astype(str).str.replace(",", "").str.replace(" ", ""),
+    errors='coerce'
+).fillna(0)
+
+
+# Total scheduled per customer
+scheduled = loan_cashflow_df.groupby("MASKED_ID").agg(
+    TOTAL_CAPITAL_SCHEDULED=("CAPITAL_TO_BE_PAIED", "sum"),
+    TOTAL_INTEREST_SCHEDULED=("INTEREST_TO_BE_PAIED", "sum"),
+    TOTAL_AMOUNT_SCHEDULED=("TERM_AMOUNT", "sum")
+).reset_index()
+
+
+
+# Total actually paid from repayment table
+actually_paid = repayment_df.groupby("MASKED_ID").agg(
+    TOTAL_CAPITAL_PAID=("CAPITAL_PAIED", "sum"),
+    TOTAL_INTEREST_PAID=("INTEREST_PAIED", "sum")
+).reset_index()
+
+
+# Merge
+cash_features = scheduled.merge(actually_paid, on="MASKED_ID", how="left")
+
+# ── Fix: force all columns to numeric BEFORE doing subtraction ──
+cash_features["TOTAL_CAPITAL_PAID"]      = pd.to_numeric(cash_features["TOTAL_CAPITAL_PAID"],      errors='coerce').fillna(0)
+cash_features["TOTAL_INTEREST_PAID"]     = pd.to_numeric(cash_features["TOTAL_INTEREST_PAID"],     errors='coerce').fillna(0)
+cash_features["TOTAL_CAPITAL_SCHEDULED"] = pd.to_numeric(cash_features["TOTAL_CAPITAL_SCHEDULED"], errors='coerce').fillna(0)
+cash_features["TOTAL_INTEREST_SCHEDULED"]= pd.to_numeric(cash_features["TOTAL_INTEREST_SCHEDULED"],errors='coerce').fillna(0)
+cash_features["TOTAL_AMOUNT_SCHEDULED"]  = pd.to_numeric(cash_features["TOTAL_AMOUNT_SCHEDULED"],  errors='coerce').fillna(0)
+
+# Due = Scheduled - Already Paid
+cash_features["TOTAL_CAPITAL_DUE"]  = cash_features["TOTAL_CAPITAL_SCHEDULED"]  - cash_features["TOTAL_CAPITAL_PAID"]
+cash_features["TOTAL_INTEREST_DUE"] = cash_features["TOTAL_INTEREST_SCHEDULED"] - cash_features["TOTAL_INTEREST_PAID"]
+cash_features["AVG_PAYMENT_RATIO"]  = cash_features["TOTAL_CAPITAL_PAID"] / cash_features["TOTAL_AMOUNT_SCHEDULED"].replace(0, 1)
+
+# Keep only your original columns
+cash_features = cash_features[["MASKED_ID", "TOTAL_CAPITAL_DUE", "TOTAL_INTEREST_DUE", "AVG_PAYMENT_RATIO"]]
+cash_features = cash_features.fillna(0)
+
+# # Aggregate per customer
+# cash_features = loan_cashflow_df.groupby("MASKED_ID").agg({
+#     "CAPITAL_TO_BE_PAIED": "sum",
+#     "INTEREST_TO_BE_PAIED": "sum",
+#     "PAYMENT_RATIO": "mean"
+# }).reset_index()
+
+# Rename columns
+cash_features.columns = [
+    "MASKED_ID",
+    "TOTAL_CAPITAL_DUE",
+    "TOTAL_INTEREST_DUE",
+    "AVG_PAYMENT_RATIO"
+]
+
+# Fill missing values
+cash_features = cash_features.fillna(0)
+
+
+# In[50]:
+
+
+import numpy as np
+
+# Ensure numeric columns
+account_df["MONTHEND_CONVERTED_BALANCE"] = pd.to_numeric(account_df["MONTHEND_CONVERTED_BALANCE"], errors='coerce').fillna(0)
+account_df["CONVERTED_BALANCE"] = pd.to_numeric(account_df["CONVERTED_BALANCE"], errors='coerce').fillna(0)
+account_df["OOD"] = pd.to_numeric(account_df["OOD"], errors='coerce').fillna(0)
+
+# Calculate Utilization: ratio of loan balance / term amount
+# (if TERM_AMOUNT available, else skip or adjust)
+account_df["UTILIZATION"] = account_df["CONVERTED_BALANCE"] / account_df["TERM_AMOUNT"].replace(0, 1)
+
+# Calculate ACCOUNT_AGE_MONTHS
+# ----------------------------
+# Ensure date columns are datetime
+account_df["ORIG_CONTRACT_DATE"] = pd.to_datetime(account_df["ORIG_CONTRACT_DATE"], errors='coerce')
+account_df["ACCT_CLOSE_DATE"] = pd.to_datetime(account_df["ACCT_CLOSE_DATE"], errors='coerce')
+
+# Fix reference date for reproducibility (e.g., model training cutoff)
+reference_date = pd.to_datetime("2026-01-31")
+
+# Use ACCT_CLOSE_DATE if exists, else reference_date
+account_df["END_DATE"] = account_df["ACCT_CLOSE_DATE"].fillna(reference_date)
+
+# Calculate account age in months
+# account_df["ACCOUNT_AGE_MONTHS"] = ((account_df["END_DATE"] - account_df["ORIG_CONTRACT_DATE"]) / np.timedelta64(1, "M")).round(0)
+account_df["ACCOUNT_AGE_MONTHS"] = ((account_df["END_DATE"] - account_df["ORIG_CONTRACT_DATE"]) / np.timedelta64(1, "D") / 30).round(0)
+
+# Aggregate per customer if multiple accounts
+acc_features = account_df.groupby("MASKED_ID").agg({
+    "MONTHEND_CONVERTED_BALANCE": "mean",
+    "UTILIZATION": "mean",
+    # "OOD": "max",
+    "ACCOUNT_AGE_MONTHS": "mean"
+}).reset_index()
+
+# Fill missing numeric values
+acc_features = acc_features.fillna(0)
+
+
+# In[51]:
+
+
+repayment_df["OOD"] = pd.to_numeric(
+    repayment_df["OOD"],
+    errors="coerce"
+)
+
+
+# In[52]:
+
+
+re_numeric_cols = ["CAPITAL_PAIED", "INTEREST_PAIED"]
+
+for col in re_numeric_cols:
+    repayment_df[col] = pd.to_numeric(repayment_df[col], errors="coerce")  # convert strings to numbers
+    repayment_df[col].fillna(0, inplace=True)  # replace NaN with 0
+
+
+# In[53]:
+
+
+ood_features = repayment_df.groupby("MASKED_ID").agg({
+    "OOD": "max"
+}).reset_index()
+
+ood_features.rename(columns={"OOD": "MAX_OOD"}, inplace=True)
+
+
+# In[54]:
+
+
+payment_features = repayment_df.groupby("MASKED_ID").agg({
+    "CAPITAL_PAIED": "sum",
+    "INTEREST_PAIED": "sum"
+}).reset_index()
+
+payment_features["TOTAL_PAID"] = (
+    payment_features["CAPITAL_PAIED"] +
+    payment_features["INTEREST_PAIED"]
+)
+
+# import joblib
+
+# # eligible_cus_df is your cleaned DataFrame
+# import joblib
+# joblib.dump(eligible_cus_df, "eligible_customers.pkl", protocol=4)
+
+# In[55]:
+
+
+model_data = eligible_cus_df.copy()
+
+
+# In[56]:
+
+
+model_data = model_data.merge(txn_features, on="MASKED_ID", how="left")
+
+
+# In[57]:
+
+
+model_data = model_data.merge(cash_features, on="MASKED_ID", how="left")
+
+
+# In[58]:
+
+
+model_data = model_data.merge(acc_features, on="MASKED_ID", how="left")
+
+
+# In[59]:
+
+
+# Merge customer-level cash features with MAX_OOD
+model_data = model_data.merge(ood_features, on="MASKED_ID", how="left")
+
+# Fill missing MAX_OOD for customers with no loans
+model_data["MAX_OOD"] = model_data["MAX_OOD"].fillna(0)
+#
+
+
+# In[60]:
+
+
+model_data = model_data.merge(payment_features, on="MASKED_ID", how="left")
+
+# Fill missing MAX_OOD for customers with no loans
+model_data["TOTAL_PAID"] = model_data["TOTAL_PAID"].fillna(0)
+
+
+# In[61]:
+
+
+num_cols = model_data.select_dtypes(include=["float64", "int64"]).columns
+model_data[num_cols] = model_data[num_cols].fillna(0)
+
+
+# In[62]:
+
+
+# Identify categorical columns
+cat_cols = model_data.select_dtypes(include=["category", "object"]).columns
+
+
+# In[63]:
+
+
+
+for col in cat_cols:
+    if pd.api.types.is_categorical_dtype(model_data[col]):
+        # Add 'Unknown' to categories if not already present
+        if "Unknown" not in model_data[col].cat.categories:
+            model_data[col] = model_data[col].cat.add_categories("Unknown")
+    # Fill missing values
+    model_data[col] = model_data[col].fillna("Unknown")
+
+
+# In[64]:
+
+
+# Creating the default flag
+
+
+# In[65]:
+
+
+# Filter only credit accounts (LOAN ACCOUNT or BORROWINGS)
+loan_accounts = account_df[account_df["ACTIVE_PRODUCT"].isin(["LOAN ACCOUNT", "BORROWINGS"])]
+
+
+# In[66]:
+
+
+
+model_data["DEFAULT"] = model_data.apply(
+    lambda x: 1 if (x["MAX_OOD"] >= 60 or (x["TOTAL_CAPITAL_DUE"] > 0 and x["AVG_PAYMENT_RATIO"] < 0.6)) else 0,
+    axis=1
+)
+
+
+# In[67]:
+
+
+#Select features for credit scoring
+features = [
+    # Transaction behavior
+    "TOTAL_INFLOW", "TOTAL_OUTFLOW", "NET_TRANSACTION_SUM", "ABS_ACTIVITY",
+    "AVG_TRANSACTION", "STD_TRANSACTION", "TXN_COUNT",
+    "INFLOW_RATIO", "OUTFLOW_RATIO", "NET_RATIO",
+    "AVG_TXN_PER_DAY", "TRANSACTION_VOLATILITY",
+    "AVG_MONTHLY_INFLOW", "LOG_AVG_INFLOW",
+
+    # # Loan / credit exposure (exclude TOTAL_CAPITAL_DUE, AVG_PAYMENT_RATIO)
+    "TOTAL_INTEREST_DUE",
+
+    # Account-level / customer-level
+    "MONTHEND_CONVERTED_BALANCE", "UTILIZATION", "ACCOUNT_AGE_MONTHS"
+]
+
+# Demographic / profile features
+demographic_features = [
+    "AGE", "EMPLOYMENT_STATUS", "OCCUPATION", "GENDER", "MARITAL_STATUS", "DISTRICT"
+]
+
+# Combine features
+features = features + demographic_features
+
+
+# Convert categorical features
+# -------------------------------
+categorical_cols = ["EMPLOYMENT_STATUS", "OCCUPATION", "GENDER", "MARITAL_STATUS", "DISTRICT"]
+for col in categorical_cols:
+    model_data[col] = model_data[col].astype("category")
+
+
+# In[68]:
+
+
+X = model_data[features]
+y = model_data["DEFAULT"]
+
+
+# In[69]:
+
+
+#xgboost
+
+
+# In[70]:
+
+
+
+
+
+# In[71]:
+
+
+from xgboost import XGBClassifier
+
+# Encode categorical columns for full model
+X_full = X.copy()
+for col in categorical_cols:
+    X_full[col] = X_full[col].cat.codes
+
+# Train final model on all customers
+xgb_reg_full = XGBClassifier(
+    n_estimators=200,
+    max_depth=6,
+    scale_pos_weight=(len(y)-sum(y))/sum(y),
+    reg_alpha=5,
+    reg_lambda=5,
+    random_state=42,
+    use_label_encoder=False,
+    eval_metric='logloss'
+)
+
+xgb_reg_full.fit(X_full, y)
+
+
+# In[72]:
+
+
+# import joblib
+
+# # ----- SAVE THE MODEL -----
+# joblib.dump(xgb_reg_full, "credit_model.pkl", protocol=4)
+# print("Model saved as credit_model.pkl")
+
+
+# In[73]:
+
+
+# Predict credit scores (probability of default)
+model_data['default_probability'] = xgb_reg_full.predict_proba(X_full)[:, 1]
+
+
+# In[74]:
+
+
+y_proba = xgb_reg_full.predict_proba(X_full)[:,1]
+y_pred = xgb_reg_full.predict(X_full)
+
+
+# In[75]:
+
+
+results = pd.DataFrame({
+    'MASKED_ID': model_data['MASKED_ID'],
+    'Default_Probability': y_proba,
+    'Predicted_Default': y_pred
+})
+
+
+# In[76]:
+
+
+
+min_score = 300
+max_score = 850
+results['Internal_Bank_Score'] = max_score - (y_proba * (max_score - min_score))
+results['Internal_Bank_Default_Score'] = results['Internal_Bank_Score'].round().astype(int)
+
+
+# In[77]:
+
+
+bins = [300, 550, 650, 750, 850]
+labels = ["High Risk","Medium Risk","Low Risk","Very Low Risk"]
+
+results["Score_Band"] = pd.cut(
+    results["Internal_Bank_Default_Score"],
+    bins=bins,
+    labels=labels,
+    include_lowest=True
+)
+
+
+# In[78]:
+
+
+final_table = model_data.merge(results, on="MASKED_ID", how="left")
+
+
+# In[79]:
+
+
+## Model 6 K-Prototypes
+
+
+# In[80]:
+
+
+
+
+
+# In[81]:
+
+
+import pandas as pd
+from kmodes.kprototypes import KPrototypes
+
+
+# In[82]:
+
+
+from kmodes.kprototypes import KPrototypes
+import pandas as pd
+
+# Use a separate copy for final clustering
+eligible_final = final_table.copy()
+
+
+# In[83]:
+
+
+# Define features
+numeric_feats_final = ['Monthly_Avg_Balance', 'Avg_Monthly_Credit','AGE']
+categorical_feats_final = ['OCCUPATION','CUSTOMER_RISK_NAME','GENDER', 
+                           'EMPLOYMENT_STATUS', 'MARITAL_STATUS','TARGET_DESC','Score_Band']
+
+
+# In[84]:
+
+
+# Fill missing values
+eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
+for col in categorical_feats_final:
+    eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
+
+
+# In[85]:
+
+
+# Prepare cluster data
+cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
+# Weight Internal_Bank_Default_Score higher
+weight_factor = 5  # you can tune this
+cluster_data_final['Internal_Bank_Default_Score'] = eligible_final['Internal_Bank_Default_Score'] * weight_factor
+
+
+# In[86]:
+
+
+eligible_final[categorical_feats_final] = eligible_final[categorical_feats_final].fillna('Unknown').astype(str)
+
+
+# In[87]:
+
+
+
+cat_idx_final = [cluster_data_final.columns.get_loc(col) for col in categorical_feats_final]
+
+
+# In[88]:
+
+
+# Fit K-Prototypes with k = 4
+kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
+cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
+
+
+# # In[89]:
+
+
+# import joblib
+
+# # ----- SAVE THE CLUSTER MODEL -----
+# joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
+# print("K-Prototypes cluster model saved as kproto_cluster_model.pkl")
+
+
+# In[90]:
+
+
+# Assign cluster labels to dataframe
+eligible_final['Cluster_KProto'] = cluster_labels_final
+
+
+# In[91]:
+
+
+# Merging to the original df
+
+
+# In[92]:
+
+
+# Keep only MASKED_ID and NAME_MASKED_ID from customer_df
+customer_basic = customer_df[['MASKED_ID']].copy()
+
+# Drop duplicate MASKED_IDs in eligible_final first
+eligible_final = eligible_final.drop_duplicates(subset='MASKED_ID')
+
+# Perform left join on MASKED_ID
+customer_full_df = customer_basic.merge(
+    eligible_final,
+    on='MASKED_ID',
+    how='left'  # keeps all customers from customer_basic
+)
+
+
+import joblib
+
+joblib.dump(customer_full_df, "eligible_customers.pkl", protocol=4)
+print("eligible_customers.pkl saved successfully!")
+
+joblib.dump(xgb_reg_full, "credit_model.pkl", protocol=4)
+print("credit_model.pkl saved successfully!")
+
+joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
+print("kproto_cluster_model.pkl saved successfully!")
+

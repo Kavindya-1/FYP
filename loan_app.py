@@ -6,10 +6,126 @@ import time
 st.set_page_config(page_title="Loan Eligibility Portal", page_icon="🏦", layout="centered")
 
 # Load models
-xgb_model = joblib.load("credit_model.pkl")
-kproto_model = joblib.load("kproto_cluster_model.pkl")
+xgb_model       = joblib.load("credit_model.pkl")
+kproto_model     = joblib.load("kproto_cluster_model.pkl")
 eligible_customers = joblib.load("eligible_customers.pkl")
 
+# ══════════════════════════════════════════════════════════════
+# DECISION ENGINE
+# ══════════════════════════════════════════════════════════════
+
+AGE_CEILINGS = {
+    "Young Adult":   500_000,
+    "Adult":       2_000_000,
+    "Middle-Aged": 1_500_000,
+    "Senior":        750_000,
+}
+
+BAND_CONFIG = {
+    "Very Low Risk": {"base_multiplier": 36, "band_floor": 750, "band_ceiling": 850},
+    "Low Risk":      {"base_multiplier": 24, "band_floor": 650, "band_ceiling": 750},
+    "Medium Risk":   {"base_multiplier": 12, "band_floor": 550, "band_ceiling": 650},
+    "High Risk":     {"base_multiplier":  0, "band_floor": 300, "band_ceiling": 550},
+}
+
+EMPLOYMENT_FACTORS = {
+    "Core Working Group": 1.0,
+    "Special Segment":    0.8,
+    "Other":              0.6,
+    "Not valid segment":  0.6,
+}
+
+def compute_max_eligible(record):
+    """
+    Returns a dict with max_eligible and all the intermediate
+    values so the UI can explain the breakdown.
+    """
+    band          = str(record.get("Score_Band", "High Risk"))
+    score         = float(record.get("Internal_Bank_Default_Score", 300))
+    salary        = float(record.get("Avg_Monthly_Credit", 0))
+    age_bucket    = str(record.get("Age_Bucket", "Adult"))
+    emp_segment   = str(record.get("Employment_Segment", "Other"))
+    max_ood       = float(record.get("MAX_OOD", 0))
+    capital_due   = float(record.get("TOTAL_CAPITAL_DUE", 0))
+    net_ratio     = float(record.get("NET_RATIO", 0))
+
+    cfg           = BAND_CONFIG.get(band, BAND_CONFIG["High Risk"])
+    base_mult     = cfg["base_multiplier"]
+    band_floor    = cfg["band_floor"]
+    band_ceiling  = cfg["band_ceiling"]
+
+    # 1 — Score ratio within band (0.0 → 1.0)
+    score_ratio   = (score - band_floor) / max(band_ceiling - band_floor, 1)
+    score_ratio   = max(0.0, min(1.0, score_ratio))
+
+    # 2 — Adjusted multiplier
+    adj_mult      = base_mult * (0.85 + 0.30 * score_ratio)
+
+    # 3 — Max by salary
+    max_by_salary = salary * adj_mult
+
+    # 4 — Age ceiling
+    age_ceiling   = AGE_CEILINGS.get(age_bucket, 1_000_000)
+
+    # 5 — Raw max before adjustments
+    raw_max       = min(max_by_salary, age_ceiling)
+
+    # 6 — Employment factor
+    emp_factor    = EMPLOYMENT_FACTORS.get(emp_segment, 0.6)
+
+    # 7 — OOD penalty
+    if max_ood >= 60:
+        ood_penalty      = -1          # signals hard reject
+        ood_penalty_label = "Rejected (≥60 days overdue)"
+    elif max_ood >= 30:
+        ood_penalty      = 0.70
+        ood_penalty_label = "×0.70 (30–59 days overdue)"
+    else:
+        ood_penalty      = 1.0
+        ood_penalty_label = "No penalty"
+
+    # 8 — Net ratio penalty
+    if net_ratio < 0:
+        net_penalty       = 0.80
+        net_penalty_label = "×0.80 (spending > income)"
+    else:
+        net_penalty       = 1.0
+        net_penalty_label = "No penalty"
+
+    # 9 — Apply all factors
+    if ood_penalty == -1:
+        max_eligible = 0
+    else:
+        max_eligible = (raw_max * emp_factor * ood_penalty * net_penalty) - max(capital_due, 0)
+        max_eligible = max(0, max_eligible)
+
+    return {
+        "band":               band,
+        "score":              score,
+        "score_ratio":        round(score_ratio, 3),
+        "base_multiplier":    base_mult,
+        "adj_multiplier":     round(adj_mult, 2),
+        "salary":             salary,
+        "max_by_salary":      round(max_by_salary, 2),
+        "age_ceiling":        age_ceiling,
+        "age_bucket":         age_bucket,
+        "raw_max":            round(raw_max, 2),
+        "emp_segment":        emp_segment,
+        "emp_factor":         emp_factor,
+        "max_ood":            max_ood,
+        "ood_penalty":        ood_penalty,
+        "ood_penalty_label":  ood_penalty_label,
+        "net_ratio":          round(net_ratio, 3),
+        "net_penalty":        net_penalty,
+        "net_penalty_label":  net_penalty_label,
+        "capital_due":        capital_due,
+        "max_eligible":       round(max_eligible, 2),
+        "hard_ood_reject":    ood_penalty == -1,
+    }
+
+# ══════════════════════════════════════════════════════════════
+# CSS
+# ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap');
@@ -18,7 +134,6 @@ html, body, .stApp {
     background: linear-gradient(160deg, #1a5a9a 0%, #0C447C 40%, #042C53 100%) !important;
     font-family: 'DM Sans', sans-serif !important;
 }
-
 #MainMenu, footer, header {visibility: hidden;}
 .block-container {padding-top: 4rem !important; max-width: 480px !important;}
 
@@ -38,85 +153,54 @@ html, body, .stApp {
 }
 .stTextInput label, .stNumberInput label {
     color: rgba(255,255,255,0.6) !important;
-    letter-spacing: 2px;
-    font-size: 12px !important;
-    text-transform: uppercase;
+    letter-spacing: 2px; font-size: 12px !important; text-transform: uppercase;
 }
-
 .stButton > button {
-    background: white !important;
-    color: #042C53 !important;
-    border: none !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    padding: 14px !important;
-    width: 100% !important;
+    background: white !important; color: #042C53 !important;
+    border: none !important; border-radius: 10px !important;
+    font-weight: 600 !important; font-size: 15px !important;
+    padding: 14px !important; width: 100% !important;
     transition: opacity 0.2s !important;
 }
 .stButton > button:hover {opacity: 0.9 !important;}
-.stAlert,
-div[data-testid="stAlert"],
+.stAlert, div[data-testid="stAlert"],
 div[data-testid="stAlert"] > div,
 .element-container div[data-testid="stAlert"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 100% !important;
-    border-radius: 10px !important;
-    box-sizing: border-box !important;
-    display: block !important;
-    float: none !important;
+    width: 100% !important; max-width: 100% !important;
+    min-width: 100% !important; border-radius: 10px !important;
+    box-sizing: border-box !important; display: block !important; float: none !important;
 }
-.element-container {
-    width: 100% !important;
-}
-
+.element-container { width: 100% !important; }
 .step-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: rgba(255,255,255,0.6);
-    text-transform: uppercase;
-    margin-bottom: 1rem;
+    display: inline-block; background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+    padding: 4px 14px; font-size: 11px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 1rem;
 }
-
 .verified-card {
-    background: rgba(255,255,255,0.07);
-    border: 0.5px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1rem;
+    background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 1.2rem 1.5rem; margin-bottom: 1rem;
 }
-
 .verified-label {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: rgba(255,255,255,0.45);
-    text-transform: uppercase;
-    margin-bottom: 4px;
+    font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.45);
+    text-transform: uppercase; margin-bottom: 4px;
 }
-
-.verified-value {
-    font-size: 15px;
-    color: white;
-    font-weight: 500;
+.verified-value { font-size: 15px; color: white; font-weight: 500; }
+.breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 0.5px solid rgba(255,255,255,0.08);
+    font-size: 13px;
 }
-
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-key { color: rgba(255,255,255,0.55); }
+.breakdown-val { color: white; font-weight: 500; text-align: right; }
 .stSelectbox label {
-    color: rgba(255,255,255,0.6) !important;
-    letter-spacing: 2px;
-    font-size: 12px !important;
-    text-transform: uppercase;
+    color: rgba(255,255,255,0.6) !important; letter-spacing: 2px;
+    font-size: 12px !important; text-transform: uppercase;
 }
 .stSelectbox > div > div {
-    background: white !important;
-    border-radius: 10px !important;
-    color: #042C53 !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    background: white !important; border-radius: 10px !important;
+    color: #042C53 !important; border: 1px solid rgba(255,255,255,0.2) !important;
     font-size: 15px !important;
 }
 </style>
@@ -127,21 +211,26 @@ background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
 background:rgba(255,255,255,0.04);pointer-events:none;z-index:0"></div>
 """, unsafe_allow_html=True)
 
-# ── Session state initialisation ───────────────────────────────
-if "step" not in st.session_state:
-    st.session_state.step = 1
-if "customer_record" not in st.session_state:
-    st.session_state.customer_record = None
-if "nic_value" not in st.session_state:
-    st.session_state.nic_value = ""
-if "step2_error" not in st.session_state:
-    st.session_state.step2_error = ""
-if "step4_error" not in st.session_state:
-    st.session_state.step4_error = ""
-if "loan_amount" not in st.session_state:
-    st.session_state.loan_amount = None
-if "loan_product" not in st.session_state:
-    st.session_state.loan_product = ""
+# ══════════════════════════════════════════════════════════════
+# SESSION STATE
+# ══════════════════════════════════════════════════════════════
+defaults = {
+    "step": 1, "customer_record": None, "nic_value": "",
+    "step2_error": "", "step4_error": "",
+    "loan_amount": None, "loan_product": "",
+    "decision": None,   # stores compute_max_eligible result
+    "suggested_amount": None,
+}
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+def start_over():
+    for k in defaults:
+        st.session_state[k] = defaults[k]
+
+def fmt(n):
+    return f"LKR {n:,.0f}"
 
 # ══════════════════════════════════════════════════════════════
 # STEP 1 — NIC Entry
@@ -150,7 +239,7 @@ if st.session_state.step == 1:
     st.markdown("""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2.5rem 2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 1 of 4</div>
+        <div class="step-badge">Step 1 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:32px;color:white;
         line-height:1.2;margin-bottom:0.75rem">Check your loan eligibility</h1>
         <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0">
@@ -167,20 +256,17 @@ if st.session_state.step == 1:
         else:
             with st.spinner("Verifying your NIC..."):
                 time.sleep(2)
-
             matched = eligible_customers[eligible_customers['MASKED_LEGAL_ID'] == nic]
-
             if matched.empty:
                 st.error("❌ NIC number not found in our records. Please contact your nearest branch.")
             else:
-                customer_record = matched.iloc[0]
-
-                if customer_record['Eligibility_Flag'] == 'REJECT':
+                rec = matched.iloc[0]
+                if rec['Eligibility_Flag'] == 'REJECT':
                     st.error("❌ You are not eligible to apply for a loan at this time.")
-                elif int(customer_record.get('Number_of_Active_Accounts', 0)) == 0:
+                elif int(rec.get('Number_of_Active_Accounts', 0)) == 0:
                     st.error("❌ Sorry, we could not find any active accounts linked to your NIC. Please visit your nearest branch for assistance.")
                 else:
-                    st.session_state.customer_record = customer_record
+                    st.session_state.customer_record = rec
                     st.session_state.nic_value = nic
                     st.session_state.step = 2
                     st.rerun()
@@ -194,38 +280,23 @@ elif st.session_state.step == 2:
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 2 of 4</div>
+        <div class="step-badge">Step 2 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Verify your details</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
         Please confirm your personal details to continue.</p>
     </div>
-
     <div class="verified-card">
         <div class="verified-label">NIC Verified</div>
         <div class="verified-value">✅ &nbsp;{st.session_state.nic_value}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
-    age_input = st.number_input(
-        "YOUR AGE",
-        min_value=1,
-        max_value=120,
-        step=1,
-        value=None,
-        placeholder="Enter your age"
-    )
-
-    salary_input = st.number_input(
-        "AVERAGE MONTHLY SALARY (LKR)",
-        min_value=0.0,
-        step=1000.0,
-        format="%.2f",
-        value=None,
-        placeholder="e.g. 75000.00"
-    )
+    age_input    = st.number_input("YOUR AGE", min_value=1, max_value=120,
+                                    step=1, value=None, placeholder="Enter your age")
+    salary_input = st.number_input("AVERAGE MONTHLY SALARY (LKR)", min_value=0.0,
+                                    step=1000.0, format="%.2f", value=None,
+                                    placeholder="e.g. 75000.00")
 
     col1, col2 = st.columns([1, 1])
     with col1:
@@ -239,14 +310,12 @@ elif st.session_state.step == 2:
             if age_input is None or salary_input is None:
                 st.session_state.step2_error = "fill"
             else:
-                stored_age = int(record['AGE'])
-                if int(age_input) != stored_age:
+                if int(age_input) != int(record['AGE']):
                     st.session_state.step2_error = "age"
                 else:
                     stored_salary = float(record['Avg_Monthly_Credit'])
-                    tolerance     = 0.20
-                    lower         = stored_salary * (1 - tolerance)
-                    upper         = stored_salary * (1 + tolerance)
+                    lower = stored_salary * 0.80
+                    upper = stored_salary * 1.20
                     if not (lower <= float(salary_input) <= upper):
                         st.session_state.step2_error = "salary"
                     else:
@@ -254,7 +323,6 @@ elif st.session_state.step == 2:
                         st.session_state.step = 3
                         st.rerun()
 
-    # Render error OUTSIDE columns — full width
     if st.session_state.step2_error == "fill":
         st.error("Please fill in both your age and monthly salary.")
     elif st.session_state.step2_error == "age":
@@ -263,130 +331,162 @@ elif st.session_state.step == 2:
         st.error("❌ The salary you entered could not be verified against our records. Please ensure it reflects your true average monthly income.")
 
 # ══════════════════════════════════════════════════════════════
-# STEP 3 — Eligibility Result + Proceed to Loan Details
+# STEP 3 — Eligibility Check (Score Band + Decision Engine)
 # ══════════════════════════════════════════════════════════════
 elif st.session_state.step == 3:
-    record = st.session_state.customer_record
-    band   = record['Score_Band']
+    record  = st.session_state.customer_record
+    band    = str(record['Score_Band'])
+    dec     = compute_max_eligible(record)
+    st.session_state.decision = dec
 
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 3 of 4</div>
+        <div class="step-badge">Step 3 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Eligibility result</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
         Based on your verified profile.</p>
     </div>
-
     <div class="verified-card">
         <div class="verified-label">NIC</div>
         <div class="verified-value">{st.session_state.nic_value}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    if band in ["Very Low Risk", "Low Risk"]:
+    # ── Hard reject: High Risk or OOD ≥ 60
+    if band == "High Risk" or dec["hard_ood_reject"]:
+        st.error("❌ Unfortunately, your loan application cannot be approved at this time.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        if st.button("← Start Over"):
+            start_over(); st.rerun()
+
+    # ── Medium Risk: suggest conservative amount
+    elif band == "Medium Risk":
+        suggested = round(dec["max_eligible"] * 0.70, -3)   # 0.7 buffer, round to nearest 1000
+        suggested = max(suggested, 0)
+        st.session_state.suggested_amount = suggested
+        st.warning("⚠️ Based on your profile, you may qualify for a limited loan amount.")
+        st.markdown(f"""
+        <div class="verified-card" style="margin-top:1rem">
+            <div class="verified-label">Suggested loan amount</div>
+            <div class="verified-value" style="font-size:22px">{fmt(suggested)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:6px">
+            A loan officer will review and confirm your final offer.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("No thanks"):
+                start_over(); st.rerun()
+        with col2:
+            if st.button(f"Proceed →"):
+                st.session_state.loan_amount = suggested
+                st.session_state.step = 4
+                st.rerun()
+
+    # ── Low / Very Low Risk: full eligibility, proceed to loan selection
+    else:
         st.success("✅ You are eligible! Please proceed to select your loan product.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
             if st.button("← Start Over"):
-                st.session_state.step = 1
-                st.session_state.customer_record = None
-                st.session_state.nic_value = ""
-                st.rerun()
+                start_over(); st.rerun()
         with col2:
             if st.button("Continue →"):
                 st.session_state.step = 4
                 st.rerun()
-    elif band == "Medium Risk":
-        st.warning("⚠️ Your application is under review. A loan officer will contact you shortly.")
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-        if st.button("← Start Over"):
-            st.session_state.step = 1
-            st.session_state.customer_record = None
-            st.session_state.nic_value = ""
-            st.rerun()
-    else:
-        st.error("❌ Unfortunately, your loan application cannot be approved at this time.")
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-        if st.button("← Start Over"):
-            st.session_state.step = 1
-            st.session_state.customer_record = None
-            st.session_state.nic_value = ""
-            st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # STEP 4 — Loan Product & Amount
 # ══════════════════════════════════════════════════════════════
 elif st.session_state.step == 4:
+    record = st.session_state.customer_record
+    dec    = st.session_state.decision
+    band   = str(record['Score_Band'])
 
     LOAN_PRODUCTS = {
-        "🎓  Personal Education Loan": "Fund your own tuition, professional certifications, or short courses to advance your career.",
-        "🏥  Personal Medical Loan": "Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.",
-        "✈️  Personal Travel Loan": "Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",
-        "💍  Personal Wedding Loan": "Fund wedding expenses including venue, catering, and arrangements without straining your savings.",
+        "🎓  Personal Education Loan":        "Fund your own tuition, professional certifications, or short courses to advance your career.",
+        "🏥  Personal Medical Loan":          "Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.",
+        "✈️  Personal Travel Loan":           "Finance a dream holiday, family trip, or religious pilgrimage with easy monthly repayments.",
+        "💍  Personal Wedding Loan":          "Fund wedding expenses including venue, catering, and arrangements without straining your savings.",
         "🛋️  Personal Home Improvement Loan": "Renovate, furnish, or upgrade your home with a flexible personal loan.",
     }
 
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
-        <div class="step-badge">Step 4 of 4</div>
+        <div class="step-badge">Step 4 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Loan details</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
         Select a loan product and enter the amount you require.</p>
     </div>
-
     <div class="verified-card">
         <div class="verified-label">NIC Verified</div>
         <div class="verified-value">✅ &nbsp;{st.session_state.nic_value}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
     loan_product = st.selectbox(
         "LOAN PRODUCT",
         options=["— Select a loan product —"] + list(LOAN_PRODUCTS.keys()),
     )
-
-    # Show description card for selected product
     if loan_product and loan_product != "— Select a loan product —":
-        desc = LOAN_PRODUCTS[loan_product]
         st.markdown(f"""
         <div style="background:rgba(255,255,255,0.05);border-left:3px solid rgba(255,255,255,0.3);
         border-radius:8px;padding:0.9rem 1.1rem;margin:0.5rem 0 1rem 0">
-            <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;line-height:1.6">{desc}</p>
+            <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;line-height:1.6">
+            {LOAN_PRODUCTS[loan_product]}</p>
         </div>
         """, unsafe_allow_html=True)
 
-    loan_amount = st.number_input(
-        "REQUIRED LOAN AMOUNT (LKR)",
-        min_value=0.0,
-        step=10000.0,
-        format="%.2f",
-        value=None,
-        placeholder="e.g. 500000.00"
-    )
+    # For Medium Risk the amount is already fixed
+    if band == "Medium Risk":
+        loan_amount = st.session_state.suggested_amount
+        st.markdown(f"""
+        <div class="verified-card">
+            <div class="verified-label">Approved loan amount</div>
+            <div class="verified-value">{fmt(loan_amount)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        if "typed_loan_amount" not in st.session_state:
+            st.session_state.typed_loan_amount = 0.0
+        st.number_input(
+            "REQUIRED LOAN AMOUNT (LKR)",
+            min_value=0.0, step=10000.0, format="%.2f",
+            key="typed_loan_amount"
+        )
+        loan_amount = st.session_state.typed_loan_amount
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        if st.button("← Back"):
+        if st.button("\u2190 Back"):
             st.session_state.step4_error = ""
+            st.session_state.typed_loan_amount = 0.0
             st.session_state.step = 3
             st.rerun()
     with col2:
         if st.button("Submit Application"):
-            if loan_product == "— Select a loan product —" or not loan_product:
+            st.session_state.step4_error = ""
+            entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
+            max_eligible = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
+            st.write(f"DEBUG: entered={entered_amount}, max={max_eligible}, band={band}, product={loan_product}")
+
+            if loan_product == "\u2014 Select a loan product \u2014" or not loan_product:
                 st.session_state.step4_error = "product"
-            elif loan_amount is None or loan_amount <= 0:
+            elif band != "Medium Risk" and (entered_amount is None or entered_amount <= 0):
                 st.session_state.step4_error = "amount"
+            elif band != "Medium Risk" and entered_amount > max_eligible:
+                st.session_state.step4_error = "over"
+                st.session_state.suggested_amount = round(max_eligible, -3)
             else:
                 st.session_state.loan_product = loan_product
-                st.session_state.loan_amount  = loan_amount
-                st.session_state.step4_error  = ""
+                st.session_state.loan_amount  = entered_amount
+                st.session_state.typed_loan_amount = 0.0
                 st.session_state.step = 5
                 st.rerun()
 
@@ -394,23 +494,38 @@ elif st.session_state.step == 4:
         st.error("❌ Please select a loan product to continue.")
     elif st.session_state.step4_error == "amount":
         st.error("❌ Please enter a valid loan amount to continue.")
+    elif st.session_state.step4_error == "over":
+        suggested = st.session_state.suggested_amount
+        st.warning(f"⚠️ The amount you entered exceeds what you qualify for. The maximum we can offer you is **{fmt(suggested)}**.")
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("No thanks"):
+                start_over(); st.rerun()
+        with col2:
+            if st.button(f"Proceed with {fmt(suggested)}"):
+                st.session_state.loan_product = loan_product
+                st.session_state.loan_amount  = suggested
+                st.session_state.step4_error  = ""
+                st.session_state.step = 5
+                st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # STEP 5 — Final Confirmation Summary
 # ══════════════════════════════════════════════════════════════
 elif st.session_state.step == 5:
     record = st.session_state.customer_record
-    band   = record['Score_Band']
+    dec    = st.session_state.decision
 
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
+        <div class="step-badge">Step 5 of 5</div>
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Application submitted</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
         Here is a summary of your loan request.</p>
     </div>
-
     <div class="verified-card">
         <div style="margin-bottom:1rem">
             <div class="verified-label">NIC</div>
@@ -422,21 +537,60 @@ elif st.session_state.step == 5:
         </div>
         <div style="margin-bottom:1rem">
             <div class="verified-label">Requested Amount</div>
-            <div class="verified-value">LKR {st.session_state.loan_amount:,.2f}</div>
+            <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
+        </div>
+        <div style="margin-bottom:1rem">
+            <div class="verified-label">Maximum Eligible Amount</div>
+            <div class="verified-value">{fmt(dec['max_eligible'])}</div>
+        </div>
+    </div>
+
+    <div class="verified-card">
+        <div class="verified-label" style="margin-bottom:10px">How your limit was calculated</div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Credit score</span>
+            <span class="breakdown-val">{int(dec['score'])} / 850</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Score position in band</span>
+            <span class="breakdown-val">{int(dec['score_ratio']*100)}%</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Salary multiplier applied</span>
+            <span class="breakdown-val">× {dec['adj_multiplier']}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Max by salary</span>
+            <span class="breakdown-val">{fmt(dec['max_by_salary'])}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Age group ceiling ({dec['age_bucket']})</span>
+            <span class="breakdown-val">{fmt(dec['age_ceiling'])}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Employment adjustment ({dec['emp_segment']})</span>
+            <span class="breakdown-val">× {dec['emp_factor']}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Overdue penalty</span>
+            <span class="breakdown-val">{dec['ood_penalty_label']}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Cash flow penalty</span>
+            <span class="breakdown-val">{dec['net_penalty_label']}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Existing debt deducted</span>
+            <span class="breakdown-val">− {fmt(dec['capital_due'])}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     st.success("✅ Your application has been received. A loan officer will be in touch within 2 business days.")
-
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     if st.button("← Start Over"):
-        for key in ["step","customer_record","nic_value","step2_error",
-                    "step4_error","loan_amount","loan_product"]:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
+        start_over(); st.rerun()
 
 st.markdown(
     '<p style="text-align:center;color:rgba(255,255,255,0.3);font-size:12px;margin-top:1rem">'
