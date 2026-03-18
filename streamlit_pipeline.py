@@ -41,8 +41,31 @@ customer_df['MARITAL_STATUS'].fillna('Unknown', inplace=True)
 customer_df['EMPLOYMENT_STATUS'].fillna('Unknown', inplace=True)
 customer_df['DISTRICT'].fillna('Unknown', inplace=True)
 customer_df['OCCUPATION'].fillna('Unknown', inplace=True)
+
+# Step 1 — Calculate median risk number
 median_risk = customer_df['CUSTOMER_RISK'].median()
+
+# Step 2 — Fill missing CUSTOMER_RISK number with median
 customer_df['CUSTOMER_RISK'].fillna(median_risk, inplace=True)
+
+# Step 3 — Build the number → name mapping from existing data
+risk_map = (
+    customer_df[['CUSTOMER_RISK', 'CUSTOMER_RISK_NAME']]
+    .dropna()                        # only rows that have both values
+    .drop_duplicates()               # remove duplicates
+    .set_index('CUSTOMER_RISK')      # use number as the key
+    ['CUSTOMER_RISK_NAME']           # get the name column
+    .to_dict()                       # convert to dictionary
+)
+
+# Step 4 — Fill missing CUSTOMER_RISK_NAME using the mapping
+customer_df['CUSTOMER_RISK_NAME'] = customer_df.apply(
+    lambda row: risk_map.get(row['CUSTOMER_RISK'], 'Unknown')
+    if pd.isna(row['CUSTOMER_RISK_NAME'])
+    else row['CUSTOMER_RISK_NAME'],
+    axis=1
+)
+
 
 
 # In[5]:
