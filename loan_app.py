@@ -402,52 +402,14 @@ elif st.session_state.step == 3:
         st.success("✅ You are eligible! Please proceed to select your loan product.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-        # ── NEW: Eligibility amount breakdown card ──
+        # ── Eligibility amount card — amount only, no internal breakdown ──
         st.markdown(f"""
         <div class="verified-card" style="margin-top:0.5rem">
             <div class="verified-label">Maximum loan you are eligible for</div>
-            <div class="verified-value" style="font-size:28px;color:rgba(100,220,130,0.95);
-            font-weight:700;margin-bottom:4px">{fmt(dec['max_eligible'])}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:14px">
+            <div class="verified-value" style="font-size:32px;color:rgba(100,220,130,0.95);
+            font-weight:700;margin-bottom:6px">{fmt(dec['max_eligible'])}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4)">
             Based on your credit profile — you may request up to this amount in the next step.</div>
-            <div style="border-top:0.5px solid rgba(255,255,255,0.1);padding-top:12px">
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Credit score</span>
-                    <span class="breakdown-val">{int(dec['score'])} &nbsp;·&nbsp; {dec['band']}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Adjusted multiplier</span>
-                    <span class="breakdown-val">{dec['adj_multiplier']}×</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Monthly income used</span>
-                    <span class="breakdown-val">{fmt(dec['salary'])}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Max by salary</span>
-                    <span class="breakdown-val">{fmt(dec['max_by_salary'])}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Age group cap</span>
-                    <span class="breakdown-val">{dec['age_bucket']} &nbsp;·&nbsp; {fmt(dec['age_ceiling'])}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Employment factor</span>
-                    <span class="breakdown-val">{dec['emp_segment']} &nbsp;·&nbsp; ×{dec['emp_factor']}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Overdue penalty</span>
-                    <span class="breakdown-val">{dec['ood_penalty_label']}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Spending penalty</span>
-                    <span class="breakdown-val">{dec['net_penalty_label']}</span>
-                </div>
-                <div class="breakdown-row">
-                    <span class="breakdown-key">Existing debt deducted</span>
-                    <span class="breakdown-val">{fmt(dec['capital_due'])}</span>
-                </div>
-            </div>
         </div>
         """, unsafe_allow_html=True)
 
