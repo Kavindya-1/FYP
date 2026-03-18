@@ -7277,3 +7277,6 @@ Parameters: { "use_label_encoder" } are not used.
 
   bst.update(dtrain, iteration=i, fobj=obj)
 
+2026-03-18 23:34:31,151:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_16000\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
