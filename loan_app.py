@@ -36,6 +36,48 @@ EMPLOYMENT_FACTORS = {
     "Not valid segment":  0.6,
 }
 
+# ── Profile Scoring Tables ──────────────────────────────────
+
+# Customer Risk Score (max 30 points)
+CUSTOMER_RISK_SCORES = {
+    "Low":      30,
+    "Medium":   20,
+    "High":     10,
+    "Critical":  0,
+    "Unknown":  15,
+}
+
+# Target Description Score (max 30 points)
+TARGET_DESC_SCORES = {
+    "Summit":    30,
+    "Signature": 24,
+    "Premier":   18,
+    "Advantage": 12,
+    "Essential":  6,
+    "Unknown":   10,
+}
+
+# Financial Capacity Score (max 40 points)
+FINANCIAL_CAPACITY_SCORES = {
+    "High Financial Capacity":        40,
+    "Medium Financial Capacity":      25,
+    "Low Financial Capacity":         10,
+    "Unknown / Missing Balance Data": 15,
+}
+
+def profile_score_to_factor(total_score):
+    """Convert total profile score (0–100) to a loan multiplier factor."""
+    if total_score >= 80:
+        return 1.15    # Excellent
+    elif total_score >= 60:
+        return 1.05    # Good
+    elif total_score >= 40:
+        return 1.00    # Average
+    elif total_score >= 20:
+        return 0.90    # Below average
+    else:
+        return 0.80    # Poor
+
 def floor_to_nearest_1000(value):
     """Always round DOWN to the nearest 1,000 to ensure affordability."""
     return math.floor(value / 1000) * 1000
@@ -74,6 +116,18 @@ def compute_max_eligible(record):
     # 6 — Employment factor
     emp_factor    = EMPLOYMENT_FACTORS.get(emp_segment, 0.6)
 
+    # 6b — Profile scoring (CUSTOMER_RISK_NAME + TARGET_DESC + Financial_Capacity)
+    cust_risk     = str(record.get("CUSTOMER_RISK_NAME", "Unknown")).strip()
+    target_desc   = str(record.get("TARGET_DESC", "Unknown")).strip()
+    fin_capacity  = str(record.get("Financial_Capacity", "Unknown / Missing Balance Data")).strip()
+
+    risk_score    = CUSTOMER_RISK_SCORES.get(cust_risk, 15)
+    target_score  = TARGET_DESC_SCORES.get(target_desc, 10)
+    fin_score     = FINANCIAL_CAPACITY_SCORES.get(fin_capacity, 15)
+
+    profile_score  = risk_score + target_score + fin_score
+    profile_factor = profile_score_to_factor(profile_score)
+
     # 7 — OOD penalty
     if max_ood >= 60:
         ood_penalty       = -1
@@ -97,7 +151,13 @@ def compute_max_eligible(record):
     if ood_penalty == -1:
         max_eligible = 0
     else:
-        max_eligible = (raw_max * emp_factor * ood_penalty * net_penalty) - max(capital_due, 0)
+        max_eligible = (
+            raw_max
+            * emp_factor
+            * profile_factor
+            * ood_penalty
+            * net_penalty
+        ) - max(capital_due, 0)
         max_eligible = max(0, max_eligible)
 
     return {
@@ -113,6 +173,16 @@ def compute_max_eligible(record):
         "raw_max":            round(raw_max, 2),
         "emp_segment":        emp_segment,
         "emp_factor":         emp_factor,
+        # Profile scoring
+        "cust_risk":          cust_risk,
+        "target_desc":        target_desc,
+        "fin_capacity":       fin_capacity,
+        "risk_score":         risk_score,
+        "target_score":       target_score,
+        "fin_score":          fin_score,
+        "profile_score":      profile_score,
+        "profile_factor":     profile_factor,
+        # Penalties
         "max_ood":            max_ood,
         "ood_penalty":        ood_penalty,
         "ood_penalty_label":  ood_penalty_label,
@@ -373,7 +443,6 @@ elif st.session_state.step == 3:
 
     # ── Medium Risk: suggest conservative amount
     elif band == "Medium Risk":
-        # FIX: floor to nearest 1,000 (never round up) to guarantee amount stays within limits
         suggested = floor_to_nearest_1000(dec["max_eligible"] * 0.70)
         suggested = max(suggested, 0)
         st.session_state.suggested_amount = suggested
@@ -397,7 +466,7 @@ elif st.session_state.step == 3:
                 st.session_state.step = 4
                 st.rerun()
 
-    # ── Low / Very Low Risk: full eligibility — show breakdown then proceed
+    # ── Low / Very Low Risk: full eligibility
     else:
         st.success("✅ You are eligible! Please proceed to select your loan product.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -550,7 +619,7 @@ elif st.session_state.step == 4:
                 max_emi      = salary * 0.40
                 max_afford   = round(max_affordable_principal(rate, term_months, max_emi), 2)
 
-                # FIX: floor to nearest 1,000 — never round up — so suggested amount is always affordable
+                # FIX: floor to nearest 1,000 — never round up
                 true_max     = floor_to_nearest_1000(min(max_eligible, max_afford))
                 true_max     = max(true_max, 0)
 
@@ -564,7 +633,6 @@ elif st.session_state.step == 4:
                     }
                 elif band != "Medium Risk" and entered_amount > max_eligible:
                     st.session_state.step4_error      = "over"
-                    # FIX: floor instead of round for the "over" path too
                     st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
                 else:
                     _emi     = calc_emi(entered_amount, rate, term_months)
