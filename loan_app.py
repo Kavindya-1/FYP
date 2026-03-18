@@ -1,3 +1,4 @@
+import math
 import streamlit as st
 import joblib
 import pandas as pd
@@ -6,8 +7,8 @@ import time
 st.set_page_config(page_title="Loan Eligibility Portal", page_icon="🏦", layout="centered")
 
 # Load models
-xgb_model       = joblib.load("credit_model.pkl")
-kproto_model     = joblib.load("kproto_cluster_model.pkl")
+xgb_model          = joblib.load("credit_model.pkl")
+kproto_model       = joblib.load("kproto_cluster_model.pkl")
 eligible_customers = joblib.load("eligible_customers.pkl")
 
 # ══════════════════════════════════════════════════════════════
@@ -35,11 +36,11 @@ EMPLOYMENT_FACTORS = {
     "Not valid segment":  0.6,
 }
 
+def floor_to_nearest_1000(value):
+    """Always round DOWN to the nearest 1,000 to ensure affordability."""
+    return math.floor(value / 1000) * 1000
+
 def compute_max_eligible(record):
-    """
-    Returns a dict with max_eligible and all the intermediate
-    values so the UI can explain the breakdown.
-    """
     band          = str(record.get("Score_Band", "High Risk"))
     score         = float(record.get("Internal_Bank_Default_Score", 300))
     salary        = float(record.get("Avg_Monthly_Credit", 0))
@@ -75,13 +76,13 @@ def compute_max_eligible(record):
 
     # 7 — OOD penalty
     if max_ood >= 60:
-        ood_penalty      = -1          # signals hard reject
+        ood_penalty       = -1
         ood_penalty_label = "Rejected (≥60 days overdue)"
     elif max_ood >= 30:
-        ood_penalty      = 0.70
+        ood_penalty       = 0.70
         ood_penalty_label = "×0.70 (30–59 days overdue)"
     else:
-        ood_penalty      = 1.0
+        ood_penalty       = 1.0
         ood_penalty_label = "No penalty"
 
     # 8 — Net ratio penalty
@@ -218,7 +219,7 @@ defaults = {
     "step": 1, "customer_record": None, "nic_value": "",
     "step2_error": "", "step4_error": "",
     "loan_amount": None, "loan_product": "",
-    "decision": None,   # stores compute_max_eligible result
+    "decision": None,
     "loan_term":     None,
     "loan_rate":     None,
     "loan_emi":      None,
@@ -372,7 +373,8 @@ elif st.session_state.step == 3:
 
     # ── Medium Risk: suggest conservative amount
     elif band == "Medium Risk":
-        suggested = round(dec["max_eligible"] * 0.70, -3)   # 0.7 buffer, round to nearest 1000
+        # FIX: floor to nearest 1,000 (never round up) to guarantee amount stays within limits
+        suggested = floor_to_nearest_1000(dec["max_eligible"] * 0.70)
         suggested = max(suggested, 0)
         st.session_state.suggested_amount = suggested
         st.warning("⚠️ Based on your profile, you may qualify for a limited loan amount.")
@@ -390,14 +392,65 @@ elif st.session_state.step == 3:
             if st.button("No thanks"):
                 start_over(); st.rerun()
         with col2:
-            if st.button(f"Proceed →"):
+            if st.button("Proceed →"):
                 st.session_state.loan_amount = suggested
                 st.session_state.step = 4
                 st.rerun()
 
-    # ── Low / Very Low Risk: full eligibility, proceed to loan selection
+    # ── Low / Very Low Risk: full eligibility — show breakdown then proceed
     else:
         st.success("✅ You are eligible! Please proceed to select your loan product.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+        # ── NEW: Eligibility amount breakdown card ──
+        st.markdown(f"""
+        <div class="verified-card" style="margin-top:0.5rem">
+            <div class="verified-label">Maximum loan you are eligible for</div>
+            <div class="verified-value" style="font-size:28px;color:rgba(100,220,130,0.95);
+            font-weight:700;margin-bottom:4px">{fmt(dec['max_eligible'])}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:14px">
+            Based on your credit profile — you may request up to this amount in the next step.</div>
+            <div style="border-top:0.5px solid rgba(255,255,255,0.1);padding-top:12px">
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Credit score</span>
+                    <span class="breakdown-val">{int(dec['score'])} &nbsp;·&nbsp; {dec['band']}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Adjusted multiplier</span>
+                    <span class="breakdown-val">{dec['adj_multiplier']}×</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly income used</span>
+                    <span class="breakdown-val">{fmt(dec['salary'])}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Max by salary</span>
+                    <span class="breakdown-val">{fmt(dec['max_by_salary'])}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Age group cap</span>
+                    <span class="breakdown-val">{dec['age_bucket']} &nbsp;·&nbsp; {fmt(dec['age_ceiling'])}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Employment factor</span>
+                    <span class="breakdown-val">{dec['emp_segment']} &nbsp;·&nbsp; ×{dec['emp_factor']}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Overdue penalty</span>
+                    <span class="breakdown-val">{dec['ood_penalty_label']}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Spending penalty</span>
+                    <span class="breakdown-val">{dec['net_penalty_label']}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Existing debt deducted</span>
+                    <span class="breakdown-val">{fmt(dec['capital_due'])}</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -417,7 +470,6 @@ elif st.session_state.step == 4:
     band   = str(record['Score_Band'])
     salary = float(record.get('Avg_Monthly_Credit', 0))
 
-    # ── Product catalogue with rates ──
     LOAN_PRODUCTS = {
         "🎓  Personal Education Loan — 12% p.a.":        ("Fund your own tuition, professional certifications, or short courses to advance your career.",  12.0),
         "🏥  Personal Medical Loan — 10% p.a.":          ("Cover unexpected medical bills, surgeries, or treatments for yourself or an immediate family member.", 10.0),
@@ -470,7 +522,6 @@ elif st.session_state.step == 4:
         </div>
         """, unsafe_allow_html=True)
 
-    # For Medium Risk the amount is already fixed — only ask for term
     if band == "Medium Risk":
         loan_amount = st.session_state.suggested_amount
         st.markdown(f"""
@@ -493,7 +544,6 @@ elif st.session_state.step == 4:
         options=["— Select a term —"] + [f"{t} months" for t in TERM_OPTIONS],
     )
 
-    # Live EMI preview
     preview_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.get("suggested_amount", 0.0)
     if (selected_rate is not None and loan_term != "— Select a term —"
             and preview_amount and preview_amount > 0):
@@ -537,22 +587,23 @@ elif st.session_state.step == 4:
                 emi          = calc_emi(entered_amount, rate, term_months)
                 max_emi      = salary * 0.40
                 max_afford   = round(max_affordable_principal(rate, term_months, max_emi), 2)
-                true_max     = round(min(max_eligible, max_afford), -3)
+
+                # FIX: floor to nearest 1,000 — never round up — so suggested amount is always affordable
+                true_max     = floor_to_nearest_1000(min(max_eligible, max_afford))
                 true_max     = max(true_max, 0)
 
                 if emi > max_emi and entered_amount > max_afford:
-                    # EMI unaffordable
-                    st.session_state.step4_error    = "emi"
+                    st.session_state.step4_error      = "emi"
                     st.session_state.suggested_amount = true_max
-                    st.session_state.emi_details    = {
+                    st.session_state.emi_details      = {
                         "emi": emi, "max_emi": max_emi,
                         "max_afford": max_afford, "true_max": true_max,
                         "rate": rate, "term": term_months,
                     }
                 elif band != "Medium Risk" and entered_amount > max_eligible:
-                    # Score-based cap exceeded
-                    st.session_state.step4_error    = "over"
-                    st.session_state.suggested_amount = round(min(max_eligible, max_afford), -3)
+                    st.session_state.step4_error      = "over"
+                    # FIX: floor instead of round for the "over" path too
+                    st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
                 else:
                     _emi     = calc_emi(entered_amount, rate, term_months)
                     _totpay  = _emi * term_months
@@ -597,7 +648,6 @@ elif st.session_state.step == 4:
             )
         st.warning(f"⚠️ {msg}")
 
-        # ── Repayment breakdown preview ──
         if sug > 0 and rate > 0 and term_m > 0:
             monthly_capital = sug / term_m
             monthly_int     = sug_emi - monthly_capital
@@ -639,7 +689,7 @@ elif st.session_state.step == 4:
             if st.button("No thanks", key="warn_no"):
                 start_over(); st.rerun()
         with col2:
-            if st.button(f"Confirm & proceed →", key="warn_yes"):
+            if st.button("Confirm & proceed →", key="warn_yes"):
                 st.session_state.loan_product      = loan_product
                 st.session_state.loan_amount       = sug
                 st.session_state.loan_term         = term_m
