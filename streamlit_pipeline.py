@@ -236,7 +236,7 @@ eligible_cus_df.loc[
         'UNEMPLOYED', 'RETIRED', 'STUDENT', 'FREELANCE', 
         'EMPLOYED', 'SELF-EMPLOYED', 'BUSINESS'
     ])) &
-    (~eligible_cus_df['AGE'].between(18, 60)),  # not between 18 and 60
+    (~eligible_cus_df['AGE'].between(18, 65)),  # not between 18 and 60
     'Employment_Segment'
 ] = 'Not valid segment'
 
@@ -550,7 +550,7 @@ cash_features["TOTAL_AMOUNT_SCHEDULED"]  = pd.to_numeric(cash_features["TOTAL_AM
 # Due = Scheduled - Already Paid
 cash_features["TOTAL_CAPITAL_DUE"]  = cash_features["TOTAL_CAPITAL_SCHEDULED"]  - cash_features["TOTAL_CAPITAL_PAID"]
 cash_features["TOTAL_INTEREST_DUE"] = cash_features["TOTAL_INTEREST_SCHEDULED"] - cash_features["TOTAL_INTEREST_PAID"]
-cash_features["AVG_PAYMENT_RATIO"]  = cash_features["TOTAL_CAPITAL_PAID"] / cash_features["TOTAL_AMOUNT_SCHEDULED"].replace(0, 1)
+cash_features["AVG_PAYMENT_RATIO"]  = (cash_features["TOTAL_CAPITAL_PAID"]+cash_features["TOTAL_INTEREST_PAID"]) / cash_features["TOTAL_AMOUNT_SCHEDULED"].replace(0, 1)
 
 # Keep only your original columns
 cash_features = cash_features[["MASKED_ID", "TOTAL_CAPITAL_DUE", "TOTAL_INTEREST_DUE", "AVG_PAYMENT_RATIO"]]
