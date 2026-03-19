@@ -13,4 +13,5 @@ catboost
 imbalanced-learn
 scipy
 kmodes
-supabase
+supabase==2.3.4
+postgrest==0.16.1
