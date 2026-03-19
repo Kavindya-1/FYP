@@ -3,6 +3,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import time
+from db_utils import save_application
 
 st.set_page_config(page_title="Loan Eligibility Portal", page_icon="🏦", layout="centered")
 
@@ -36,9 +37,6 @@ EMPLOYMENT_FACTORS = {
     "Not valid segment":  0.6,
 }
 
-# ── Profile Scoring Tables ──────────────────────────────────
-
-# Customer Risk Score (max 30 points)
 CUSTOMER_RISK_SCORES = {
     "Low":      30,
     "Medium":   20,
@@ -47,7 +45,6 @@ CUSTOMER_RISK_SCORES = {
     "Unknown":  15,
 }
 
-# Target Description Score (max 30 points)
 TARGET_DESC_SCORES = {
     "Summit":    30,
     "Signature": 24,
@@ -57,7 +54,6 @@ TARGET_DESC_SCORES = {
     "Unknown":   10,
 }
 
-# Financial Capacity Score (max 40 points)
 FINANCIAL_CAPACITY_SCORES = {
     "High Financial Capacity":        40,
     "Medium Financial Capacity":      25,
@@ -66,20 +62,13 @@ FINANCIAL_CAPACITY_SCORES = {
 }
 
 def profile_score_to_factor(total_score):
-    """Convert total profile score (0–100) to a loan multiplier factor."""
-    if total_score >= 80:
-        return 1.15    # Excellent
-    elif total_score >= 60:
-        return 1.05    # Good
-    elif total_score >= 40:
-        return 1.00    # Average
-    elif total_score >= 20:
-        return 0.90    # Below average
-    else:
-        return 0.80    # Poor
+    if total_score >= 80:   return 1.15
+    elif total_score >= 60: return 1.05
+    elif total_score >= 40: return 1.00
+    elif total_score >= 20: return 0.90
+    else:                   return 0.80
 
 def floor_to_nearest_1000(value):
-    """Always round DOWN to the nearest 1,000 to ensure affordability."""
     return math.floor(value / 1000) * 1000
 
 def compute_max_eligible(record):
@@ -97,38 +86,23 @@ def compute_max_eligible(record):
     band_floor    = cfg["band_floor"]
     band_ceiling  = cfg["band_ceiling"]
 
-    # 1 — Score ratio within band (0.0 → 1.0)
     score_ratio   = (score - band_floor) / max(band_ceiling - band_floor, 1)
     score_ratio   = max(0.0, min(1.0, score_ratio))
-
-    # 2 — Adjusted multiplier
     adj_mult      = base_mult * (0.85 + 0.30 * score_ratio)
-
-    # 3 — Max by salary
     max_by_salary = salary * adj_mult
-
-    # 4 — Age ceiling
     age_ceiling   = AGE_CEILINGS.get(age_bucket, 1_000_000)
-
-    # 5 — Raw max before adjustments
     raw_max       = min(max_by_salary, age_ceiling)
-
-    # 6 — Employment factor
     emp_factor    = EMPLOYMENT_FACTORS.get(emp_segment, 0.6)
 
-    # 6b — Profile scoring (CUSTOMER_RISK_NAME + TARGET_DESC + Financial_Capacity)
     cust_risk     = str(record.get("CUSTOMER_RISK_NAME", "Unknown")).strip()
     target_desc   = str(record.get("TARGET_DESC", "Unknown")).strip()
     fin_capacity  = str(record.get("Financial_Capacity", "Unknown / Missing Balance Data")).strip()
-
     risk_score    = CUSTOMER_RISK_SCORES.get(cust_risk, 15)
     target_score  = TARGET_DESC_SCORES.get(target_desc, 10)
     fin_score     = FINANCIAL_CAPACITY_SCORES.get(fin_capacity, 15)
-
     profile_score  = risk_score + target_score + fin_score
     profile_factor = profile_score_to_factor(profile_score)
 
-    # 7 — OOD penalty
     if max_ood >= 60:
         ood_penalty       = -1
         ood_penalty_label = "Rejected (≥60 days overdue)"
@@ -139,7 +113,6 @@ def compute_max_eligible(record):
         ood_penalty       = 1.0
         ood_penalty_label = "No penalty"
 
-    # 8 — Net ratio penalty
     if net_ratio < 0:
         net_penalty       = 0.80
         net_penalty_label = "×0.80 (spending > income)"
@@ -147,16 +120,11 @@ def compute_max_eligible(record):
         net_penalty       = 1.0
         net_penalty_label = "No penalty"
 
-    # 9 — Apply all factors
     if ood_penalty == -1:
         max_eligible = 0
     else:
         max_eligible = (
-            raw_max
-            * emp_factor
-            * profile_factor
-            * ood_penalty
-            * net_penalty
+            raw_max * emp_factor * profile_factor * ood_penalty * net_penalty
         ) - max(capital_due, 0)
         max_eligible = max(0, max_eligible)
 
@@ -173,7 +141,6 @@ def compute_max_eligible(record):
         "raw_max":            round(raw_max, 2),
         "emp_segment":        emp_segment,
         "emp_factor":         emp_factor,
-        # Profile scoring
         "cust_risk":          cust_risk,
         "target_desc":        target_desc,
         "fin_capacity":       fin_capacity,
@@ -182,7 +149,6 @@ def compute_max_eligible(record):
         "fin_score":          fin_score,
         "profile_score":      profile_score,
         "profile_factor":     profile_factor,
-        # Penalties
         "max_ood":            max_ood,
         "ood_penalty":        ood_penalty,
         "ood_penalty_label":  ood_penalty_label,
@@ -207,16 +173,11 @@ html, body, .stApp {
 }
 #MainMenu, footer, header {visibility: hidden;}
 .block-container {padding-top: 4rem !important; max-width: 480px !important;}
-
 .stTextInput input, .stNumberInput input {
-    background: white !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    border-radius: 10px !important;
-    color: #042C53 !important;
-    -webkit-text-fill-color: #042C53 !important;
-    caret-color: #042C53 !important;
-    font-size: 15px !important;
-    padding: 14px !important;
+    background: white !important; border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 10px !important; color: #042C53 !important;
+    -webkit-text-fill-color: #042C53 !important; caret-color: #042C53 !important;
+    font-size: 15px !important; padding: 14px !important;
 }
 .stTextInput input::placeholder, .stNumberInput input::placeholder {
     color: rgba(4,44,83,0.4) !important;
@@ -275,7 +236,6 @@ div[data-testid="stAlert"] > div,
     font-size: 15px !important;
 }
 </style>
-
 <div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;
 background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
 <div style="position:fixed;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;
@@ -290,12 +250,8 @@ defaults = {
     "step2_error": "", "step4_error": "",
     "loan_amount": None, "loan_product": "",
     "decision": None,
-    "loan_term":     None,
-    "loan_rate":     None,
-    "loan_emi":      None,
-    "emi_details":   {},
-    "loan_total_int":  None,
-    "loan_total_pay":  None,
+    "loan_term": None, "loan_rate": None, "loan_emi": None,
+    "emi_details": {}, "loan_total_int": None, "loan_total_pay": None,
     "suggested_amount": None,
 }
 for k, v in defaults.items():
@@ -411,7 +367,7 @@ elif st.session_state.step == 2:
         st.error("❌ The salary you entered could not be verified against our records. Please ensure it reflects your true average monthly income.")
 
 # ══════════════════════════════════════════════════════════════
-# STEP 3 — Eligibility Check (Score Band + Decision Engine)
+# STEP 3 — Eligibility Check
 # ══════════════════════════════════════════════════════════════
 elif st.session_state.step == 3:
     record  = st.session_state.customer_record
@@ -434,14 +390,12 @@ elif st.session_state.step == 3:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Hard reject: High Risk or OOD ≥ 60
     if band == "High Risk" or dec["hard_ood_reject"]:
         st.error("❌ Unfortunately, your loan application cannot be approved at this time.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         if st.button("← Start Over"):
             start_over(); st.rerun()
 
-    # ── Medium Risk: suggest conservative amount
     elif band == "Medium Risk":
         suggested = floor_to_nearest_1000(dec["max_eligible"] * 0.70)
         suggested = max(suggested, 0)
@@ -466,12 +420,9 @@ elif st.session_state.step == 3:
                 st.session_state.step = 4
                 st.rerun()
 
-    # ── Low / Very Low Risk: full eligibility
     else:
         st.success("✅ You are eligible! Please proceed to select your loan product.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
-        # ── Eligibility amount card — amount only, no internal breakdown ──
         st.markdown(f"""
         <div class="verified-card" style="margin-top:0.5rem">
             <div class="verified-label">Maximum loan you are eligible for</div>
@@ -481,7 +432,6 @@ elif st.session_state.step == 3:
             Based on your credit profile — you may request up to this amount in the next step.</div>
         </div>
         """, unsafe_allow_html=True)
-
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -618,8 +568,6 @@ elif st.session_state.step == 4:
                 emi          = calc_emi(entered_amount, rate, term_months)
                 max_emi      = salary * 0.40
                 max_afford   = round(max_affordable_principal(rate, term_months, max_emi), 2)
-
-                # FIX: floor to nearest 1,000 — never round up
                 true_max     = floor_to_nearest_1000(min(max_eligible, max_afford))
                 true_max     = max(true_max, 0)
 
@@ -635,8 +583,27 @@ elif st.session_state.step == 4:
                     st.session_state.step4_error      = "over"
                     st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
                 else:
-                    _emi     = calc_emi(entered_amount, rate, term_months)
-                    _totpay  = _emi * term_months
+                    _emi    = calc_emi(entered_amount, rate, term_months)
+                    _totpay = _emi * term_months
+
+                    # ── Save to Supabase ──────────────────────────────
+                    save_result = save_application({
+                        "nic":             st.session_state.nic_value,
+                        "loan_product":    loan_product,
+                        "loan_amount":     entered_amount,
+                        "loan_term":       term_months,
+                        "loan_rate":       rate,
+                        "loan_emi":        round(_emi, 2),
+                        "total_interest":  round(_totpay - entered_amount, 2),
+                        "total_repayment": round(_totpay, 2),
+                        "score_band":      dec["band"],
+                        "profile_score":   dec["profile_score"],
+                    })
+                    if save_result is None:
+                        st.error("❌ Failed to save your application. Please try again.")
+                        st.stop()
+                    # ─────────────────────────────────────────────────
+
                     st.session_state.loan_product      = loan_product
                     st.session_state.loan_amount       = entered_amount
                     st.session_state.loan_term         = term_months
@@ -647,7 +614,6 @@ elif st.session_state.step == 4:
                     st.session_state.step = 5
                     st.rerun()
 
-    # ── Error / warning blocks ──
     if st.session_state.step4_error == "product":
         st.error("❌ Please select a loan product to continue.")
     elif st.session_state.step4_error == "term":
@@ -720,6 +686,27 @@ elif st.session_state.step == 4:
                 start_over(); st.rerun()
         with col2:
             if st.button("Confirm & proceed →", key="warn_yes"):
+                _emi2    = calc_emi(sug, rate, term_m)
+                _totpay2 = _emi2 * term_m
+
+                # ── Save to Supabase ──────────────────────────────
+                save_result = save_application({
+                    "nic":             st.session_state.nic_value,
+                    "loan_product":    loan_product,
+                    "loan_amount":     sug,
+                    "loan_term":       term_m,
+                    "loan_rate":       rate,
+                    "loan_emi":        round(_emi2, 2),
+                    "total_interest":  round(_totpay2 - sug, 2),
+                    "total_repayment": round(_totpay2, 2),
+                    "score_band":      dec["band"],
+                    "profile_score":   dec["profile_score"],
+                })
+                if save_result is None:
+                    st.error("❌ Failed to save your application. Please try again.")
+                    st.stop()
+                # ─────────────────────────────────────────────────
+
                 st.session_state.loan_product      = loan_product
                 st.session_state.loan_amount       = sug
                 st.session_state.loan_term         = term_m
@@ -767,10 +754,6 @@ elif st.session_state.step == 5:
         <div style="margin-bottom:1rem">
             <div class="verified-label">Interest Rate</div>
             <div class="verified-value">{st.session_state.loan_rate}% p.a.</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Loan Amount (Capital)</div>
-            <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
         </div>
         <div style="margin-bottom:1rem">
             <div class="verified-label">Total Interest Payable</div>
