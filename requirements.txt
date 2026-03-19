@@ -13,3 +13,4 @@ catboost
 imbalanced-learn
 scipy
 kmodes
+supabase
