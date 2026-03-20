@@ -1057,8 +1057,42 @@ print("kproto_cluster_model.pkl saved successfully!")
 joblib.dump(account_df, "account_df_full.pkl", protocol=4)
 print("account_df_full.pkl saved successfully!")
 
-joblib.dump(repayment_df, "repayment_df.pkl", protocol=4)
-print("repayment_df.pkl saved successfully!")
+# joblib.dump(repayment_df, "repayment_df.pkl", protocol=4)
+# print("repayment_df.pkl saved successfully!")
 
-joblib.dump(transaction_df, "transaction_df.pkl", protocol=4)
-print("transaction_df.pkl saved successfully!")
+# joblib.dump(transaction_df, "transaction_df.pkl", protocol=4)
+# print("transaction_df.pkl saved successfully!")
+
+
+
+import joblib
+import pandas as pd
+
+# Clean repayment columns
+repayment_df['CAPITAL_PAIED']  = pd.to_numeric(repayment_df['CAPITAL_PAIED'],  errors='coerce').fillna(0)
+repayment_df['INTEREST_PAIED'] = pd.to_numeric(repayment_df['INTEREST_PAIED'], errors='coerce').fillna(0)
+repayment_df['OOD']            = pd.to_numeric(repayment_df['OOD'],            errors='coerce').fillna(0)
+repayment_df['TERM_AMOUNT']    = pd.to_numeric(repayment_df['TERM_AMOUNT'],    errors='coerce').fillna(0)
+repayment_df['PAYMENT_DATE']   = pd.to_datetime(repayment_df['PAYMENT_DATE'],  errors='coerce')
+repayment_df['TOTAL_PAID']     = repayment_df['CAPITAL_PAIED'] + repayment_df['INTEREST_PAIED']
+
+joblib.dump(repayment_df, "repayment_history.pkl", protocol=4)
+print(f"✅ repayment_history.pkl saved — {len(repayment_df)} rows")
+
+import os
+size = os.path.getsize("repayment_history.pkl") / (1024*1024)
+
+
+
+import joblib
+import pandas as pd
+
+# Clean transaction columns
+transaction_df['AMOUNT_LCY']   = pd.to_numeric(transaction_df['AMOUNT_LCY'],    errors='coerce').fillna(0)
+transaction_df['BOOKING_DATE'] = pd.to_datetime(transaction_df['BOOKING_DATE'],  errors='coerce')
+
+joblib.dump(transaction_df, "transaction_history.pkl", protocol=4)
+print(f"✅ transaction_history.pkl saved — {len(transaction_df)} rows")
+
+import os
+size = os.path.getsize("transaction_history.pkl") / (1024*1024)
