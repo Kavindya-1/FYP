@@ -1054,3 +1054,11 @@ print("credit_model.pkl saved successfully!")
 joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
 print("kproto_cluster_model.pkl saved successfully!")
 
+joblib.dump(account_df, "account_df_full.pkl", protocol=4)
+print("account_df_full.pkl saved successfully!")
+
+joblib.dump(repayment_df, "repayment_df.pkl", protocol=4)
+print("repayment_df.pkl saved successfully!")
+
+joblib.dump(transaction_df, "transaction_df.pkl", protocol=4)
+print("transaction_df.pkl saved successfully!")
