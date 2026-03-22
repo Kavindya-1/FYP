@@ -146,16 +146,16 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     background: rgba(255,255,255,0.72);
     border: 0.5px solid rgba(30,64,175,0.18);
     border-radius: 14px;
-    padding: 1.4rem 1rem;
+    padding: 1.6rem 1rem;
     text-align: center;
     backdrop-filter: blur(10px);
     transition: border-color 0.2s, background 0.2s;
     box-shadow: 0 2px 16px rgba(30,64,175,0.07);
-    aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    min-height: 110px;
 }
 .metric-card:hover {
     border-color: rgba(30,64,175,0.4);
@@ -170,16 +170,19 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     font-weight: 700;
 }
 .metric-value {
-    font-size: 26px;
+    font-size: 20px;
     font-weight: 700;
     color: #1d4ed8;
     font-family: 'DM Mono', monospace;
     line-height: 1.2;
-    word-break: break-word;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 .metric-value-lg {
-    font-size: 26px !important;
+    font-size: 20px !important;
 }
 
 /* ── Info cards — equal height via flex ── */
