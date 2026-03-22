@@ -583,10 +583,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
             <td class="lbl" colspan="4" style="color:#b91c1c">Remaining Balance (Still Owed)</td>
             <td style="text-align:right;color:#b91c1c">{remaining_capital:,.2f}</td>
           </tr>
-          <tr class="sched">
-            <td class="lbl" colspan="4" style="color:#1e40af">Total Scheduled (All Payments + Outstanding)</td>
-            <td style="text-align:right;color:#1d4ed8">{total_scheduled:,.2f}</td>
-          </tr>
         </tfoot>
       </table>
     </div>
