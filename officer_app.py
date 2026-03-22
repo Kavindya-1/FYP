@@ -170,16 +170,16 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     font-weight: 700;
 }
 .metric-value {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 700;
     color: #1d4ed8;
     font-family: 'DM Mono', monospace;
-    line-height: 1.15;
+    line-height: 1.2;
     word-break: break-word;
     text-align: center;
 }
 .metric-value-lg {
-    font-size: 40px !important;
+    font-size: 26px !important;
 }
 
 /* ── Info cards — equal height via flex ── */
@@ -585,35 +585,35 @@ def show_customer_page(app):
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value metric-value-lg" style="color:{score_color}">{score_val}</div>
+            <div class="metric-value" style="color:{score_color}">{score_val}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
         cluster_raw = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Cluster</div>
-            <div class="metric-value" style="font-size:18px">{cluster_raw}</div>
+            <div class="metric-value">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Score Band</div>
-            <div class="metric-value" style="font-size:18px">{c.get('Score_Band', 'N/A')}</div>
+            <div class="metric-value">{c.get('Score_Band', 'N/A')}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
-            <div class="metric-value" style="font-size:18px">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
+            <div class="metric-value">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
         </div>""", unsafe_allow_html=True)
     with m5:
         ood_val   = int(float(c.get('MAX_OOD', 0)))
         ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
-            <div class="metric-value metric-value-lg" style="color:{ood_color}">{ood_val}</div>
+            <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
         </div>""", unsafe_allow_html=True)
     with m6:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Active Accounts</div>
-            <div class="metric-value metric-value-lg">{int(c.get('Number_of_Active_Accounts', 0))}</div>
+            <div class="metric-value">{int(c.get('Number_of_Active_Accounts', 0))}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
