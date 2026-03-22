@@ -509,14 +509,8 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     total_capital_paid   = acc_rep['CAPITAL_PAIED'].sum()
     total_interest_paid  = acc_rep['INTEREST_PAIED'].sum()
     total_paid           = acc_rep['TOTAL_PAID'].sum()
-
-    # Try to get original loan amount from account row for remaining calc
-    acc_balance = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
-    # Outstanding = current balance on account (positive = still owed)
-    # If not available, estimate as capital remaining
-    original_loan_est    = total_capital_paid + max(acc_balance, 0)
+    acc_balance          = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
     remaining_capital    = max(acc_balance, 0)
-    total_scheduled      = total_paid + remaining_capital  # paid so far + what's left
 
     # ── Summary stat cards ───────────────────────────────────
     s1, s2, s3, s4 = st.columns(4)
@@ -543,52 +537,70 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
-    # ── Styled table with totals row ─────────────────────────
+    # ── Build rows ───────────────────────────────────────────
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
 
-    # Build HTML table
     rows_html = ""
-    for _, row in display_df.iterrows():
-        rows_html += f"""
-        <tr>
-          <td>{row['PAYMENT_DATE']}</td>
-          <td style="text-align:right">{row['CAPITAL_PAIED']:,.2f}</td>
-          <td style="text-align:right">{row['INTEREST_PAIED']:,.2f}</td>
-          <td style="text-align:right;font-weight:700;color:#1d4ed8">{row['TOTAL_PAID']:,.2f}</td>
-        </tr>"""
+    for i, (_, row) in enumerate(display_df.iterrows()):
+        bg = "rgba(29,78,216,0.02)" if i % 2 == 0 else "rgba(255,255,255,0.6)"
+        rows_html += (
+            f'<tr style="background:{bg};border-bottom:0.5px solid rgba(29,78,216,0.08)">'
+            f'<td style="padding:10px 16px;color:#2d4a8a;font-family:DM Sans,sans-serif">{row["PAYMENT_DATE"]}</td>'
+            f'<td style="padding:10px 16px;text-align:right;color:#0c1a4e;font-family:DM Mono,monospace">{row["CAPITAL_PAIED"]:,.2f}</td>'
+            f'<td style="padding:10px 16px;text-align:right;color:#c2410c;font-family:DM Mono,monospace">{row["INTEREST_PAIED"]:,.2f}</td>'
+            f'<td style="padding:10px 16px;text-align:right;font-weight:700;color:#1d4ed8;font-family:DM Mono,monospace">{row["TOTAL_PAID"]:,.2f}</td>'
+            f'</tr>'
+        )
 
-    st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.68);border:0.5px solid rgba(30,64,175,0.15);
-                border-radius:14px;overflow:hidden;backdrop-filter:blur(10px);
-                box-shadow:0 2px 12px rgba(30,64,175,0.06)">
-      <table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:13px">
+    table_html = f"""
+    <!DOCTYPE html><html><head>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      body {{ margin:0; padding:0; background:transparent; }}
+      .wrap {{ background:rgba(255,255,255,0.75);border:0.5px solid rgba(29,78,216,0.18);
+               border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
+      table {{ width:100%;border-collapse:collapse; }}
+      thead tr {{ background:rgba(29,78,216,0.08); }}
+      th {{ padding:12px 16px;font-family:DM Sans,sans-serif;font-size:10px;letter-spacing:2px;
+            text-transform:uppercase;font-weight:700;color:#1e40af;border-bottom:1.5px solid rgba(29,78,216,0.18); }}
+      th:not(:first-child) {{ text-align:right; }}
+      tfoot tr.total {{ background:rgba(29,78,216,0.08);border-top:2px solid #f97316; }}
+      tfoot tr.owed  {{ background:rgba(220,38,38,0.05);border-top:0.5px solid rgba(220,38,38,0.2); }}
+      tfoot td {{ padding:11px 16px;font-family:DM Mono,monospace;font-weight:700;font-size:13px; }}
+      .lbl {{ font-family:DM Sans,sans-serif !important;color:#1e40af; }}
+    </style></head><body>
+    <div class="wrap">
+      <table>
         <thead>
-          <tr style="background:rgba(29,78,216,0.07);border-bottom:1.5px solid rgba(29,78,216,0.15)">
-            <th style="text-align:left;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Payment Date</th>
-            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Capital Paid (LKR)</th>
-            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Interest Paid (LKR)</th>
-            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Total Paid (LKR)</th>
+          <tr>
+            <th style="text-align:left">Payment Date</th>
+            <th>Capital Paid (LKR)</th>
+            <th>Interest Paid (LKR)</th>
+            <th>Total Paid (LKR)</th>
           </tr>
         </thead>
-        <tbody style="color:#0c1a4e">
-          {rows_html}
-        </tbody>
+        <tbody>{rows_html}</tbody>
         <tfoot>
-          <tr style="background:rgba(29,78,216,0.08);border-top:1.5px solid #f97316">
-            <td style="padding:12px 16px;font-weight:700;color:#1e40af;font-size:13px">TOTAL</td>
-            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#0c1a4e;font-family:'DM Mono',monospace">{total_capital_paid:,.2f}</td>
-            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#c2410c;font-family:'DM Mono',monospace">{total_interest_paid:,.2f}</td>
-            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#1d4ed8;font-family:'DM Mono',monospace">{total_paid:,.2f}</td>
+          <tr class="total">
+            <td class="lbl" style="font-size:11px;letter-spacing:2px;text-transform:uppercase">Total</td>
+            <td style="text-align:right;color:#0c1a4e">{total_capital_paid:,.2f}</td>
+            <td style="text-align:right;color:#c2410c">{total_interest_paid:,.2f}</td>
+            <td style="text-align:right;color:#1d4ed8">{total_paid:,.2f}</td>
           </tr>
-          <tr style="background:rgba(220,38,38,0.05);border-top:0.5px solid rgba(220,38,38,0.2)">
-            <td style="padding:10px 16px;font-weight:700;color:#b91c1c;font-size:12px" colspan="3">REMAINING BALANCE (STILL OWED)</td>
-            <td style="text-align:right;padding:10px 16px;font-weight:700;color:#b91c1c;font-family:'DM Mono',monospace">{remaining_capital:,.2f}</td>
+          <tr class="owed">
+            <td class="lbl" colspan="3" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#b91c1c">Remaining Balance (Still Owed)</td>
+            <td style="text-align:right;color:#b91c1c">{remaining_capital:,.2f}</td>
           </tr>
         </tfoot>
       </table>
     </div>
-    """, unsafe_allow_html=True)
+    </body></html>
+    """
+
+    import streamlit.components.v1 as components
+    table_height = min(80 + len(display_df) * 42 + 90, 800)
+    components.html(table_html, height=table_height, scrolling=True)
 
 
 # ══════════════════════════════════════════════════════════════
