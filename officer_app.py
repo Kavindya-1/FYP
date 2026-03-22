@@ -36,190 +36,339 @@ def format_date(d):
         return str(d)
 
 # ══════════════════════════════════════════════════════════════
-# CSS — Aurora Light Theme (Lavender / Blush / Periwinkle)
+# SVG Bank Building Illustration
+# ══════════════════════════════════════════════════════════════
+BANK_SVG = """
+<svg width="160" height="140" viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="buildGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e40af"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="signGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="160" height="140" rx="16" fill="url(#skyGrad)"/>
+
+  <!-- Main building body -->
+  <rect x="20" y="45" width="120" height="80" rx="2" fill="url(#buildGrad)"/>
+
+  <!-- Glass windows grid on building -->
+  <rect x="28" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="50" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="72" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="94" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="116" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+
+  <rect x="28" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="50" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="72" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="94" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+  <rect x="116" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
+
+  <!-- Pediment / roof triangle -->
+  <polygon points="10,45 80,12 150,45" fill="#1e3a8a"/>
+  <!-- Roof highlight -->
+  <polygon points="10,45 80,14 150,45 148,45 80,16 12,45" fill="#2563eb" opacity="0.4"/>
+
+  <!-- Cornice bar -->
+  <rect x="15" y="43" width="130" height="5" rx="1" fill="#1e3a8a"/>
+
+  <!-- BANK sign plate -->
+  <rect x="42" y="28" width="76" height="18" rx="3" fill="url(#signGrad)"/>
+  <text x="80" y="41" text-anchor="middle" font-family="Georgia, serif" font-weight="700"
+        font-size="13" fill="#7c2d12" letter-spacing="3">BANK</text>
+
+  <!-- Columns -->
+  <rect x="30" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
+  <rect x="53" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
+  <rect x="97" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
+  <rect x="120" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
+
+  <!-- Column caps -->
+  <rect x="28" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="51" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="95" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="118" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
+
+  <!-- Column bases -->
+  <rect x="27" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="50" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="94" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
+  <rect x="117" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
+
+  <!-- Door -->
+  <rect x="67" y="99" width="26" height="26" rx="2" fill="#1e3a8a"/>
+  <rect x="69" y="101" width="10" height="22" rx="1" fill="url(#glassGrad)"/>
+  <rect x="81" y="101" width="10" height="22" rx="1" fill="url(#glassGrad)"/>
+  <!-- Door handle -->
+  <circle cx="79" cy="113" r="1.5" fill="#fbbf24"/>
+  <circle cx="81" cy="113" r="1.5" fill="#fbbf24"/>
+
+  <!-- Base steps -->
+  <rect x="10" y="125" width="140" height="5" rx="1" fill="#1e3a8a" opacity="0.7"/>
+  <rect x="5"  y="130" width="150" height="5" rx="1" fill="#1e3a8a" opacity="0.5"/>
+  <rect x="0"  y="135" width="160" height="5" rx="0" fill="#1e3a8a" opacity="0.3"/>
+</svg>
+"""
+
+# ══════════════════════════════════════════════════════════════
+# CSS — Blue & Orange Analytics Theme
 # ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 html, body, .stApp {
-    background: linear-gradient(160deg, #c8d8f8 0%, #d8c8f0 35%, #f0c8e8 65%, #f8d0e0 100%) !important;
+    background: linear-gradient(150deg, #e8f0fe 0%, #dbeafe 30%, #eff6ff 60%, #fef3e8 85%, #fff7ed 100%) !important;
     font-family: 'DM Sans', sans-serif !important;
-    color: #2d1f4e !important;
+    color: #0f172a !important;
 }
 .block-container { padding: 2rem 3rem !important; max-width: 1400px !important; }
 section[data-testid="stSidebar"] { display: none; }
 
-h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #1e1340 !important; }
+h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !important; }
 
+/* ── Metric cards ── */
 .metric-card {
-    background: rgba(255,255,255,0.55);
-    border: 0.5px solid rgba(160,120,210,0.25);
+    background: rgba(255,255,255,0.72);
+    border: 0.5px solid rgba(30,64,175,0.18);
     border-radius: 14px;
     padding: 1.2rem 1.5rem;
     text-align: center;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
     transition: border-color 0.2s, background 0.2s;
-    box-shadow: 0 2px 16px rgba(160,100,220,0.08);
+    box-shadow: 0 2px 16px rgba(30,64,175,0.07);
 }
 .metric-card:hover {
-    border-color: rgba(160,120,210,0.5);
-    background: rgba(255,255,255,0.75);
+    border-color: rgba(30,64,175,0.4);
+    background: rgba(255,255,255,0.9);
 }
 .metric-label {
-    font-size: 11px;
-    color: rgba(100,70,160,0.7);
+    font-size: 10px;
+    color: #1e40af;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     margin-bottom: 6px;
+    font-weight: 600;
 }
 .metric-value {
     font-size: 30px;
-    font-weight: 600;
-    color: #2d1f4e;
+    font-weight: 700;
+    color: #0c1a4e;
     font-family: 'DM Mono', monospace;
 }
 
+/* ── Info cards — equal height via flex ── */
+.profile-row {
+    display: flex;
+    gap: 1.2rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+}
 .info-card {
-    background: rgba(255,255,255,0.5);
-    border: 0.5px solid rgba(160,120,210,0.2);
+    background: rgba(255,255,255,0.68);
+    border: 0.5px solid rgba(30,64,175,0.15);
     border-radius: 14px;
     padding: 1.4rem;
-    margin-bottom: 1rem;
-    height: 100%;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 12px rgba(160,100,220,0.06);
+    flex: 1;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(30,64,175,0.06);
+    min-height: 0;
 }
 .info-card-title {
     font-size: 10px;
-    color: #7c4dbb;
+    color: #1e40af;
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 1rem;
-    font-weight: 500;
+    font-weight: 600;
+    border-bottom: 1.5px solid #f97316;
+    padding-bottom: 6px;
 }
 .info-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 8px 0;
-    border-bottom: 0.5px solid rgba(160,120,210,0.12);
+    border-bottom: 0.5px solid rgba(30,64,175,0.08);
     font-size: 13px;
 }
 .info-row:last-child { border-bottom: none; }
-.info-key { color: rgba(60,40,100,0.55); }
+.info-key { color: #374151; font-weight: 400; }
 .info-val {
-    color: #2d1f4e;
-    font-weight: 500;
+    color: #0c1a4e;
+    font-weight: 600;
     font-family: 'DM Mono', monospace;
     font-size: 12px;
     text-align: right;
 }
 
-.badge-pending  { background:rgba(220,160,20,0.15); color:#8a5c00; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(220,160,20,0.4); }
-.badge-approved { background:rgba(80,180,120,0.15); color:#1a6640; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(80,180,120,0.4); }
-.badge-rejected { background:rgba(220,80,80,0.12);  color:#8a1a1a; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(220,80,80,0.35); }
+/* ── Badges ── */
+.badge-pending  { background:rgba(251,191,36,0.18); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(251,191,36,0.5); font-weight:600; }
+.badge-approved { background:rgba(34,197,94,0.14);  color:#14532d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(34,197,94,0.4);  font-weight:600; }
+.badge-rejected { background:rgba(239,68,68,0.12);  color:#7f1d1d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(239,68,68,0.35); font-weight:600; }
 
+/* ── Section headers ── */
 .section-header {
     font-size: 10px;
-    color: #7c4dbb;
+    color: #1e40af;
     text-transform: uppercase;
     letter-spacing: 3px;
-    font-weight: 500;
+    font-weight: 700;
     margin: 1.8rem 0 1rem 0;
     padding-bottom: 8px;
-    border-bottom: 0.5px solid rgba(160,120,210,0.25);
+    border-bottom: 1.5px solid #f97316;
+    display: inline-block;
+    width: 100%;
 }
 
+/* ── Buttons ── */
 .stButton > button {
-    background: rgba(255,255,255,0.6) !important;
-    color: #3a2070 !important;
-    border: 0.5px solid rgba(160,120,210,0.35) !important;
+    background: rgba(255,255,255,0.75) !important;
+    color: #1e3a8a !important;
+    border: 1px solid rgba(30,64,175,0.3) !important;
     border-radius: 10px !important;
     font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
     transition: all 0.2s !important;
     backdrop-filter: blur(4px) !important;
 }
 .stButton > button:hover {
-    background: rgba(160,120,210,0.15) !important;
-    border-color: rgba(130,80,200,0.55) !important;
-    color: #5a20b0 !important;
+    background: rgba(30,64,175,0.1) !important;
+    border-color: #1e40af !important;
+    color: #1e3a8a !important;
 }
 
+/* ── Expander ── */
 div[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.4) !important;
-    border: 0.5px solid rgba(160,120,210,0.2) !important;
+    background: rgba(255,255,255,0.55) !important;
+    border: 0.5px solid rgba(30,64,175,0.18) !important;
     border-radius: 12px !important;
-    backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(8px) !important;
 }
-div[data-testid="stExpander"] summary { color: #2d1f4e !important; }
-div[data-testid="stExpander"] summary:hover { color: #7c4dbb !important; }
+div[data-testid="stExpander"] summary { color: #0c1a4e !important; font-weight: 500 !important; }
+div[data-testid="stExpander"] summary:hover { color: #1e40af !important; }
 
+/* ── Form inputs ── */
 .stSelectbox > div > div {
-    background: rgba(255,255,255,0.6) !important;
-    border-color: rgba(160,120,210,0.3) !important;
-    color: #2d1f4e !important;
+    background: rgba(255,255,255,0.75) !important;
+    border-color: rgba(30,64,175,0.25) !important;
+    color: #0c1a4e !important;
     border-radius: 10px !important;
 }
 .stTextInput input, .stTextArea textarea {
-    background: rgba(255,255,255,0.6) !important;
-    border-color: rgba(160,120,210,0.3) !important;
-    color: #2d1f4e !important;
+    background: rgba(255,255,255,0.75) !important;
+    border-color: rgba(30,64,175,0.25) !important;
+    color: #0c1a4e !important;
     border-radius: 10px !important;
-    -webkit-text-fill-color: #2d1f4e !important;
-    caret-color: #2d1f4e !important;
+    -webkit-text-fill-color: #0c1a4e !important;
+    caret-color: #0c1a4e !important;
 }
 label {
-    color: rgba(60,40,120,0.65) !important;
+    color: #1e40af !important;
     font-size: 11px !important;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 600 !important;
 }
 
+/* ── Streamlit metrics ── */
 .stMetric {
-    background: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.65);
     border-radius: 12px;
     padding: 0.8rem;
-    border: 0.5px solid rgba(160,120,210,0.2);
+    border: 0.5px solid rgba(30,64,175,0.18);
 }
-[data-testid="stMetricValue"] { color: #2d1f4e !important; font-family: 'DM Mono', monospace !important; }
-[data-testid="stMetricLabel"] { color: rgba(100,70,160,0.7) !important; }
+[data-testid="stMetricValue"] { color: #0c1a4e !important; font-family: 'DM Mono', monospace !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] { color: #1e40af !important; font-weight: 600 !important; font-size: 11px !important; }
 
+/* ── App list cards ── */
 .app-card {
-    background: rgba(255,255,255,0.45);
-    border: 0.5px solid rgba(160,120,210,0.18);
+    background: rgba(255,255,255,0.62);
+    border: 0.5px solid rgba(30,64,175,0.14);
     border-radius: 12px;
     padding: 1rem 1.4rem;
     margin-bottom: 0.5rem;
     transition: border-color 0.2s, background 0.2s;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 1px 8px rgba(160,100,220,0.05);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 8px rgba(30,64,175,0.05);
 }
 .app-card:hover {
-    border-color: rgba(130,80,200,0.4);
-    background: rgba(255,255,255,0.65);
+    border-color: rgba(30,64,175,0.38);
+    background: rgba(255,255,255,0.85);
 }
 
-/* Decorative circles */
+/* ── Alert / info boxes ── */
+div[data-testid="stAlert"] { border-radius: 12px !important; }
+
+/* ── Decorative blobs ── */
 .deco { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
 
-/* Dataframe text */
-div[data-testid="stDataFrame"] { color: #2d1f4e !important; }
+/* ── Login card ── */
+.login-card {
+    background: rgba(255,255,255,0.72);
+    border: 0.5px solid rgba(30,64,175,0.15);
+    border-radius: 20px;
+    padding: 3rem 2.5rem 2.5rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 40px rgba(30,64,175,0.1);
+    text-align: center;
+}
+.login-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: #0c1a4e;
+    margin: 1.2rem 0 0.4rem;
+}
+.login-sub {
+    color: #374151;
+    font-size: 14px;
+    margin-bottom: 1.8rem;
+}
 
-/* Alert/info boxes */
-div[data-testid="stAlert"] { border-radius: 12px !important; }
+/* ── Orange accent bar ── */
+.orange-accent { width: 40px; height: 3px; background: #f97316; border-radius: 2px; margin: 0.5rem auto 1.2rem; }
 </style>
 
-<div class="deco" style="top:-150px;right:-150px;width:550px;height:550px;background:radial-gradient(circle,rgba(200,180,255,0.25) 0%,transparent 70%)"></div>
-<div class="deco" style="bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,180,220,0.2) 0%,transparent 70%)"></div>
-<div class="deco" style="top:40%;left:50%;width:300px;height:300px;background:radial-gradient(circle,rgba(180,210,255,0.15) 0%,transparent 70%)"></div>
+<!-- Decorative gradient blobs -->
+<div class="deco" style="top:-140px;right:-140px;width:520px;height:520px;background:radial-gradient(circle,rgba(147,197,253,0.3) 0%,transparent 70%)"></div>
+<div class="deco" style="bottom:-100px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(249,115,22,0.15) 0%,transparent 70%)"></div>
+<div class="deco" style="top:50%;left:55%;width:280px;height:280px;background:radial-gradient(circle,rgba(59,130,246,0.1) 0%,transparent 70%)"></div>
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # SESSION STATE
 # ══════════════════════════════════════════════════════════════
-if "officer_name"   not in st.session_state: st.session_state.officer_name   = ""
-if "selected_app"   not in st.session_state: st.session_state.selected_app   = None
+if "officer_name"    not in st.session_state: st.session_state.officer_name    = ""
+if "selected_app"    not in st.session_state: st.session_state.selected_app    = None
 if "loan_detail_acc" not in st.session_state: st.session_state.loan_detail_acc = None
+
+# ══════════════════════════════════════════════════════════════
+# PLOTLY THEME — Blue / Orange
+# ══════════════════════════════════════════════════════════════
+PLOT_BG   = 'rgba(0,0,0,0)'
+GRID_COL  = 'rgba(30,64,175,0.1)'
+FONT_COL  = '#374151'
+LINE_A    = '#1d4ed8'   # blue
+LINE_B    = '#f97316'   # orange
+LINE_C    = '#60a5fa'   # light blue
+FILL_A    = 'rgba(29,78,216,0.08)'
+FILL_B    = 'rgba(249,115,22,0.08)'
+LEGEND_BG = 'rgba(255,255,255,0.65)'
+LEGEND_BD = 'rgba(30,64,175,0.2)'
 
 # ══════════════════════════════════════════════════════════════
 # LOGIN
@@ -227,32 +376,20 @@ if "loan_detail_acc" not in st.session_state: st.session_state.loan_detail_acc =
 if not st.session_state.officer_name:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        st.markdown("""
-        <div style='text-align:center;padding:5rem 0 2rem'>
-            <div style='font-size:52px;margin-bottom:1.2rem'>🏦</div>
-            <h1 style='font-size:26px;margin-bottom:0.5rem;color:#1e1340'>Officer Portal</h1>
-            <p style='color:rgba(60,40,120,0.5);font-size:14px'>Internal loan management system</p>
+        st.markdown(f"""
+        <div class="login-card">
+            <div style="display:flex;justify-content:center">{BANK_SVG}</div>
+            <div class="orange-accent"></div>
+            <div class="login-title">Officer Portal</div>
+            <div class="login-sub">Internal loan management system</div>
         </div>
         """, unsafe_allow_html=True)
+        st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
         name = st.text_input("Officer name", placeholder="Enter your full name")
         if st.button("Sign in →", use_container_width=True) and name.strip():
             st.session_state.officer_name = name.strip()
             st.rerun()
     st.stop()
-
-# ══════════════════════════════════════════════════════════════
-# PLOTLY THEME HELPER — light aurora palette
-# ══════════════════════════════════════════════════════════════
-PLOT_BG   = 'rgba(0,0,0,0)'
-GRID_COL  = 'rgba(160,120,210,0.12)'
-FONT_COL  = 'rgba(45,31,78,0.65)'
-LINE_A    = '#8b5cf6'   # violet
-LINE_B    = '#ec4899'   # pink
-LINE_C    = '#6366f1'   # indigo
-FILL_A    = 'rgba(139,92,246,0.08)'
-FILL_B    = 'rgba(236,72,153,0.08)'
-LEGEND_BG = 'rgba(255,255,255,0.5)'
-LEGEND_BD = 'rgba(160,120,210,0.25)'
 
 # ══════════════════════════════════════════════════════════════
 # LOAN REPAYMENT DETAIL PAGE
@@ -268,11 +405,11 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     st.markdown(f"""
     <div style='margin:1rem 0 2rem'>
-        <div style='font-size:10px;color:#7c4dbb;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
+        <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;font-weight:700'>
             Loan Repayment Detail
         </div>
-        <h1 style='font-size:26px;margin:0;color:#1e1340'>{product}</h1>
-        <p style='color:rgba(60,40,120,0.5);font-size:13px;margin-top:4px'>
+        <h1 style='font-size:26px;margin:0;color:#0c1a4e'>{product}</h1>
+        <p style='color:#374151;font-size:13px;margin-top:4px'>
             Opened: {opened} &nbsp;·&nbsp; Term: {term}
         </p>
     </div>
@@ -304,12 +441,12 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     with m2:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Total Interest Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#ec4899">{fmt(acc_rep['INTEREST_PAIED'].sum())}</div>
+            <div class="metric-value" style="font-size:20px;color:#f97316">{fmt(acc_rep['INTEREST_PAIED'].sum())}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Total Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#8b5cf6">{fmt(acc_rep['TOTAL_PAID'].sum())}</div>
+            <div class="metric-value" style="font-size:20px;color:#1d4ed8">{fmt(acc_rep['TOTAL_PAID'].sum())}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
         st.markdown(f"""<div class="metric-card">
@@ -337,9 +474,9 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
         font=dict(color=FONT_COL, family='DM Sans'),
         height=350, margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(gridcolor=GRID_COL, title='Payment Date'),
-        yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)'),
-        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
+        xaxis=dict(gridcolor=GRID_COL, title='Payment Date', color=FONT_COL),
+        yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)', color=FONT_COL),
+        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#0c1a4e'))
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -368,9 +505,9 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
         font=dict(color=FONT_COL, family='DM Sans'),
         height=300, margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(gridcolor=GRID_COL),
-        yaxis=dict(gridcolor=GRID_COL, title='Cumulative Amount (LKR)'),
-        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
+        xaxis=dict(gridcolor=GRID_COL, color=FONT_COL),
+        yaxis=dict(gridcolor=GRID_COL, title='Cumulative Amount (LKR)', color=FONT_COL),
+        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#0c1a4e'))
     )
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -410,10 +547,12 @@ def show_customer_page(app):
 
     st.markdown(f"""
     <div style='margin:1rem 0 2rem'>
-        <div style='font-size:10px;color:#7c4dbb;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
+        <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;
+                    margin-bottom:8px;font-weight:700'>
             Application #{app['id']} &nbsp;·&nbsp; {badge}
         </div>
-        <h1 style='font-size:28px;margin:0;color:#1e1340'>Customer Profile</h1>
+        <h1 style='font-size:28px;margin:0;color:#0c1a4e'>Customer Profile</h1>
+        <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-top:8px'></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -428,12 +567,14 @@ def show_customer_page(app):
     cust_repayments   = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
     cust_transactions = transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
 
+    # ── Top metric cards ─────────────────────────────────────
     m1, m2, m3, m4, m5 = st.columns(5)
     with m1:
-        score_color = "#5a20b0" if float(c.get('Internal_Bank_Default_Score', 0)) >= 650 else "#c0392b"
+        score_val   = int(float(c.get('Internal_Bank_Default_Score', 0)))
+        score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value" style="color:{score_color}">{int(float(c.get('Internal_Bank_Default_Score', 0)))}</div>
+            <div class="metric-value" style="color:{score_color}">{score_val}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
         st.markdown(f"""<div class="metric-card">
@@ -447,7 +588,7 @@ def show_customer_page(app):
         </div>""", unsafe_allow_html=True)
     with m4:
         ood_val   = int(float(c.get('MAX_OOD', 0)))
-        ood_color = "#c0392b" if ood_val >= 30 else "#5a20b0"
+        ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
             <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
@@ -460,46 +601,56 @@ def show_customer_page(app):
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    # ══ THREE INFO CARDS — equal height via flex row ══════════
+    # Personal has 8 rows, Risk has 7 rows, Application has 9 rows
+    # We force all three to the same row count with a spacer row in Risk card
+    st.markdown(f"""
+    <div class="profile-row">
 
-    with col1:
-        st.markdown('<div class="section-header">Personal Information</div>', unsafe_allow_html=True)
-        st.markdown(f"""<div class="info-card">
-            <div class="info-row"><span class="info-key">NIC</span><span class="info-val">{nic}</span></div>
-            <div class="info-row"><span class="info-key">Age</span><span class="info-val">{int(c.get('AGE', 0))}</span></div>
-            <div class="info-row"><span class="info-key">Gender</span><span class="info-val">{str(c.get('GENDER', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Marital status</span><span class="info-val">{str(c.get('MARITAL_STATUS', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Occupation</span><span class="info-val">{str(c.get('OCCUPATION', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Employment</span><span class="info-val">{str(c.get('EMPLOYMENT_STATUS', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
-        </div>""", unsafe_allow_html=True)
+      <!-- PERSONAL INFORMATION -->
+      <div class="info-card">
+        <div class="info-card-title">Personal Information</div>
+        <div class="info-row"><span class="info-key">NIC</span><span class="info-val">{nic}</span></div>
+        <div class="info-row"><span class="info-key">Age</span><span class="info-val">{int(c.get('AGE', 0))}</span></div>
+        <div class="info-row"><span class="info-key">Gender</span><span class="info-val">{str(c.get('GENDER', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">Marital status</span><span class="info-val">{str(c.get('MARITAL_STATUS', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">Occupation</span><span class="info-val">{str(c.get('OCCUPATION', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">Employment</span><span class="info-val">{str(c.get('EMPLOYMENT_STATUS', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
+      </div>
 
-    with col2:
-        st.markdown('<div class="section-header">Risk Profile</div>', unsafe_allow_html=True)
-        st.markdown(f"""<div class="info-card">
-            <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Target tier</span><span class="info-val">{c.get('TARGET_DESC', 'N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity', 'N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
-        </div>""", unsafe_allow_html=True)
+      <!-- RISK PROFILE (7 rows + salary = 8 rows) -->
+      <div class="info-card">
+        <div class="info-card-title">Risk Profile</div>
+        <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
+        <div class="info-row"><span class="info-key">Target tier</span><span class="info-val">{c.get('TARGET_DESC', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Monthly salary</span><span class="info-val">{fmt(c.get('Avg_Monthly_Credit', 0))}</span></div>
+        <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
+        <div class="info-row"><span class="info-key">Net ratio</span><span class="info-val">{round(float(c.get('NET_RATIO', 0)), 3)}</span></div>
+      </div>
 
-    with col3:
-        st.markdown('<div class="section-header">This Application</div>', unsafe_allow_html=True)
-        st.markdown(f"""<div class="info-card">
-            <div style='margin-bottom:12px'>{badge}</div>
-            <div class="info-row"><span class="info-key">Product</span><span class="info-val" style="font-size:11px">{app['loan_product'].split('—')[0].strip()}</span></div>
-            <div class="info-row"><span class="info-key">Amount</span><span class="info-val">{fmt(app['loan_amount'])}</span></div>
-            <div class="info-row"><span class="info-key">Term</span><span class="info-val">{app['loan_term']} months</span></div>
-            <div class="info-row"><span class="info-key">Rate</span><span class="info-val">{app['loan_rate']}% p.a.</span></div>
-            <div class="info-row"><span class="info-key">Monthly EMI</span><span class="info-val">{fmt(app['loan_emi'])}</span></div>
-            <div class="info-row"><span class="info-key">Total interest</span><span class="info-val">{fmt(app['total_interest'])}</span></div>
-            <div class="info-row"><span class="info-key">Total repayment</span><span class="info-val">{fmt(app['total_repayment'])}</span></div>
-            <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
-        </div>""", unsafe_allow_html=True)
+      <!-- THIS APPLICATION (badge + 8 rows) -->
+      <div class="info-card">
+        <div class="info-card-title">This Application</div>
+        <div style='margin-bottom:12px'>{badge}</div>
+        <div class="info-row"><span class="info-key">Product</span><span class="info-val" style="font-size:11px">{app['loan_product'].split('—')[0].strip()}</span></div>
+        <div class="info-row"><span class="info-key">Amount</span><span class="info-val">{fmt(app['loan_amount'])}</span></div>
+        <div class="info-row"><span class="info-key">Term</span><span class="info-val">{app['loan_term']} months</span></div>
+        <div class="info-row"><span class="info-key">Rate</span><span class="info-val">{app['loan_rate']}% p.a.</span></div>
+        <div class="info-row"><span class="info-key">Monthly EMI</span><span class="info-val">{fmt(app['loan_emi'])}</span></div>
+        <div class="info-row"><span class="info-key">Total interest</span><span class="info-val">{fmt(app['total_interest'])}</span></div>
+        <div class="info-row"><span class="info-key">Total repayment</span><span class="info-val">{fmt(app['total_repayment'])}</span></div>
+        <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
+      </div>
 
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Accounts Section ─────────────────────────────────────
     st.markdown('<div class="section-header">Accounts</div>', unsafe_allow_html=True)
 
     if not cust_accounts.empty:
@@ -532,6 +683,7 @@ def show_customer_page(app):
     else:
         st.info("No account records found for this customer.")
 
+    # ── Average Monthly Balance ──────────────────────────────
     balance_cols  = ['JUN_25', 'JUL_25', 'AUG_25', 'SEP_25', 'OCT_25', 'NOV_25']
     existing_cols = [col for col in balance_cols if col in account_df.columns]
 
@@ -552,11 +704,12 @@ def show_customer_page(app):
             paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
             font=dict(color=FONT_COL, family='DM Sans'),
             height=250, margin=dict(l=0, r=0, t=10, b=0),
-            xaxis=dict(gridcolor=GRID_COL),
-            yaxis=dict(gridcolor=GRID_COL, title='Average Balance (LKR)')
+            xaxis=dict(gridcolor=GRID_COL, color=FONT_COL),
+            yaxis=dict(gridcolor=GRID_COL, title='Average Balance (LKR)', color=FONT_COL)
         )
         st.plotly_chart(fig_bal, use_container_width=True)
 
+    # ── Transaction Activity ─────────────────────────────────
     if not cust_transactions.empty and 'BOOKING_DATE' in cust_transactions.columns:
         st.markdown('<div class="section-header">Transaction Activity</div>', unsafe_allow_html=True)
         txn = cust_transactions.copy()
@@ -584,12 +737,13 @@ def show_customer_page(app):
             paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
             font=dict(color=FONT_COL, family='DM Sans'),
             height=280, margin=dict(l=0, r=0, t=10, b=0),
-            xaxis=dict(gridcolor=GRID_COL),
-            yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)'),
-            legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
+            xaxis=dict(gridcolor=GRID_COL, color=FONT_COL),
+            yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)', color=FONT_COL),
+            legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#0c1a4e'))
         )
         st.plotly_chart(fig_txn, use_container_width=True)
 
+    # ── Review Section ───────────────────────────────────────
     if app["status"] == "Pending":
         st.markdown('<div class="section-header">Review Decision</div>', unsafe_allow_html=True)
         notes = st.text_area(
@@ -626,7 +780,10 @@ def show_customer_page(app):
 def show_dashboard():
     col1, col2 = st.columns([4, 1])
     with col1:
-        st.markdown("<h1 style='font-size:26px;margin-bottom:4px;color:#1e1340'>Loan Officer Dashboard</h1>", unsafe_allow_html=True)
+        st.markdown("""
+        <h1 style='font-size:26px;margin-bottom:2px;color:#0c1a4e'>Loan Officer Dashboard</h1>
+        <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-bottom:4px'></div>
+        """, unsafe_allow_html=True)
         st.caption(f"Signed in as **{st.session_state.officer_name}**")
     with col2:
         st.markdown("<div style='margin-top:1.2rem'></div>", unsafe_allow_html=True)
@@ -634,7 +791,7 @@ def show_dashboard():
             st.session_state.officer_name = ""
             st.rerun()
 
-    st.markdown("<hr style='border-color:rgba(160,120,210,0.2);margin:1rem 0'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:rgba(30,64,175,0.15);margin:1rem 0'>", unsafe_allow_html=True)
 
     col_r, _ = st.columns([1, 5])
     with col_r:
@@ -653,26 +810,26 @@ def show_dashboard():
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(f"""<div class="metric-card"><div class="metric-label">Total</div>
+        st.markdown(f"""<div class="metric-card"><div class="metric-label">Total Applications</div>
             <div class="metric-value">{total}</div></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown(f"""<div class="metric-card"><div class="metric-label">Pending</div>
-            <div class="metric-value" style="color:#8a5c00">{pending}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-card"><div class="metric-label">Pending Review</div>
+            <div class="metric-value" style="color:#92400e">{pending}</div></div>""", unsafe_allow_html=True)
     with c3:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Approved</div>
-            <div class="metric-value" style="color:#1a6640">{approved}</div></div>""", unsafe_allow_html=True)
+            <div class="metric-value" style="color:#14532d">{approved}</div></div>""", unsafe_allow_html=True)
     with c4:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Rejected</div>
-            <div class="metric-value" style="color:#8a1a1a">{rejected}</div></div>""", unsafe_allow_html=True)
+            <div class="metric-value" style="color:#7f1d1d">{rejected}</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    status_filter = st.selectbox("Filter", ["All", "Pending", "Approved", "Rejected"])
+    status_filter = st.selectbox("Filter by status", ["All", "Pending", "Approved", "Rejected"])
     filtered = applications if status_filter == "All" else [
         a for a in applications if a["status"] == status_filter
     ]
 
-    st.markdown(f"<p style='color:rgba(100,70,160,0.55);font-size:12px;letter-spacing:1px'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#1e40af;font-size:12px;letter-spacing:1px;font-weight:600'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
 
     for app in filtered:
         badge = {
@@ -687,14 +844,14 @@ def show_dashboard():
             <div class="app-card">
                 <div style='display:flex;justify-content:space-between;align-items:center'>
                     <div style='display:flex;align-items:center;gap:16px'>
-                        <span style='color:rgba(100,70,160,0.45);font-size:11px;font-family:DM Mono'>#{app['id']}</span>
-                        <span style='color:#1e1340;font-weight:500'>{app['nic']}</span>
+                        <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:600'>#{app['id']}</span>
+                        <span style='color:#0c1a4e;font-weight:600'>{app['nic']}</span>
                         {badge}
                     </div>
                     <div style='display:flex;gap:2rem;align-items:center'>
-                        <span style='color:rgba(60,40,100,0.5);font-size:12px'>{app['loan_product'].split('—')[0].strip()}</span>
-                        <span style='color:#2d1f4e;font-family:DM Mono;font-size:13px'>{fmt(app['loan_amount'])}</span>
-                        <span style='color:rgba(60,40,100,0.4);font-size:11px'>{app['submitted_at']}</span>
+                        <span style='color:#374151;font-size:12px'>{app['loan_product'].split('—')[0].strip()}</span>
+                        <span style='color:#0c1a4e;font-family:DM Mono;font-size:13px;font-weight:600'>{fmt(app['loan_amount'])}</span>
+                        <span style='color:#6b7280;font-size:11px'>{app['submitted_at']}</span>
                     </div>
                 </div>
             </div>
