@@ -36,123 +36,182 @@ def format_date(d):
         return str(d)
 
 # ══════════════════════════════════════════════════════════════
-# CSS — Dark Green/Gold Theme
+# CSS — Aurora Light Theme (Lavender / Blush / Periwinkle)
 # ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 html, body, .stApp {
-    background: linear-gradient(160deg, #0D1F0F 0%, #0A1A0C 40%, #060F07 100%) !important;
+    background: linear-gradient(160deg, #c8d8f8 0%, #d8c8f0 35%, #f0c8e8 65%, #f8d0e0 100%) !important;
     font-family: 'DM Sans', sans-serif !important;
-    color: #D4E8D0 !important;
+    color: #2d1f4e !important;
 }
 .block-container { padding: 2rem 3rem !important; max-width: 1400px !important; }
 section[data-testid="stSidebar"] { display: none; }
 
-h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #F0FAF0 !important; }
+h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #1e1340 !important; }
 
 .metric-card {
-    background: rgba(255,255,255,0.04);
-    border: 0.5px solid rgba(134,239,172,0.2);
+    background: rgba(255,255,255,0.55);
+    border: 0.5px solid rgba(160,120,210,0.25);
     border-radius: 14px;
     padding: 1.2rem 1.5rem;
     text-align: center;
+    backdrop-filter: blur(8px);
     transition: border-color 0.2s, background 0.2s;
+    box-shadow: 0 2px 16px rgba(160,100,220,0.08);
 }
-.metric-card:hover { border-color: rgba(134,239,172,0.5); background: rgba(255,255,255,0.07); }
-.metric-label { font-size: 11px; color: rgba(134,239,172,0.6); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-.metric-value { font-size: 30px; font-weight: 600; color: #F0FAF0; font-family: 'DM Mono', monospace; }
+.metric-card:hover {
+    border-color: rgba(160,120,210,0.5);
+    background: rgba(255,255,255,0.75);
+}
+.metric-label {
+    font-size: 11px;
+    color: rgba(100,70,160,0.7);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+.metric-value {
+    font-size: 30px;
+    font-weight: 600;
+    color: #2d1f4e;
+    font-family: 'DM Mono', monospace;
+}
 
 .info-card {
-    background: rgba(255,255,255,0.04);
-    border: 0.5px solid rgba(134,239,172,0.15);
+    background: rgba(255,255,255,0.5);
+    border: 0.5px solid rgba(160,120,210,0.2);
     border-radius: 14px;
     padding: 1.4rem;
     margin-bottom: 1rem;
     height: 100%;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(160,100,220,0.06);
 }
 .info-card-title {
-    font-size: 10px; color: #86EFAC; text-transform: uppercase;
-    letter-spacing: 3px; margin-bottom: 1rem; font-weight: 500;
+    font-size: 10px;
+    color: #7c4dbb;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+    font-weight: 500;
 }
 .info-row {
-    display: flex; justify-content: space-between;
-    padding: 8px 0; border-bottom: 0.5px solid rgba(134,239,172,0.08);
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 0.5px solid rgba(160,120,210,0.12);
     font-size: 13px;
 }
 .info-row:last-child { border-bottom: none; }
-.info-key { color: rgba(212,232,208,0.55); }
-.info-val { color: #F0FAF0; font-weight: 500; font-family: 'DM Mono', monospace; font-size: 12px; text-align: right; }
+.info-key { color: rgba(60,40,100,0.55); }
+.info-val {
+    color: #2d1f4e;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    text-align: right;
+}
 
-.badge-pending  { background:rgba(251,191,36,0.15); color:#FCD34D; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(251,191,36,0.4); }
-.badge-approved { background:rgba(134,239,172,0.15); color:#86EFAC; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(134,239,172,0.4); }
-.badge-rejected { background:rgba(248,113,113,0.15); color:#FCA5A5; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(248,113,113,0.4); }
+.badge-pending  { background:rgba(220,160,20,0.15); color:#8a5c00; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(220,160,20,0.4); }
+.badge-approved { background:rgba(80,180,120,0.15); color:#1a6640; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(80,180,120,0.4); }
+.badge-rejected { background:rgba(220,80,80,0.12);  color:#8a1a1a; padding:4px 14px; border-radius:20px; font-size:11px; border:0.5px solid rgba(220,80,80,0.35); }
 
 .section-header {
-    font-size: 10px; color: #86EFAC; text-transform: uppercase;
-    letter-spacing: 3px; font-weight: 500;
+    font-size: 10px;
+    color: #7c4dbb;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: 500;
     margin: 1.8rem 0 1rem 0;
     padding-bottom: 8px;
-    border-bottom: 0.5px solid rgba(134,239,172,0.2);
+    border-bottom: 0.5px solid rgba(160,120,210,0.25);
 }
 
 .stButton > button {
-    background: rgba(255,255,255,0.05) !important;
-    color: #D4E8D0 !important;
-    border: 0.5px solid rgba(134,239,172,0.25) !important;
+    background: rgba(255,255,255,0.6) !important;
+    color: #3a2070 !important;
+    border: 0.5px solid rgba(160,120,210,0.35) !important;
     border-radius: 10px !important;
     font-family: 'DM Sans', sans-serif !important;
     transition: all 0.2s !important;
+    backdrop-filter: blur(4px) !important;
 }
 .stButton > button:hover {
-    background: rgba(134,239,172,0.1) !important;
-    border-color: rgba(134,239,172,0.5) !important;
-    color: #86EFAC !important;
+    background: rgba(160,120,210,0.15) !important;
+    border-color: rgba(130,80,200,0.55) !important;
+    color: #5a20b0 !important;
 }
 
 div[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.03) !important;
-    border: 0.5px solid rgba(134,239,172,0.15) !important;
+    background: rgba(255,255,255,0.4) !important;
+    border: 0.5px solid rgba(160,120,210,0.2) !important;
     border-radius: 12px !important;
+    backdrop-filter: blur(6px) !important;
 }
-div[data-testid="stExpander"] summary { color: #D4E8D0 !important; }
-div[data-testid="stExpander"] summary:hover { color: #86EFAC !important; }
+div[data-testid="stExpander"] summary { color: #2d1f4e !important; }
+div[data-testid="stExpander"] summary:hover { color: #7c4dbb !important; }
 
 .stSelectbox > div > div {
-    background: rgba(255,255,255,0.05) !important;
-    border-color: rgba(134,239,172,0.2) !important;
-    color: #D4E8D0 !important;
+    background: rgba(255,255,255,0.6) !important;
+    border-color: rgba(160,120,210,0.3) !important;
+    color: #2d1f4e !important;
     border-radius: 10px !important;
 }
 .stTextInput input, .stTextArea textarea {
-    background: rgba(255,255,255,0.05) !important;
-    border-color: rgba(134,239,172,0.2) !important;
-    color: #D4E8D0 !important;
+    background: rgba(255,255,255,0.6) !important;
+    border-color: rgba(160,120,210,0.3) !important;
+    color: #2d1f4e !important;
     border-radius: 10px !important;
+    -webkit-text-fill-color: #2d1f4e !important;
+    caret-color: #2d1f4e !important;
 }
-label { color: rgba(212,232,208,0.6) !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px; }
+label {
+    color: rgba(60,40,120,0.65) !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
-.stMetric { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 0.8rem; border: 0.5px solid rgba(134,239,172,0.15); }
-[data-testid="stMetricValue"] { color: #F0FAF0 !important; font-family: 'DM Mono', monospace !important; }
-[data-testid="stMetricLabel"] { color: rgba(134,239,172,0.6) !important; }
+.stMetric {
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+    padding: 0.8rem;
+    border: 0.5px solid rgba(160,120,210,0.2);
+}
+[data-testid="stMetricValue"] { color: #2d1f4e !important; font-family: 'DM Mono', monospace !important; }
+[data-testid="stMetricLabel"] { color: rgba(100,70,160,0.7) !important; }
 
 .app-card {
-    background: rgba(255,255,255,0.03);
-    border: 0.5px solid rgba(134,239,172,0.12);
+    background: rgba(255,255,255,0.45);
+    border: 0.5px solid rgba(160,120,210,0.18);
     border-radius: 12px;
     padding: 1rem 1.4rem;
     margin-bottom: 0.5rem;
     transition: border-color 0.2s, background 0.2s;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 1px 8px rgba(160,100,220,0.05);
 }
-.app-card:hover { border-color: rgba(134,239,172,0.35); background: rgba(255,255,255,0.05); }
+.app-card:hover {
+    border-color: rgba(130,80,200,0.4);
+    background: rgba(255,255,255,0.65);
+}
 
 /* Decorative circles */
 .deco { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
+
+/* Dataframe text */
+div[data-testid="stDataFrame"] { color: #2d1f4e !important; }
+
+/* Alert/info boxes */
+div[data-testid="stAlert"] { border-radius: 12px !important; }
 </style>
 
-<div class="deco" style="top:-120px;right:-120px;width:500px;height:500px;background:radial-gradient(circle,rgba(134,239,172,0.04) 0%,transparent 70%)"></div>
-<div class="deco" style="bottom:-80px;left:-80px;width:350px;height:350px;background:radial-gradient(circle,rgba(251,191,36,0.04) 0%,transparent 70%)"></div>
+<div class="deco" style="top:-150px;right:-150px;width:550px;height:550px;background:radial-gradient(circle,rgba(200,180,255,0.25) 0%,transparent 70%)"></div>
+<div class="deco" style="bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,180,220,0.2) 0%,transparent 70%)"></div>
+<div class="deco" style="top:40%;left:50%;width:300px;height:300px;background:radial-gradient(circle,rgba(180,210,255,0.15) 0%,transparent 70%)"></div>
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
@@ -171,8 +230,8 @@ if not st.session_state.officer_name:
         st.markdown("""
         <div style='text-align:center;padding:5rem 0 2rem'>
             <div style='font-size:52px;margin-bottom:1.2rem'>🏦</div>
-            <h1 style='font-size:26px;margin-bottom:0.5rem'>Officer Portal</h1>
-            <p style='color:rgba(212,232,208,0.45);font-size:14px'>Internal loan management system</p>
+            <h1 style='font-size:26px;margin-bottom:0.5rem;color:#1e1340'>Officer Portal</h1>
+            <p style='color:rgba(60,40,120,0.5);font-size:14px'>Internal loan management system</p>
         </div>
         """, unsafe_allow_html=True)
         name = st.text_input("Officer name", placeholder="Enter your full name")
@@ -180,6 +239,20 @@ if not st.session_state.officer_name:
             st.session_state.officer_name = name.strip()
             st.rerun()
     st.stop()
+
+# ══════════════════════════════════════════════════════════════
+# PLOTLY THEME HELPER — light aurora palette
+# ══════════════════════════════════════════════════════════════
+PLOT_BG   = 'rgba(0,0,0,0)'
+GRID_COL  = 'rgba(160,120,210,0.12)'
+FONT_COL  = 'rgba(45,31,78,0.65)'
+LINE_A    = '#8b5cf6'   # violet
+LINE_B    = '#ec4899'   # pink
+LINE_C    = '#6366f1'   # indigo
+FILL_A    = 'rgba(139,92,246,0.08)'
+FILL_B    = 'rgba(236,72,153,0.08)'
+LEGEND_BG = 'rgba(255,255,255,0.5)'
+LEGEND_BD = 'rgba(160,120,210,0.25)'
 
 # ══════════════════════════════════════════════════════════════
 # LOAN REPAYMENT DETAIL PAGE
@@ -195,11 +268,11 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     st.markdown(f"""
     <div style='margin:1rem 0 2rem'>
-        <div style='font-size:10px;color:#86EFAC;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
+        <div style='font-size:10px;color:#7c4dbb;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
             Loan Repayment Detail
         </div>
-        <h1 style='font-size:26px;margin:0'>{product}</h1>
-        <p style='color:rgba(212,232,208,0.45);font-size:13px;margin-top:4px'>
+        <h1 style='font-size:26px;margin:0;color:#1e1340'>{product}</h1>
+        <p style='color:rgba(60,40,120,0.5);font-size:13px;margin-top:4px'>
             Opened: {opened} &nbsp;·&nbsp; Term: {term}
         </p>
     </div>
@@ -222,7 +295,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         st.info("No dated repayment records found.")
         return
 
-    # Summary metrics
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f"""<div class="metric-card">
@@ -232,12 +304,12 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     with m2:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Total Interest Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#FCD34D">{fmt(acc_rep['INTEREST_PAIED'].sum())}</div>
+            <div class="metric-value" style="font-size:20px;color:#ec4899">{fmt(acc_rep['INTEREST_PAIED'].sum())}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Total Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#86EFAC">{fmt(acc_rep['TOTAL_PAID'].sum())}</div>
+            <div class="metric-value" style="font-size:20px;color:#8b5cf6">{fmt(acc_rep['TOTAL_PAID'].sum())}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
         st.markdown(f"""<div class="metric-card">
@@ -246,50 +318,32 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
-
-    # Capital vs Interest Line Graph
     st.markdown('<div class="section-header">Capital & Interest Repayments Over Time</div>', unsafe_allow_html=True)
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=acc_rep['PAYMENT_DATE'],
-        y=acc_rep['CAPITAL_PAIED'],
-        name='Capital Paid',
-        mode='lines+markers',
-        line=dict(color='#86EFAC', width=2),
-        marker=dict(size=5),
-        fill='tozeroy',
-        fillcolor='rgba(134,239,172,0.08)'
+        x=acc_rep['PAYMENT_DATE'], y=acc_rep['CAPITAL_PAIED'],
+        name='Capital Paid', mode='lines+markers',
+        line=dict(color=LINE_A, width=2), marker=dict(size=5),
+        fill='tozeroy', fillcolor=FILL_A
     ))
     fig.add_trace(go.Scatter(
-        x=acc_rep['PAYMENT_DATE'],
-        y=acc_rep['INTEREST_PAIED'],
-        name='Interest Paid',
-        mode='lines+markers',
-        line=dict(color='#FCD34D', width=2),
-        marker=dict(size=5),
-        fill='tozeroy',
-        fillcolor='rgba(252,211,77,0.08)'
+        x=acc_rep['PAYMENT_DATE'], y=acc_rep['INTEREST_PAIED'],
+        name='Interest Paid', mode='lines+markers',
+        line=dict(color=LINE_B, width=2), marker=dict(size=5),
+        fill='tozeroy', fillcolor=FILL_B
     ))
     fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='rgba(212,232,208,0.7)', family='DM Sans'),
-        height=350,
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(gridcolor='rgba(134,239,172,0.08)', title='Payment Date'),
-        yaxis=dict(gridcolor='rgba(134,239,172,0.08)', title='Amount (LKR)'),
-        legend=dict(
-            bgcolor='rgba(255,255,255,0.05)',
-            bordercolor='rgba(134,239,172,0.2)',
-            font=dict(color='#D4E8D0')
-        )
+        paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
+        font=dict(color=FONT_COL, family='DM Sans'),
+        height=350, margin=dict(l=0, r=0, t=10, b=0),
+        xaxis=dict(gridcolor=GRID_COL, title='Payment Date'),
+        yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)'),
+        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # Cumulative line graph
     st.markdown('<div class="section-header">Cumulative Repayment Progress</div>', unsafe_allow_html=True)
-
     acc_rep['Cumulative_Capital']  = acc_rep['CAPITAL_PAIED'].cumsum()
     acc_rep['Cumulative_Interest'] = acc_rep['INTEREST_PAIED'].cumsum()
     acc_rep['Cumulative_Total']    = acc_rep['TOTAL_PAID'].cumsum()
@@ -298,31 +352,28 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     fig2.add_trace(go.Scatter(
         x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Total'],
         name='Total Cumulative', mode='lines',
-        line=dict(color='#86EFAC', width=3)
+        line=dict(color=LINE_A, width=3)
     ))
     fig2.add_trace(go.Scatter(
         x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Capital'],
         name='Capital Cumulative', mode='lines',
-        line=dict(color='#6EE7B7', width=2, dash='dot')
+        line=dict(color=LINE_C, width=2, dash='dot')
     ))
     fig2.add_trace(go.Scatter(
         x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Interest'],
         name='Interest Cumulative', mode='lines',
-        line=dict(color='#FCD34D', width=2, dash='dot')
+        line=dict(color=LINE_B, width=2, dash='dot')
     ))
     fig2.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='rgba(212,232,208,0.7)', family='DM Sans'),
-        height=300,
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(gridcolor='rgba(134,239,172,0.08)'),
-        yaxis=dict(gridcolor='rgba(134,239,172,0.08)', title='Cumulative Amount (LKR)'),
-        legend=dict(bgcolor='rgba(255,255,255,0.05)', bordercolor='rgba(134,239,172,0.2)', font=dict(color='#D4E8D0'))
+        paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
+        font=dict(color=FONT_COL, family='DM Sans'),
+        height=300, margin=dict(l=0, r=0, t=10, b=0),
+        xaxis=dict(gridcolor=GRID_COL),
+        yaxis=dict(gridcolor=GRID_COL, title='Cumulative Amount (LKR)'),
+        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-    # Repayment table
     st.markdown('<div class="section-header">Repayment Records</div>', unsafe_allow_html=True)
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
@@ -334,7 +385,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 # CUSTOMER DETAIL PAGE
 # ══════════════════════════════════════════════════════════════
 def show_customer_page(app):
-    # If viewing loan repayment detail
     if st.session_state.loan_detail_acc is not None:
         nic = app["nic"]
         cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
@@ -360,10 +410,10 @@ def show_customer_page(app):
 
     st.markdown(f"""
     <div style='margin:1rem 0 2rem'>
-        <div style='font-size:10px;color:#86EFAC;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
+        <div style='font-size:10px;color:#7c4dbb;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px'>
             Application #{app['id']} &nbsp;·&nbsp; {badge}
         </div>
-        <h1 style='font-size:28px;margin:0'>Customer Profile</h1>
+        <h1 style='font-size:28px;margin:0;color:#1e1340'>Customer Profile</h1>
     </div>
     """, unsafe_allow_html=True)
 
@@ -374,31 +424,30 @@ def show_customer_page(app):
     c = cust.iloc[0]
     masked_id = c.get("MASKED_ID", "")
 
-    cust_accounts    = account_df[account_df["MASKED_ID"] == masked_id] if masked_id else pd.DataFrame()
-    cust_repayments  = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
-    cust_transactions= transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
+    cust_accounts     = account_df[account_df["MASKED_ID"] == masked_id] if masked_id else pd.DataFrame()
+    cust_repayments   = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
+    cust_transactions = transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
 
-    # ── Top metrics ─────────────────────────────────────────
     m1, m2, m3, m4, m5 = st.columns(5)
     with m1:
-        score_color = "#86EFAC" if float(c.get('Internal_Bank_Default_Score',0)) >= 650 else "#FCA5A5"
+        score_color = "#5a20b0" if float(c.get('Internal_Bank_Default_Score', 0)) >= 650 else "#c0392b"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value" style="color:{score_color}">{int(float(c.get('Internal_Bank_Default_Score',0)))}</div>
+            <div class="metric-value" style="color:{score_color}">{int(float(c.get('Internal_Bank_Default_Score', 0)))}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Score Band</div>
-            <div class="metric-value" style="font-size:15px;padding-top:8px">{c.get('Score_Band','N/A')}</div>
+            <div class="metric-value" style="font-size:15px;padding-top:8px">{c.get('Score_Band', 'N/A')}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
-            <div class="metric-value" style="font-size:17px;padding-top:6px">{fmt(c.get('Avg_Monthly_Credit',0))}</div>
+            <div class="metric-value" style="font-size:17px;padding-top:6px">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
-        ood_val = int(float(c.get('MAX_OOD', 0)))
-        ood_color = "#FCA5A5" if ood_val >= 30 else "#86EFAC"
+        ood_val   = int(float(c.get('MAX_OOD', 0)))
+        ood_color = "#c0392b" if ood_val >= 30 else "#5a20b0"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
             <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
@@ -406,36 +455,35 @@ def show_customer_page(app):
     with m5:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Active Accounts</div>
-            <div class="metric-value">{int(c.get('Number_of_Active_Accounts',0))}</div>
+            <div class="metric-value">{int(c.get('Number_of_Active_Accounts', 0))}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Three info columns ───────────────────────────────────
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown('<div class="section-header">Personal Information</div>', unsafe_allow_html=True)
         st.markdown(f"""<div class="info-card">
             <div class="info-row"><span class="info-key">NIC</span><span class="info-val">{nic}</span></div>
-            <div class="info-row"><span class="info-key">Age</span><span class="info-val">{int(c.get('AGE',0))}</span></div>
-            <div class="info-row"><span class="info-key">Gender</span><span class="info-val">{str(c.get('GENDER','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Marital status</span><span class="info-val">{str(c.get('MARITAL_STATUS','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Occupation</span><span class="info-val">{str(c.get('OCCUPATION','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Employment</span><span class="info-val">{str(c.get('EMPLOYMENT_STATUS','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment','N/A'))}</span></div>
+            <div class="info-row"><span class="info-key">Age</span><span class="info-val">{int(c.get('AGE', 0))}</span></div>
+            <div class="info-row"><span class="info-key">Gender</span><span class="info-val">{str(c.get('GENDER', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">Marital status</span><span class="info-val">{str(c.get('MARITAL_STATUS', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">Occupation</span><span class="info-val">{str(c.get('OCCUPATION', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">Employment</span><span class="info-val">{str(c.get('EMPLOYMENT_STATUS', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
         </div>""", unsafe_allow_html=True)
 
     with col2:
         st.markdown('<div class="section-header">Risk Profile</div>', unsafe_allow_html=True)
         st.markdown(f"""<div class="info-card">
-            <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME','N/A')).title()}</span></div>
-            <div class="info-row"><span class="info-key">Target tier</span><span class="info-val">{c.get('TARGET_DESC','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE',0))}</span></div>
+            <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
+            <div class="info-row"><span class="info-key">Target tier</span><span class="info-val">{c.get('TARGET_DESC', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
         </div>""", unsafe_allow_html=True)
 
     with col3:
@@ -452,7 +500,6 @@ def show_customer_page(app):
             <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
         </div>""", unsafe_allow_html=True)
 
-    # ── Accounts Section ─────────────────────────────────────
     st.markdown('<div class="section-header">Accounts</div>', unsafe_allow_html=True)
 
     if not cust_accounts.empty:
@@ -471,29 +518,21 @@ def show_customer_page(app):
 
             with st.expander(expander_label):
                 if is_loan:
-                    # Loan account — show term, balance, NO ood
                     lc1, lc2, lc3 = st.columns(3)
                     with lc1: st.metric("Balance", fmt(balance))
                     with lc2: st.metric("Term", str(term))
                     with lc3: st.metric("Status", status)
-
-                    # Button to go to repayment detail page
-                    if st.button(
-                        f"View repayment history →",
-                        key=f"repay_{acc.get('ACC_MASKED_ID','')}"
-                    ):
+                    if st.button("View repayment history →", key=f"repay_{acc.get('ACC_MASKED_ID', '')}"):
                         st.session_state.loan_detail_acc = acc.to_dict()
                         st.rerun()
                 else:
-                    # Savings / Current — show balance only, NO ood
                     lc1, lc2 = st.columns(2)
                     with lc1: st.metric("Balance", fmt(balance))
                     with lc2: st.metric("Status", status)
     else:
         st.info("No account records found for this customer.")
 
-    # ── Average Monthly Balance Line Graph ───────────────────
-    balance_cols = ['JUN_25', 'JUL_25', 'AUG_25', 'SEP_25', 'OCT_25', 'NOV_25']
+    balance_cols  = ['JUN_25', 'JUL_25', 'AUG_25', 'SEP_25', 'OCT_25', 'NOV_25']
     existing_cols = [col for col in balance_cols if col in account_df.columns]
 
     if not cust_accounts.empty and existing_cols:
@@ -505,20 +544,19 @@ def show_customer_page(app):
         fig_bal.add_trace(go.Scatter(
             x=month_labels, y=monthly_avg.values,
             mode='lines+markers', name='Avg Balance',
-            line=dict(color='#86EFAC', width=3),
-            marker=dict(size=8, color='#86EFAC'),
-            fill='tozeroy', fillcolor='rgba(134,239,172,0.08)'
+            line=dict(color=LINE_A, width=3),
+            marker=dict(size=8, color=LINE_A),
+            fill='tozeroy', fillcolor=FILL_A
         ))
         fig_bal.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='rgba(212,232,208,0.7)', family='DM Sans'),
+            paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
+            font=dict(color=FONT_COL, family='DM Sans'),
             height=250, margin=dict(l=0, r=0, t=10, b=0),
-            xaxis=dict(gridcolor='rgba(134,239,172,0.08)'),
-            yaxis=dict(gridcolor='rgba(134,239,172,0.08)', title='Average Balance (LKR)')
+            xaxis=dict(gridcolor=GRID_COL),
+            yaxis=dict(gridcolor=GRID_COL, title='Average Balance (LKR)')
         )
         st.plotly_chart(fig_bal, use_container_width=True)
 
-    # ── Transaction Activity Line Graph ──────────────────────
     if not cust_transactions.empty and 'BOOKING_DATE' in cust_transactions.columns:
         st.markdown('<div class="section-header">Transaction Activity</div>', unsafe_allow_html=True)
         txn = cust_transactions.copy()
@@ -527,32 +565,31 @@ def show_customer_page(app):
         txn['Month']   = txn['BOOKING_DATE'].dt.to_period('M').astype(str)
         txn['INFLOW']  = txn['AMOUNT_LCY'].apply(lambda x: x if x > 0 else 0)
         txn['OUTFLOW'] = txn['AMOUNT_LCY'].apply(lambda x: abs(x) if x < 0 else 0)
-        monthly_txn = txn.groupby('Month').agg(Inflow=('INFLOW','sum'), Outflow=('OUTFLOW','sum')).reset_index()
+        monthly_txn    = txn.groupby('Month').agg(Inflow=('INFLOW', 'sum'), Outflow=('OUTFLOW', 'sum')).reset_index()
 
         fig_txn = go.Figure()
         fig_txn.add_trace(go.Scatter(
             x=monthly_txn['Month'], y=monthly_txn['Inflow'],
             name='Inflow', mode='lines+markers',
-            line=dict(color='#86EFAC', width=2), marker=dict(size=5),
-            fill='tozeroy', fillcolor='rgba(134,239,172,0.08)'
+            line=dict(color=LINE_A, width=2), marker=dict(size=5),
+            fill='tozeroy', fillcolor=FILL_A
         ))
         fig_txn.add_trace(go.Scatter(
             x=monthly_txn['Month'], y=monthly_txn['Outflow'],
             name='Outflow', mode='lines+markers',
-            line=dict(color='#FCD34D', width=2), marker=dict(size=5),
-            fill='tozeroy', fillcolor='rgba(252,211,77,0.08)'
+            line=dict(color=LINE_B, width=2), marker=dict(size=5),
+            fill='tozeroy', fillcolor=FILL_B
         ))
         fig_txn.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='rgba(212,232,208,0.7)', family='DM Sans'),
+            paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
+            font=dict(color=FONT_COL, family='DM Sans'),
             height=280, margin=dict(l=0, r=0, t=10, b=0),
-            xaxis=dict(gridcolor='rgba(134,239,172,0.08)'),
-            yaxis=dict(gridcolor='rgba(134,239,172,0.08)', title='Amount (LKR)'),
-            legend=dict(bgcolor='rgba(255,255,255,0.05)', bordercolor='rgba(134,239,172,0.2)', font=dict(color='#D4E8D0'))
+            xaxis=dict(gridcolor=GRID_COL),
+            yaxis=dict(gridcolor=GRID_COL, title='Amount (LKR)'),
+            legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#2d1f4e'))
         )
         st.plotly_chart(fig_txn, use_container_width=True)
 
-    # ── Review Section ───────────────────────────────────────
     if app["status"] == "Pending":
         st.markdown('<div class="section-header">Review Decision</div>', unsafe_allow_html=True)
         notes = st.text_area(
@@ -577,9 +614,9 @@ def show_customer_page(app):
     else:
         st.markdown('<div class="section-header">Review Details</div>', unsafe_allow_html=True)
         st.markdown(f"""<div class="info-card">
-            <div class="info-row"><span class="info-key">Reviewed by</span><span class="info-val">{app.get('reviewed_by','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Reviewed at</span><span class="info-val">{app.get('reviewed_at','N/A')}</span></div>
-            <div class="info-row"><span class="info-key">Notes</span><span class="info-val">{app.get('officer_notes','N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Reviewed by</span><span class="info-val">{app.get('reviewed_by', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Reviewed at</span><span class="info-val">{app.get('reviewed_at', 'N/A')}</span></div>
+            <div class="info-row"><span class="info-key">Notes</span><span class="info-val">{app.get('officer_notes', 'N/A')}</span></div>
         </div>""", unsafe_allow_html=True)
 
 
@@ -589,7 +626,7 @@ def show_customer_page(app):
 def show_dashboard():
     col1, col2 = st.columns([4, 1])
     with col1:
-        st.markdown("<h1 style='font-size:26px;margin-bottom:4px'>Loan Officer Dashboard</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='font-size:26px;margin-bottom:4px;color:#1e1340'>Loan Officer Dashboard</h1>", unsafe_allow_html=True)
         st.caption(f"Signed in as **{st.session_state.officer_name}**")
     with col2:
         st.markdown("<div style='margin-top:1.2rem'></div>", unsafe_allow_html=True)
@@ -597,7 +634,7 @@ def show_dashboard():
             st.session_state.officer_name = ""
             st.rerun()
 
-    st.markdown("<hr style='border-color:rgba(134,239,172,0.15);margin:1rem 0'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:rgba(160,120,210,0.2);margin:1rem 0'>", unsafe_allow_html=True)
 
     col_r, _ = st.columns([1, 5])
     with col_r:
@@ -620,13 +657,13 @@ def show_dashboard():
             <div class="metric-value">{total}</div></div>""", unsafe_allow_html=True)
     with c2:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Pending</div>
-            <div class="metric-value" style="color:#FCD34D">{pending}</div></div>""", unsafe_allow_html=True)
+            <div class="metric-value" style="color:#8a5c00">{pending}</div></div>""", unsafe_allow_html=True)
     with c3:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Approved</div>
-            <div class="metric-value" style="color:#86EFAC">{approved}</div></div>""", unsafe_allow_html=True)
+            <div class="metric-value" style="color:#1a6640">{approved}</div></div>""", unsafe_allow_html=True)
     with c4:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Rejected</div>
-            <div class="metric-value" style="color:#FCA5A5">{rejected}</div></div>""", unsafe_allow_html=True)
+            <div class="metric-value" style="color:#8a1a1a">{rejected}</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
@@ -635,7 +672,7 @@ def show_dashboard():
         a for a in applications if a["status"] == status_filter
     ]
 
-    st.markdown(f"<p style='color:rgba(134,239,172,0.5);font-size:12px;letter-spacing:1px'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:rgba(100,70,160,0.55);font-size:12px;letter-spacing:1px'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
 
     for app in filtered:
         badge = {
@@ -650,14 +687,14 @@ def show_dashboard():
             <div class="app-card">
                 <div style='display:flex;justify-content:space-between;align-items:center'>
                     <div style='display:flex;align-items:center;gap:16px'>
-                        <span style='color:rgba(134,239,172,0.4);font-size:11px;font-family:DM Mono'>#{app['id']}</span>
-                        <span style='color:#F0FAF0;font-weight:500'>{app['nic']}</span>
+                        <span style='color:rgba(100,70,160,0.45);font-size:11px;font-family:DM Mono'>#{app['id']}</span>
+                        <span style='color:#1e1340;font-weight:500'>{app['nic']}</span>
                         {badge}
                     </div>
                     <div style='display:flex;gap:2rem;align-items:center'>
-                        <span style='color:rgba(212,232,208,0.5);font-size:12px'>{app['loan_product'].split('—')[0].strip()}</span>
-                        <span style='color:#F0FAF0;font-family:DM Mono;font-size:13px'>{fmt(app['loan_amount'])}</span>
-                        <span style='color:rgba(212,232,208,0.35);font-size:11px'>{app['submitted_at']}</span>
+                        <span style='color:rgba(60,40,100,0.5);font-size:12px'>{app['loan_product'].split('—')[0].strip()}</span>
+                        <span style='color:#2d1f4e;font-family:DM Mono;font-size:13px'>{fmt(app['loan_amount'])}</span>
+                        <span style='color:rgba(60,40,100,0.4);font-size:11px'>{app['submitted_at']}</span>
                     </div>
                 </div>
             </div>
