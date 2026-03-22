@@ -484,23 +484,28 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     remaining_capital    = max(acc_balance, 0)
 
     # ── Summary stat cards ───────────────────────────────────
-    s1, s2, s3, s4 = st.columns(4)
+    s1, s2, s3, s4, s5 = st.columns(5)
     with s1:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.04);border-color:rgba(29,78,216,0.2)">
+            <div class="metric-label">Total Scheduled</div>
+            <div class="metric-value" style="color:#3b5fad">{fmt(total_capital_paid + total_interest_paid + remaining_capital)}</div>
+        </div>""", unsafe_allow_html=True)
+    with s2:
         st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.07);border-color:rgba(29,78,216,0.25)">
             <div class="metric-label">Total Capital Paid</div>
             <div class="metric-value">{fmt(total_capital_paid)}</div>
         </div>""", unsafe_allow_html=True)
-    with s2:
+    with s3:
         st.markdown(f"""<div class="metric-card" style="background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.25)">
             <div class="metric-label">Total Interest Paid</div>
             <div class="metric-value" style="color:#c2410c">{fmt(total_interest_paid)}</div>
         </div>""", unsafe_allow_html=True)
-    with s3:
+    with s4:
         st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.05);border-color:rgba(29,78,216,0.2)">
             <div class="metric-label">Total Amount Paid</div>
             <div class="metric-value">{fmt(total_paid)}</div>
         </div>""", unsafe_allow_html=True)
-    with s4:
+    with s5:
         st.markdown(f"""<div class="metric-card" style="background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.22)">
             <div class="metric-label">Amount Still Owed</div>
             <div class="metric-value" style="color:#b91c1c">{fmt(remaining_capital)}</div>
@@ -511,12 +516,17 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     # ── Build rows ───────────────────────────────────────────
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
+    # Scheduled per row = what was actually paid (capital + interest = total paid per instalment)
+    display_df['SCHEDULED'] = display_df['CAPITAL_PAIED'] + display_df['INTEREST_PAIED']
+
+    total_scheduled = display_df['SCHEDULED'].sum() + remaining_capital  # paid + still owed
 
     rows_html = ""
     for i, (_, row) in enumerate(display_df.iterrows()):
         rows_html += (
             f'<tr>'
             f'<td>{row["PAYMENT_DATE"]}</td>'
+            f'<td>{row["SCHEDULED"]:,.2f}</td>'
             f'<td>{row["CAPITAL_PAIED"]:,.2f}</td>'
             f'<td style="color:#c2410c">{row["INTEREST_PAIED"]:,.2f}</td>'
             f'<td>{row["TOTAL_PAID"]:,.2f}</td>'
@@ -532,19 +542,21 @@ def show_loan_repayment_page(acc_row, cust_repayments):
                border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
       table {{ width:100%;border-collapse:collapse; }}
       thead tr {{ background:rgba(29,78,216,0.08); }}
-      th {{ padding:13px 18px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;
+      th {{ padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;
             text-transform:uppercase;font-weight:700;color:#1e40af;border-bottom:1.5px solid rgba(29,78,216,0.18); }}
       th:not(:first-child) {{ text-align:right; }}
-      tbody td {{ padding:11px 18px;font-size:14px;color:#1e40af; }}
+      tbody td {{ padding:11px 16px;font-size:14px;color:#1e40af; }}
       tbody td:first-child {{ font-family:'DM Sans',sans-serif;color:#2d4a8a;font-size:14px; }}
       tbody td:not(:first-child) {{ font-family:'DM Mono',monospace;text-align:right;color:#1e40af; }}
+      tbody td:nth-child(2) {{ color:#3b5fad;font-style:italic; }}
       tbody td:last-child {{ font-weight:700;font-size:15px;color:#1d4ed8; }}
       tbody tr {{ border-bottom:0.5px solid rgba(29,78,216,0.08); }}
       tbody tr:nth-child(even) {{ background:rgba(29,78,216,0.025); }}
       tbody tr:nth-child(odd)  {{ background:rgba(255,255,255,0.6); }}
       tfoot tr.total {{ background:rgba(29,78,216,0.08);border-top:2px solid #f97316; }}
+      tfoot tr.sched {{ background:rgba(29,78,216,0.04);border-top:0.5px solid rgba(29,78,216,0.15); }}
       tfoot tr.owed  {{ background:rgba(220,38,38,0.04);border-top:0.5px solid rgba(220,38,38,0.2); }}
-      tfoot td {{ padding:12px 18px;font-family:'DM Mono',monospace;font-weight:700;font-size:15px; }}
+      tfoot td {{ padding:12px 16px;font-family:'DM Mono',monospace;font-weight:700;font-size:15px; }}
       .lbl {{ font-family:'DM Sans',sans-serif !important;font-size:11px;letter-spacing:2px;text-transform:uppercase; }}
     </style></head><body>
     <div class="wrap">
@@ -552,6 +564,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         <thead>
           <tr>
             <th style="text-align:left">Payment Date</th>
+            <th>Scheduled (LKR)</th>
             <th>Capital Paid (LKR)</th>
             <th>Interest Paid (LKR)</th>
             <th>Total Paid (LKR)</th>
@@ -560,14 +573,19 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         <tbody>{rows_html}</tbody>
         <tfoot>
           <tr class="total">
-            <td class="lbl" style="color:#1e40af">Total</td>
+            <td class="lbl" style="color:#1e40af">Paid to Date</td>
+            <td style="text-align:right;color:#3b5fad;font-style:italic">{display_df['SCHEDULED'].sum():,.2f}</td>
             <td style="text-align:right;color:#1d4ed8">{total_capital_paid:,.2f}</td>
             <td style="text-align:right;color:#c2410c">{total_interest_paid:,.2f}</td>
             <td style="text-align:right;color:#1d4ed8">{total_paid:,.2f}</td>
           </tr>
           <tr class="owed">
-            <td class="lbl" colspan="3" style="color:#b91c1c">Remaining Balance (Still Owed)</td>
+            <td class="lbl" colspan="4" style="color:#b91c1c">Remaining Balance (Still Owed)</td>
             <td style="text-align:right;color:#b91c1c">{remaining_capital:,.2f}</td>
+          </tr>
+          <tr class="sched">
+            <td class="lbl" colspan="4" style="color:#1e40af">Total Scheduled (All Payments + Outstanding)</td>
+            <td style="text-align:right;color:#1d4ed8">{total_scheduled:,.2f}</td>
           </tr>
         </tfoot>
       </table>
