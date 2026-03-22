@@ -134,7 +134,7 @@ st.markdown("""
 html, body, .stApp {
     background: linear-gradient(150deg, #e8f0fe 0%, #dbeafe 30%, #eff6ff 60%, #fef3e8 85%, #fff7ed 100%) !important;
     font-family: 'DM Sans', sans-serif !important;
-    color: #0f172a !important;
+    color: #0c1a4e !important;
 }
 .block-container { padding: 2rem 3rem !important; max-width: 1400px !important; }
 section[data-testid="stSidebar"] { display: none; }
@@ -166,15 +166,20 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     color: #1e40af;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-weight: 700;
 }
 .metric-value {
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
     color: #1d4ed8;
     font-family: 'DM Mono', monospace;
-    line-height: 1;
+    line-height: 1.15;
+    word-break: break-word;
+    text-align: center;
+}
+.metric-value-lg {
+    font-size: 40px !important;
 }
 
 /* ── Info cards — equal height via flex ── */
@@ -200,7 +205,7 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     border-bottom: 1.5px solid #f97316;
     padding-bottom: 6px;
 }
@@ -208,17 +213,17 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 9px 0;
     border-bottom: 0.5px solid rgba(30,64,175,0.08);
-    font-size: 13px;
+    font-size: 14px;
 }
 .info-row:last-child { border-bottom: none; }
-.info-key { color: #374151; font-weight: 400; }
+.info-key { color: #2d4a8a; font-weight: 400; }
 .info-val {
     color: #0c1a4e;
-    font-weight: 600;
+    font-weight: 700;
     font-family: 'DM Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
     text-align: right;
 }
 
@@ -387,7 +392,7 @@ if not st.session_state.officer_name:
             <div style="display:flex;justify-content:center">{BANK_SVG}</div>
             <div class="orange-accent"></div>
             <div class="login-title">Officer Portal</div>
-            <div class="login-sub">Internal loan management system</div>
+            <div class="login-sub" style="color:#2d4a8a">Internal loan management system</div>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
@@ -415,7 +420,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
             Loan Repayment Detail
         </div>
         <h1 style='font-size:26px;margin:0;color:#0c1a4e'>{product}</h1>
-        <p style='color:#374151;font-size:13px;margin-top:4px'>
+        <p style='color:#2d4a8a;font-size:13px;margin-top:4px'>
             Opened: {opened} &nbsp;·&nbsp; Term: {term}
         </p>
     </div>
@@ -580,35 +585,35 @@ def show_customer_page(app):
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value" style="color:{score_color};font-size:38px">{score_val}</div>
+            <div class="metric-value metric-value-lg" style="color:{score_color}">{score_val}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
-        cluster_raw  = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
+        cluster_raw = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Cluster</div>
-            <div class="metric-value" style="font-size:13px;line-height:1.3;word-break:break-word">{cluster_raw}</div>
+            <div class="metric-value" style="font-size:18px">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Score Band</div>
-            <div class="metric-value" style="font-size:14px;line-height:1.3">{c.get('Score_Band', 'N/A')}</div>
+            <div class="metric-value" style="font-size:18px">{c.get('Score_Band', 'N/A')}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
-            <div class="metric-value" style="font-size:15px;line-height:1.3">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
+            <div class="metric-value" style="font-size:18px">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
         </div>""", unsafe_allow_html=True)
     with m5:
         ood_val   = int(float(c.get('MAX_OOD', 0)))
         ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
-            <div class="metric-value" style="color:{ood_color};font-size:38px">{ood_val}</div>
+            <div class="metric-value metric-value-lg" style="color:{ood_color}">{ood_val}</div>
         </div>""", unsafe_allow_html=True)
     with m6:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Active Accounts</div>
-            <div class="metric-value" style="font-size:38px">{int(c.get('Number_of_Active_Accounts', 0))}</div>
+            <div class="metric-value metric-value-lg">{int(c.get('Number_of_Active_Accounts', 0))}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
@@ -632,7 +637,7 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
       </div>
 
-      <!-- RISK PROFILE (7 rows + salary = 8 rows) -->
+      <!-- RISK PROFILE — 7 rows, no monthly salary, salary band from cluster -->
       <div class="info-card">
         <div class="info-card-title">Risk Profile</div>
         <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
@@ -640,9 +645,9 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
-        <div class="info-row"><span class="info-key">Monthly salary</span><span class="info-val">{fmt(c.get('Avg_Monthly_Credit', 0))}</span></div>
         <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
-        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Salary_Band', c.get('salary_band', c.get('SALARY_BAND', 'N/A'))))}</span></div>
+        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Salary_Band', c.get('salary_band', c.get('SALARY_BAND', c.get('Cluster_Name', 'N/A')))))}</span></div>
+        <div class="info-row"><span class="info-key">Score band</span><span class="info-val">{c.get('Score_Band', 'N/A')}</span></div>
       </div>
 
       <!-- THIS APPLICATION (badge + 8 rows) -->
@@ -856,14 +861,14 @@ def show_dashboard():
             <div class="app-card">
                 <div style='display:flex;justify-content:space-between;align-items:center'>
                     <div style='display:flex;align-items:center;gap:16px'>
-                        <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:600'>#{app['id']}</span>
-                        <span style='color:#0c1a4e;font-weight:600'>{app['nic']}</span>
+                        <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:700'>#{app['id']}</span>
+                        <span style='color:#0c1a4e;font-weight:700'>{app['nic']}</span>
                         {badge}
                     </div>
                     <div style='display:flex;gap:2rem;align-items:center'>
-                        <span style='color:#374151;font-size:12px'>{app['loan_product'].split('—')[0].strip()}</span>
-                        <span style='color:#0c1a4e;font-family:DM Mono;font-size:13px;font-weight:600'>{fmt(app['loan_amount'])}</span>
-                        <span style='color:#6b7280;font-size:11px'>{app['submitted_at']}</span>
+                        <span style='color:#2d4a8a;font-size:13px'>{app['loan_product'].split('—')[0].strip()}</span>
+                        <span style='color:#0c1a4e;font-family:DM Mono;font-size:14px;font-weight:700'>{fmt(app['loan_amount'])}</span>
+                        <span style='color:#3b5fad;font-size:12px'>{app['submitted_at']}</span>
                     </div>
                 </div>
             </div>
