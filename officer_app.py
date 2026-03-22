@@ -472,36 +472,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="section-header">Cumulative Repayment Progress</div>', unsafe_allow_html=True)
-    acc_rep['Cumulative_Capital']  = acc_rep['CAPITAL_PAIED'].cumsum()
-    acc_rep['Cumulative_Interest'] = acc_rep['INTEREST_PAIED'].cumsum()
-    acc_rep['Cumulative_Total']    = acc_rep['TOTAL_PAID'].cumsum()
 
-    fig2 = go.Figure()
-    fig2.add_trace(go.Scatter(
-        x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Total'],
-        name='Total Cumulative', mode='lines',
-        line=dict(color=LINE_A, width=3)
-    ))
-    fig2.add_trace(go.Scatter(
-        x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Capital'],
-        name='Capital Cumulative', mode='lines',
-        line=dict(color=LINE_C, width=2, dash='dot')
-    ))
-    fig2.add_trace(go.Scatter(
-        x=acc_rep['PAYMENT_DATE'], y=acc_rep['Cumulative_Interest'],
-        name='Interest Cumulative', mode='lines',
-        line=dict(color=LINE_B, width=2, dash='dot')
-    ))
-    fig2.update_layout(
-        paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
-        font=dict(color=FONT_COL, family='DM Sans'),
-        height=300, margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(gridcolor=GRID_COL, color=FONT_COL),
-        yaxis=dict(gridcolor=GRID_COL, title='Cumulative Amount (LKR)', color=FONT_COL),
-        legend=dict(bgcolor=LEGEND_BG, bordercolor=LEGEND_BD, font=dict(color='#0c1a4e'))
-    )
-    st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown('<div class="section-header">Repayment Records</div>', unsafe_allow_html=True)
 
@@ -543,13 +514,12 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     rows_html = ""
     for i, (_, row) in enumerate(display_df.iterrows()):
-        bg = "rgba(29,78,216,0.02)" if i % 2 == 0 else "rgba(255,255,255,0.6)"
         rows_html += (
-            f'<tr style="background:{bg};border-bottom:0.5px solid rgba(29,78,216,0.08)">'
-            f'<td style="padding:10px 16px;color:#2d4a8a;font-family:DM Sans,sans-serif">{row["PAYMENT_DATE"]}</td>'
-            f'<td style="padding:10px 16px;text-align:right;color:#0c1a4e;font-family:DM Mono,monospace">{row["CAPITAL_PAIED"]:,.2f}</td>'
-            f'<td style="padding:10px 16px;text-align:right;color:#c2410c;font-family:DM Mono,monospace">{row["INTEREST_PAIED"]:,.2f}</td>'
-            f'<td style="padding:10px 16px;text-align:right;font-weight:700;color:#1d4ed8;font-family:DM Mono,monospace">{row["TOTAL_PAID"]:,.2f}</td>'
+            f'<tr>'
+            f'<td>{row["PAYMENT_DATE"]}</td>'
+            f'<td>{row["CAPITAL_PAIED"]:,.2f}</td>'
+            f'<td style="color:#c2410c">{row["INTEREST_PAIED"]:,.2f}</td>'
+            f'<td>{row["TOTAL_PAID"]:,.2f}</td>'
             f'</tr>'
         )
 
@@ -562,13 +532,20 @@ def show_loan_repayment_page(acc_row, cust_repayments):
                border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
       table {{ width:100%;border-collapse:collapse; }}
       thead tr {{ background:rgba(29,78,216,0.08); }}
-      th {{ padding:12px 16px;font-family:DM Sans,sans-serif;font-size:10px;letter-spacing:2px;
+      th {{ padding:13px 18px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;
             text-transform:uppercase;font-weight:700;color:#1e40af;border-bottom:1.5px solid rgba(29,78,216,0.18); }}
       th:not(:first-child) {{ text-align:right; }}
+      tbody td {{ padding:11px 18px;font-size:14px;color:#1e40af; }}
+      tbody td:first-child {{ font-family:'DM Sans',sans-serif;color:#2d4a8a;font-size:14px; }}
+      tbody td:not(:first-child) {{ font-family:'DM Mono',monospace;text-align:right;color:#1e40af; }}
+      tbody td:last-child {{ font-weight:700;font-size:15px;color:#1d4ed8; }}
+      tbody tr {{ border-bottom:0.5px solid rgba(29,78,216,0.08); }}
+      tbody tr:nth-child(even) {{ background:rgba(29,78,216,0.025); }}
+      tbody tr:nth-child(odd)  {{ background:rgba(255,255,255,0.6); }}
       tfoot tr.total {{ background:rgba(29,78,216,0.08);border-top:2px solid #f97316; }}
-      tfoot tr.owed  {{ background:rgba(220,38,38,0.05);border-top:0.5px solid rgba(220,38,38,0.2); }}
-      tfoot td {{ padding:11px 16px;font-family:DM Mono,monospace;font-weight:700;font-size:13px; }}
-      .lbl {{ font-family:DM Sans,sans-serif !important;color:#1e40af; }}
+      tfoot tr.owed  {{ background:rgba(220,38,38,0.04);border-top:0.5px solid rgba(220,38,38,0.2); }}
+      tfoot td {{ padding:12px 18px;font-family:'DM Mono',monospace;font-weight:700;font-size:15px; }}
+      .lbl {{ font-family:'DM Sans',sans-serif !important;font-size:11px;letter-spacing:2px;text-transform:uppercase; }}
     </style></head><body>
     <div class="wrap">
       <table>
@@ -583,13 +560,13 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         <tbody>{rows_html}</tbody>
         <tfoot>
           <tr class="total">
-            <td class="lbl" style="font-size:11px;letter-spacing:2px;text-transform:uppercase">Total</td>
-            <td style="text-align:right;color:#0c1a4e">{total_capital_paid:,.2f}</td>
+            <td class="lbl" style="color:#1e40af">Total</td>
+            <td style="text-align:right;color:#1d4ed8">{total_capital_paid:,.2f}</td>
             <td style="text-align:right;color:#c2410c">{total_interest_paid:,.2f}</td>
             <td style="text-align:right;color:#1d4ed8">{total_paid:,.2f}</td>
           </tr>
           <tr class="owed">
-            <td class="lbl" colspan="3" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#b91c1c">Remaining Balance (Still Owed)</td>
+            <td class="lbl" colspan="3" style="color:#b91c1c">Remaining Balance (Still Owed)</td>
             <td style="text-align:right;color:#b91c1c">{remaining_capital:,.2f}</td>
           </tr>
         </tfoot>
