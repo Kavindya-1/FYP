@@ -446,28 +446,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
         st.info("No dated repayment records found.")
         return
 
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Total Capital Paid</div>
-            <div class="metric-value" style="font-size:20px">{fmt(acc_rep['CAPITAL_PAIED'].sum())}</div>
-        </div>""", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Total Interest Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#f97316">{fmt(acc_rep['INTEREST_PAIED'].sum())}</div>
-        </div>""", unsafe_allow_html=True)
-    with m3:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Total Paid</div>
-            <div class="metric-value" style="font-size:20px;color:#1d4ed8">{fmt(acc_rep['TOTAL_PAID'].sum())}</div>
-        </div>""", unsafe_allow_html=True)
-    with m4:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">No. of Payments</div>
-            <div class="metric-value" style="font-size:20px">{len(acc_rep)}</div>
-        </div>""", unsafe_allow_html=True)
-
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-header">Capital & Interest Repayments Over Time</div>', unsafe_allow_html=True)
 
@@ -526,10 +504,91 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown('<div class="section-header">Repayment Records</div>', unsafe_allow_html=True)
+
+    # ── Compute summary figures ──────────────────────────────
+    total_capital_paid   = acc_rep['CAPITAL_PAIED'].sum()
+    total_interest_paid  = acc_rep['INTEREST_PAIED'].sum()
+    total_paid           = acc_rep['TOTAL_PAID'].sum()
+
+    # Try to get original loan amount from account row for remaining calc
+    acc_balance = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
+    # Outstanding = current balance on account (positive = still owed)
+    # If not available, estimate as capital remaining
+    original_loan_est    = total_capital_paid + max(acc_balance, 0)
+    remaining_capital    = max(acc_balance, 0)
+    total_scheduled      = total_paid + remaining_capital  # paid so far + what's left
+
+    # ── Summary stat cards ───────────────────────────────────
+    s1, s2, s3, s4 = st.columns(4)
+    with s1:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.07);border-color:rgba(29,78,216,0.25)">
+            <div class="metric-label">Total Capital Paid</div>
+            <div class="metric-value">{fmt(total_capital_paid)}</div>
+        </div>""", unsafe_allow_html=True)
+    with s2:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.25)">
+            <div class="metric-label">Total Interest Paid</div>
+            <div class="metric-value" style="color:#c2410c">{fmt(total_interest_paid)}</div>
+        </div>""", unsafe_allow_html=True)
+    with s3:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.05);border-color:rgba(29,78,216,0.2)">
+            <div class="metric-label">Total Amount Paid</div>
+            <div class="metric-value">{fmt(total_paid)}</div>
+        </div>""", unsafe_allow_html=True)
+    with s4:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.22)">
+            <div class="metric-label">Amount Still Owed</div>
+            <div class="metric-value" style="color:#b91c1c">{fmt(remaining_capital)}</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+
+    # ── Styled table with totals row ─────────────────────────
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
-    display_df.columns = ['Payment Date', 'Capital Paid (LKR)', 'Interest Paid (LKR)', 'Total Paid (LKR)']
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+    # Build HTML table
+    rows_html = ""
+    for _, row in display_df.iterrows():
+        rows_html += f"""
+        <tr>
+          <td>{row['PAYMENT_DATE']}</td>
+          <td style="text-align:right">{row['CAPITAL_PAIED']:,.2f}</td>
+          <td style="text-align:right">{row['INTEREST_PAIED']:,.2f}</td>
+          <td style="text-align:right;font-weight:700;color:#1d4ed8">{row['TOTAL_PAID']:,.2f}</td>
+        </tr>"""
+
+    st.markdown(f"""
+    <div style="background:rgba(255,255,255,0.68);border:0.5px solid rgba(30,64,175,0.15);
+                border-radius:14px;overflow:hidden;backdrop-filter:blur(10px);
+                box-shadow:0 2px 12px rgba(30,64,175,0.06)">
+      <table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:13px">
+        <thead>
+          <tr style="background:rgba(29,78,216,0.07);border-bottom:1.5px solid rgba(29,78,216,0.15)">
+            <th style="text-align:left;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Payment Date</th>
+            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Capital Paid (LKR)</th>
+            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Interest Paid (LKR)</th>
+            <th style="text-align:right;padding:12px 16px;color:#1e40af;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Total Paid (LKR)</th>
+          </tr>
+        </thead>
+        <tbody style="color:#0c1a4e">
+          {rows_html}
+        </tbody>
+        <tfoot>
+          <tr style="background:rgba(29,78,216,0.08);border-top:1.5px solid #f97316">
+            <td style="padding:12px 16px;font-weight:700;color:#1e40af;font-size:13px">TOTAL</td>
+            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#0c1a4e;font-family:'DM Mono',monospace">{total_capital_paid:,.2f}</td>
+            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#c2410c;font-family:'DM Mono',monospace">{total_interest_paid:,.2f}</td>
+            <td style="text-align:right;padding:12px 16px;font-weight:700;color:#1d4ed8;font-family:'DM Mono',monospace">{total_paid:,.2f}</td>
+          </tr>
+          <tr style="background:rgba(220,38,38,0.05);border-top:0.5px solid rgba(220,38,38,0.2)">
+            <td style="padding:10px 16px;font-weight:700;color:#b91c1c;font-size:12px" colspan="3">REMAINING BALANCE (STILL OWED)</td>
+            <td style="text-align:right;padding:10px 16px;font-weight:700;color:#b91c1c;font-family:'DM Mono',monospace">{remaining_capital:,.2f}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════
