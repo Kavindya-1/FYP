@@ -146,11 +146,16 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     background: rgba(255,255,255,0.72);
     border: 0.5px solid rgba(30,64,175,0.18);
     border-radius: 14px;
-    padding: 1.2rem 1.5rem;
+    padding: 1.4rem 1rem;
     text-align: center;
     backdrop-filter: blur(10px);
     transition: border-color 0.2s, background 0.2s;
     box-shadow: 0 2px 16px rgba(30,64,175,0.07);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 .metric-card:hover {
     border-color: rgba(30,64,175,0.4);
@@ -160,15 +165,16 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     font-size: 10px;
     color: #1e40af;
     text-transform: uppercase;
-    letter-spacing: 2.5px;
-    margin-bottom: 6px;
-    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    font-weight: 700;
 }
 .metric-value {
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 700;
-    color: #0c1a4e;
+    color: #1d4ed8;
     font-family: 'DM Mono', monospace;
+    line-height: 1;
 }
 
 /* ── Info cards — equal height via flex ── */
@@ -568,35 +574,41 @@ def show_customer_page(app):
     cust_transactions = transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
 
     # ── Top metric cards ─────────────────────────────────────
-    m1, m2, m3, m4, m5 = st.columns(5)
+    m1, m2, m3, m4, m5, m6 = st.columns(6)
     with m1:
         score_val   = int(float(c.get('Internal_Bank_Default_Score', 0)))
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value" style="color:{score_color}">{score_val}</div>
+            <div class="metric-value" style="color:{score_color};font-size:38px">{score_val}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
+        cluster_raw  = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
         st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Score Band</div>
-            <div class="metric-value" style="font-size:15px;padding-top:8px">{c.get('Score_Band', 'N/A')}</div>
+            <div class="metric-label">Cluster</div>
+            <div class="metric-value" style="font-size:13px;line-height:1.3;word-break:break-word">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
         st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Monthly Income</div>
-            <div class="metric-value" style="font-size:17px;padding-top:6px">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
+            <div class="metric-label">Score Band</div>
+            <div class="metric-value" style="font-size:14px;line-height:1.3">{c.get('Score_Band', 'N/A')}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
+        st.markdown(f"""<div class="metric-card">
+            <div class="metric-label">Monthly Income</div>
+            <div class="metric-value" style="font-size:15px;line-height:1.3">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
+        </div>""", unsafe_allow_html=True)
+    with m5:
         ood_val   = int(float(c.get('MAX_OOD', 0)))
         ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
-            <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
+            <div class="metric-value" style="color:{ood_color};font-size:38px">{ood_val}</div>
         </div>""", unsafe_allow_html=True)
-    with m5:
+    with m6:
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Active Accounts</div>
-            <div class="metric-value">{int(c.get('Number_of_Active_Accounts', 0))}</div>
+            <div class="metric-value" style="font-size:38px">{int(c.get('Number_of_Active_Accounts', 0))}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
@@ -630,7 +642,7 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Monthly salary</span><span class="info-val">{fmt(c.get('Avg_Monthly_Credit', 0))}</span></div>
         <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
-        <div class="info-row"><span class="info-key">Net ratio</span><span class="info-val">{round(float(c.get('NET_RATIO', 0)), 3)}</span></div>
+        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Salary_Band', c.get('salary_band', c.get('SALARY_BAND', 'N/A'))))}</span></div>
       </div>
 
       <!-- THIS APPLICATION (badge + 8 rows) -->
