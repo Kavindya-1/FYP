@@ -399,7 +399,7 @@ elif st.session_state.step == 3:
     elif band == "Medium Risk":
         suggested = floor_to_nearest_1000(dec["max_eligible"] * 0.70)
         suggested = max(suggested, 0)
-        st.session_state.suggested_amount = suggested
+        st.session_state.suggested_amount = (suggested/2)
         st.warning("⚠️ Based on your profile, you may qualify for a limited loan amount.")
         st.markdown(f"""
         <div class="verified-card" style="margin-top:1rem">
