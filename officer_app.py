@@ -875,10 +875,32 @@ def show_dashboard():
 
     st.markdown("<hr style='border-color:rgba(30,64,175,0.15);margin:1rem 0'>", unsafe_allow_html=True)
 
-    col_r, _ = st.columns([1, 5])
+    # ── Refresh + Clear All buttons side by side ─────────────
+    col_r, col_clear, _ = st.columns([1, 1, 4])
     with col_r:
         if st.button("↻ Refresh", use_container_width=True):
             st.rerun()
+    with col_clear:
+        if st.button("🗑️ Clear All", use_container_width=True):
+            if "confirm_clear" not in st.session_state:
+                st.session_state.confirm_clear = False
+            st.session_state.confirm_clear = True
+
+    # ── Confirmation prompt ───────────────────────────────────
+    if st.session_state.get("confirm_clear", False):
+        st.warning("⚠️ Are you sure you want to delete ALL applications? This cannot be undone.")
+        col_yes, col_no, _ = st.columns([1, 1, 4])
+        with col_yes:
+            if st.button("✅ Yes, delete all", use_container_width=True):
+                from db_utils import clear_all_applications
+                clear_all_applications()
+                st.session_state.confirm_clear = False
+                st.success("All applications cleared!")
+                st.rerun()
+        with col_no:
+            if st.button("❌ Cancel", use_container_width=True):
+                st.session_state.confirm_clear = False
+                st.rerun()
 
     applications = get_all_applications()
     if not applications:
