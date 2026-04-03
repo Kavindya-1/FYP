@@ -78,3 +78,17 @@ def update_application_status(app_id: int, status: str,
     except Exception as e:
         st.error(f"Failed to update application: {e}")
         return None
+
+
+def clear_all_applications():
+    """Delete all applications from Supabase."""
+    try:
+        supabase = get_client()
+        response = supabase.table("applications") \
+            .delete() \
+            .neq("id", 0) \
+            .execute()
+        return response
+    except Exception as e:
+        st.error(f"Failed to clear applications: {e}")
+        return None
