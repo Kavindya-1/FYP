@@ -1216,17 +1216,23 @@ eligible_final.to_excel("eligible_final.xlsx", index=False)
 
 import joblib
 
-joblib.dump(customer_df, "eligible_customers.pkl", protocol=4)
-print("eligible_customers.pkl saved successfully!")
+joblib.dump(eligible_final, "eligible_customers.pkl", protocol=4)
+print(f"✅ eligible_customers.pkl saved — {len(eligible_final)} rows")
+
 
 joblib.dump(xgb_monotone_full, "credit_model.pkl", protocol=4)
-print("credit_model.pkl saved successfully!")
+print("✅ credit_model.pkl saved successfully!")
+
+
 
 joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
-print("kproto_cluster_model.pkl saved successfully!")
+print("✅ kproto_cluster_model.pkl saved successfully!")
+
 
 joblib.dump(account_df, "account_df_full.pkl", protocol=4)
-print("account_df_full.pkl saved successfully!")
+print(f"✅ account_df_full.pkl saved — {len(account_df)} rows")
+
+# print("account_df_full.pkl saved successfully!")
 
 # joblib.dump(repayment_df, "repayment_df.pkl", protocol=4)
 # print("repayment_df.pkl saved successfully!")
