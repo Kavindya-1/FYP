@@ -839,28 +839,105 @@ y = model_data["DEFAULT"]
 # In[71]:
 
 
-from xgboost import XGBClassifier
+# from xgboost import XGBClassifier
 
-# Encode categorical columns for full model
+# # Encode categorical columns for full model
+# X_full = X.copy()
+# for col in categorical_cols:
+#     X_full[col] = X_full[col].cat.codes
+
+# # Train final model on all customers
+# xgb_reg_full = XGBClassifier(
+#     n_estimators=200,
+#     max_depth=6,
+#     scale_pos_weight=(len(y)-sum(y))/sum(y),
+#     reg_alpha=5,
+#     reg_lambda=5,
+#     random_state=42,
+#     use_label_encoder=False,
+#     eval_metric='logloss'
+# )
+
+# xgb_reg_full.fit(X_full, y)
+
+# ── Step 1: Prepare full dataset with category dtype ──
 X_full = X.copy()
 for col in categorical_cols:
-    X_full[col] = X_full[col].cat.codes
+    X_full[col] = X_full[col].astype("category")
 
-# Train final model on all customers
-xgb_reg_full = XGBClassifier(
-    n_estimators=200,
-    max_depth=6,
-    scale_pos_weight=(len(y)-sum(y))/sum(y),
-    reg_alpha=5,
-    reg_lambda=5,
-    random_state=42,
-    use_label_encoder=False,
-    eval_metric='logloss'
+# ── Step 2: Rebuild monotone constraints from X_full columns ──
+# (X_full has same columns as X_train but we rebuild to be safe)
+constraint_map = {
+      # Transaction behaviour
+    "NET_TRANSACTION_SUM"        : -1,  # more net flow       → lower risk
+    "AVG_TRANSACTION"            : -1,  # higher avg txn      → lower risk
+    "STD_TRANSACTION"            :  1,  # high volatility     → higher risk
+    "TXN_COUNT"                  : -1,  # more transactions   → lower risk
+    "NET_RATIO"                  : -1,  # better ratio        → lower risk
+    "AVG_TXN_PER_DAY"            : -1,  # more activity       → lower risk
+    "TRANSACTION_VOLATILITY"     :  1,  # more volatile       → higher risk
+    "LOG_AVG_INFLOW"             : -1,  # more inflow         → lower risk
+
+    # Loan size
+    "TOTAL_CAPITAL_SCHEDULED"    :  1,  # bigger loan         → higher risk
+    "TOTAL_INTEREST_SCHEDULED"   :  1,  # higher interest     → higher risk
+
+    # Payment behaviour
+    "PAYMENT_FREQUENCY"          : -1,  # pays more often     → lower risk
+
+
+    # Account level
+    "MONTHEND_CONVERTED_BALANCE" : -1,  # higher balance      → lower risk
+    "UTILIZATION"                :  1,  # higher utilization  → higher risk
+    "ACCOUNT_AGE_MONTHS"         : -1,  # older account       → lower risk
+    "Number_of_Active_Accounts"  :  0,  # unclear direction
+
+    # Categoricals — cannot be constrained
+    "CUSTOMER_RISK_NAME"         :  0,
+    "AGE"                        :  0,
+    "EMPLOYMENT_STATUS"          :  0,
+    "OCCUPATION"                 :  0,
+    "DISTRICT"                   :  0,
+
+}
+
+
+import xgboost as xgb
+
+# Build from X_full columns — guarantees correct order
+monotone_constraints_full = tuple(
+    constraint_map.get(f, 0) for f in X_full.columns
 )
 
-xgb_reg_full.fit(X_full, y)
+# Verify
+print("Constrained features (full model):")
+for f, c in zip(X_full.columns, monotone_constraints_full):
+    if c != 0:
+        print(f"  {f:<35} {'↑ higher risk' if c == 1 else '↓ lower risk'}")
 
+# ── Step 3: Retrain on full dataset with same rules ──
+non_default  = (y == 0).sum()
+default      = (y == 1).sum()
+weight_full  = non_default / default
 
+xgb_monotone_full = xgb.XGBClassifier(
+    # ── Tuned hyperparameters ──
+    n_estimators         = 400,   # ← changed
+    max_depth            = 4,     # ← same
+    learning_rate        = 0.01,  # ← changed
+    subsample            = 0.8,   # ← same
+    colsample_bytree     = 0.8,   # ← same
+    reg_alpha            = 0.5,   # ← changed
+    reg_lambda           = 1,     # ← changed
+    min_child_weight     = 3,     # ← changed
+    scale_pos_weight     = weight_full,
+    random_state         = 42,
+    eval_metric          = "logloss",
+    enable_categorical   = True,
+    # ── Same business rules enforced ──
+    monotone_constraints = monotone_constraints_full
+)
+xgb_monotone_full.fit(X_full, y)
 # In[72]:
 
 
@@ -875,14 +952,14 @@ xgb_reg_full.fit(X_full, y)
 
 
 # Predict credit scores (probability of default)
-model_data['default_probability'] = xgb_reg_full.predict_proba(X_full)[:, 1]
+model_data['default_probability'] = xgb_monotone_full.predict_proba(X_full)[:, 1]
 
 
 # In[74]:
 
 
-y_proba = xgb_reg_full.predict_proba(X_full)[:,1]
-y_pred = xgb_reg_full.predict(X_full)
+y_proba = xgb_monotone_full.predict_proba(X_full)[:,1]
+y_pred = xgb_monotone_full.predict(X_full)
 
 
 # In[75]:
@@ -1048,7 +1125,7 @@ import joblib
 joblib.dump(customer_full_df, "eligible_customers.pkl", protocol=4)
 print("eligible_customers.pkl saved successfully!")
 
-joblib.dump(xgb_reg_full, "credit_model.pkl", protocol=4)
+joblib.dump(xgb_monotone_full, "credit_model.pkl", protocol=4)
 print("credit_model.pkl saved successfully!")
 
 joblib.dump(kproto_final, "kproto_cluster_model.pkl", protocol=4)
@@ -1096,3 +1173,4 @@ print(f"✅ transaction_history.pkl saved — {len(transaction_df)} rows")
 
 import os
 size = os.path.getsize("transaction_history.pkl") / (1024*1024)
+# %%
