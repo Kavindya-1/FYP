@@ -35,6 +35,12 @@ def format_date(d):
     except:
         return str(d)
 
+def get_thin_flag(nic):
+    row = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
+    if row.empty:
+        return False
+    return int(row.iloc[0].get("Thin_File_Flag", 0)) == 1
+
 # ══════════════════════════════════════════════════════════════
 # SVG Bank Building Illustration
 # ══════════════════════════════════════════════════════════════
@@ -58,66 +64,41 @@ BANK_SVG = """
       <stop offset="100%" stop-color="#d97706"/>
     </linearGradient>
   </defs>
-
-  <!-- Sky background -->
   <rect width="160" height="140" rx="16" fill="url(#skyGrad)"/>
-
-  <!-- Main building body -->
   <rect x="20" y="45" width="120" height="80" rx="2" fill="url(#buildGrad)"/>
-
-  <!-- Glass windows grid on building -->
   <rect x="28" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="50" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="72" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="94" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="116" y="55" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
-
   <rect x="28" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="50" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="72" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="94" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
   <rect x="116" y="73" width="16" height="12" rx="1" fill="url(#glassGrad)"/>
-
-  <!-- Pediment / roof triangle -->
   <polygon points="10,45 80,12 150,45" fill="#1e3a8a"/>
-  <!-- Roof highlight -->
   <polygon points="10,45 80,14 150,45 148,45 80,16 12,45" fill="#2563eb" opacity="0.4"/>
-
-  <!-- Cornice bar -->
   <rect x="15" y="43" width="130" height="5" rx="1" fill="#1e3a8a"/>
-
-  <!-- BANK sign plate -->
   <rect x="42" y="28" width="76" height="18" rx="3" fill="url(#signGrad)"/>
   <text x="80" y="41" text-anchor="middle" font-family="Georgia, serif" font-weight="700"
         font-size="13" fill="#7c2d12" letter-spacing="3">BANK</text>
-
-  <!-- Columns -->
   <rect x="30" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
   <rect x="53" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
   <rect x="97" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
   <rect x="120" y="45" width="10" height="45" rx="2" fill="#dbeafe" opacity="0.9"/>
-
-  <!-- Column caps -->
   <rect x="28" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
   <rect x="51" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
   <rect x="95" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
   <rect x="118" y="44" width="14" height="4" rx="1" fill="#93c5fd"/>
-
-  <!-- Column bases -->
   <rect x="27" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
   <rect x="50" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
   <rect x="94" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
   <rect x="117" y="86" width="16" height="4" rx="1" fill="#93c5fd"/>
-
-  <!-- Door -->
   <rect x="67" y="99" width="26" height="26" rx="2" fill="#1e3a8a"/>
   <rect x="69" y="101" width="10" height="22" rx="1" fill="url(#glassGrad)"/>
   <rect x="81" y="101" width="10" height="22" rx="1" fill="url(#glassGrad)"/>
-  <!-- Door handle -->
   <circle cx="79" cy="113" r="1.5" fill="#fbbf24"/>
   <circle cx="81" cy="113" r="1.5" fill="#fbbf24"/>
-
-  <!-- Base steps -->
   <rect x="10" y="125" width="140" height="5" rx="1" fill="#1e3a8a" opacity="0.7"/>
   <rect x="5"  y="130" width="150" height="5" rx="1" fill="#1e3a8a" opacity="0.5"/>
   <rect x="0"  y="135" width="160" height="5" rx="0" fill="#1e3a8a" opacity="0.3"/>
@@ -125,7 +106,7 @@ BANK_SVG = """
 """
 
 # ══════════════════════════════════════════════════════════════
-# CSS — Blue & Orange Analytics Theme
+# CSS
 # ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
@@ -138,10 +119,8 @@ html, body, .stApp {
 }
 .block-container { padding: 2rem 3rem !important; max-width: 1400px !important; }
 section[data-testid="stSidebar"] { display: none; }
-
 h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !important; }
 
-/* ── Metric cards ── */
 .metric-card {
     background: rgba(255,255,255,0.72);
     border: 0.5px solid rgba(30,64,175,0.18);
@@ -157,207 +136,68 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
     justify-content: center;
     min-height: 110px;
 }
-.metric-card:hover {
-    border-color: rgba(30,64,175,0.4);
-    background: rgba(255,255,255,0.9);
-}
-.metric-label {
-    font-size: 10px;
-    color: #1e40af;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-    font-weight: 700;
-}
-.metric-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d4ed8;
-    font-family: 'DM Mono', monospace;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-.metric-value-lg {
-    font-size: 20px !important;
-}
+.metric-card:hover { border-color: rgba(30,64,175,0.4); background: rgba(255,255,255,0.9); }
+.metric-label { font-size: 10px; color: #1e40af; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: 700; }
+.metric-value { font-size: 20px; font-weight: 700; color: #1d4ed8; font-family: 'DM Mono', monospace; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
-/* ── Info cards — equal height via flex ── */
-.profile-row {
-    display: flex;
-    gap: 1.2rem;
-    align-items: stretch;
-    margin-bottom: 1rem;
-}
-.info-card {
-    background: rgba(255,255,255,0.68);
-    border: 0.5px solid rgba(30,64,175,0.15);
-    border-radius: 14px;
-    padding: 1.4rem;
-    flex: 1;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 12px rgba(30,64,175,0.06);
-    min-height: 0;
-}
-.info-card-title {
-    font-size: 10px;
-    color: #1e40af;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    border-bottom: 1.5px solid #f97316;
-    padding-bottom: 6px;
-}
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 0;
-    border-bottom: 0.5px solid rgba(30,64,175,0.08);
-    font-size: 14px;
-}
+.profile-row { display: flex; gap: 1.2rem; align-items: stretch; margin-bottom: 1rem; }
+.info-card { background: rgba(255,255,255,0.68); border: 0.5px solid rgba(30,64,175,0.15); border-radius: 14px; padding: 1.4rem; flex: 1; backdrop-filter: blur(10px); box-shadow: 0 2px 12px rgba(30,64,175,0.06); min-height: 0; }
+.info-card-title { font-size: 10px; color: #1e40af; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 1rem; font-weight: 700; border-bottom: 1.5px solid #f97316; padding-bottom: 6px; }
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid rgba(30,64,175,0.08); font-size: 14px; }
 .info-row:last-child { border-bottom: none; }
 .info-key { color: #2d4a8a; font-weight: 400; }
-.info-val {
-    color: #0c1a4e;
-    font-weight: 700;
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    text-align: right;
-}
+.info-val { color: #0c1a4e; font-weight: 700; font-family: 'DM Mono', monospace; font-size: 14px; text-align: right; }
 
-/* ── Badges ── */
 .badge-pending  { background:rgba(251,191,36,0.18); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(251,191,36,0.5); font-weight:600; }
 .badge-approved { background:rgba(34,197,94,0.14);  color:#14532d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(34,197,94,0.4);  font-weight:600; }
 .badge-rejected { background:rgba(239,68,68,0.12);  color:#7f1d1d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(239,68,68,0.35); font-weight:600; }
+.badge-thin     { background:rgba(249,115,22,0.15); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(249,115,22,0.5); font-weight:600; }
 
-/* ── Section headers ── */
-.section-header {
-    font-size: 10px;
-    color: #1e40af;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    font-weight: 700;
-    margin: 1.8rem 0 1rem 0;
-    padding-bottom: 8px;
-    border-bottom: 1.5px solid #f97316;
-    display: inline-block;
-    width: 100%;
-}
+.section-header { font-size: 10px; color: #1e40af; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin: 1.8rem 0 1rem 0; padding-bottom: 8px; border-bottom: 1.5px solid #f97316; display: inline-block; width: 100%; }
 
-/* ── Buttons ── */
-.stButton > button {
-    background: rgba(255,255,255,0.75) !important;
-    color: #1e3a8a !important;
-    border: 1px solid rgba(30,64,175,0.3) !important;
-    border-radius: 10px !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-weight: 600 !important;
-    transition: all 0.2s !important;
-    backdrop-filter: blur(4px) !important;
-}
-.stButton > button:hover {
-    background: rgba(30,64,175,0.1) !important;
-    border-color: #1e40af !important;
-    color: #1e3a8a !important;
-}
+.stButton > button { background: rgba(255,255,255,0.75) !important; color: #1e3a8a !important; border: 1px solid rgba(30,64,175,0.3) !important; border-radius: 10px !important; font-family: 'DM Sans', sans-serif !important; font-weight: 600 !important; transition: all 0.2s !important; backdrop-filter: blur(4px) !important; }
+.stButton > button:hover { background: rgba(30,64,175,0.1) !important; border-color: #1e40af !important; color: #1e3a8a !important; }
 
-/* ── Expander ── */
-div[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.55) !important;
-    border: 0.5px solid rgba(30,64,175,0.18) !important;
-    border-radius: 12px !important;
-    backdrop-filter: blur(8px) !important;
-}
+div[data-testid="stExpander"] { background: rgba(255,255,255,0.55) !important; border: 0.5px solid rgba(30,64,175,0.18) !important; border-radius: 12px !important; backdrop-filter: blur(8px) !important; }
 div[data-testid="stExpander"] summary { color: #0c1a4e !important; font-weight: 500 !important; }
 div[data-testid="stExpander"] summary:hover { color: #1e40af !important; }
 
-/* ── Form inputs ── */
-.stSelectbox > div > div {
-    background: rgba(255,255,255,0.75) !important;
-    border-color: rgba(30,64,175,0.25) !important;
-    color: #0c1a4e !important;
-    border-radius: 10px !important;
-}
-.stTextInput input, .stTextArea textarea {
-    background: rgba(255,255,255,0.75) !important;
-    border-color: rgba(30,64,175,0.25) !important;
-    color: #0c1a4e !important;
-    border-radius: 10px !important;
-    -webkit-text-fill-color: #0c1a4e !important;
-    caret-color: #0c1a4e !important;
-}
-label {
-    color: #1e40af !important;
-    font-size: 11px !important;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600 !important;
-}
+.stSelectbox > div > div { background: rgba(255,255,255,0.75) !important; border-color: rgba(30,64,175,0.25) !important; color: #0c1a4e !important; border-radius: 10px !important; }
+.stTextInput input, .stTextArea textarea { background: rgba(255,255,255,0.75) !important; border-color: rgba(30,64,175,0.25) !important; color: #0c1a4e !important; border-radius: 10px !important; -webkit-text-fill-color: #0c1a4e !important; caret-color: #0c1a4e !important; }
+label { color: #1e40af !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px; font-weight: 600 !important; }
 
-/* ── Streamlit metrics ── */
-.stMetric {
-    background: rgba(255,255,255,0.65);
-    border-radius: 12px;
-    padding: 0.8rem;
-    border: 0.5px solid rgba(30,64,175,0.18);
-}
+.stMetric { background: rgba(255,255,255,0.65); border-radius: 12px; padding: 0.8rem; border: 0.5px solid rgba(30,64,175,0.18); }
 [data-testid="stMetricValue"] { color: #0c1a4e !important; font-family: 'DM Mono', monospace !important; font-weight: 700 !important; }
 [data-testid="stMetricLabel"] { color: #1e40af !important; font-weight: 600 !important; font-size: 11px !important; }
 
-/* ── App list cards ── */
-.app-card {
-    background: rgba(255,255,255,0.62);
-    border: 0.5px solid rgba(30,64,175,0.14);
-    border-radius: 12px;
-    padding: 1rem 1.4rem;
-    margin-bottom: 0.5rem;
-    transition: border-color 0.2s, background 0.2s;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 1px 8px rgba(30,64,175,0.05);
-}
-.app-card:hover {
-    border-color: rgba(30,64,175,0.38);
-    background: rgba(255,255,255,0.85);
-}
+.app-card { background: rgba(255,255,255,0.62); border: 0.5px solid rgba(30,64,175,0.14); border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(30,64,175,0.05); }
+.app-card:hover { border-color: rgba(30,64,175,0.38); background: rgba(255,255,255,0.85); }
+.app-card-thin { background: rgba(255,247,237,0.75); border: 0.5px solid rgba(249,115,22,0.35); border-left: 3px solid #f97316 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(249,115,22,0.08); }
+.app-card-thin:hover { background: rgba(255,247,237,0.95); border-color: rgba(249,115,22,0.6); }
 
-/* ── Alert / info boxes ── */
 div[data-testid="stAlert"] { border-radius: 12px !important; }
-
-/* ── Decorative blobs ── */
 .deco { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
 
-/* ── Login card ── */
-.login-card {
-    background: rgba(255,255,255,0.72);
-    border: 0.5px solid rgba(30,64,175,0.15);
-    border-radius: 20px;
-    padding: 3rem 2.5rem 2.5rem;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 8px 40px rgba(30,64,175,0.1);
-    text-align: center;
-}
-.login-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 26px;
-    color: #0c1a4e;
-    margin: 1.2rem 0 0.4rem;
-}
-.login-sub {
-    color: #374151;
-    font-size: 14px;
-    margin-bottom: 1.8rem;
-}
-
-/* ── Orange accent bar ── */
+.login-card { background: rgba(255,255,255,0.72); border: 0.5px solid rgba(30,64,175,0.15); border-radius: 20px; padding: 3rem 2.5rem 2.5rem; backdrop-filter: blur(12px); box-shadow: 0 8px 40px rgba(30,64,175,0.1); text-align: center; }
+.login-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: #0c1a4e; margin: 1.2rem 0 0.4rem; }
+.login-sub { color: #374151; font-size: 14px; margin-bottom: 1.8rem; }
 .orange-accent { width: 40px; height: 3px; background: #f97316; border-radius: 2px; margin: 0.5rem auto 1.2rem; }
+
+.thin-file-banner {
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.4);
+    border-left: 4px solid #f97316;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.thin-file-banner-icon { font-size: 20px; }
+.thin-file-banner-text { color: #92400e; font-size: 14px; font-weight: 500; line-height: 1.5; }
 </style>
 
-<!-- Decorative gradient blobs -->
 <div class="deco" style="top:-140px;right:-140px;width:520px;height:520px;background:radial-gradient(circle,rgba(147,197,253,0.3) 0%,transparent 70%)"></div>
 <div class="deco" style="bottom:-100px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(249,115,22,0.15) 0%,transparent 70%)"></div>
 <div class="deco" style="top:50%;left:55%;width:280px;height:280px;background:radial-gradient(circle,rgba(59,130,246,0.1) 0%,transparent 70%)"></div>
@@ -371,14 +211,14 @@ if "selected_app"    not in st.session_state: st.session_state.selected_app    =
 if "loan_detail_acc" not in st.session_state: st.session_state.loan_detail_acc = None
 
 # ══════════════════════════════════════════════════════════════
-# PLOTLY THEME — Blue / Orange
+# PLOTLY THEME
 # ══════════════════════════════════════════════════════════════
 PLOT_BG   = 'rgba(0,0,0,0)'
 GRID_COL  = 'rgba(30,64,175,0.1)'
 FONT_COL  = '#374151'
-LINE_A    = '#1d4ed8'   # blue
-LINE_B    = '#f97316'   # orange
-LINE_C    = '#60a5fa'   # light blue
+LINE_A    = '#1d4ed8'
+LINE_B    = '#f97316'
+LINE_C    = '#60a5fa'
 FILL_A    = 'rgba(29,78,216,0.08)'
 FILL_B    = 'rgba(249,115,22,0.08)'
 LEGEND_BG = 'rgba(255,255,255,0.65)'
@@ -472,18 +312,14 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-
-
     st.markdown('<div class="section-header">Repayment Records</div>', unsafe_allow_html=True)
 
-    # ── Compute summary figures ──────────────────────────────
     total_capital_paid   = acc_rep['CAPITAL_PAIED'].sum()
     total_interest_paid  = acc_rep['INTEREST_PAIED'].sum()
     total_paid           = acc_rep['TOTAL_PAID'].sum()
     acc_balance          = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
     remaining_capital    = max(acc_balance, 0)
 
-    # ── Summary stat cards ───────────────────────────────────
     s1, s2, s3, s4, s5 = st.columns(5)
     with s1:
         st.markdown(f"""<div class="metric-card" style="background:rgba(29,78,216,0.04);border-color:rgba(29,78,216,0.2)">
@@ -513,16 +349,12 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
-    # ── Build rows ───────────────────────────────────────────
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
-    # Scheduled per row = what was actually paid (capital + interest = total paid per instalment)
     display_df['SCHEDULED'] = display_df['CAPITAL_PAIED'] + display_df['INTEREST_PAIED']
 
-    total_scheduled = display_df['SCHEDULED'].sum() + remaining_capital  # paid + still owed
-
     rows_html = ""
-    for i, (_, row) in enumerate(display_df.iterrows()):
+    for _, row in display_df.iterrows():
         rows_html += (
             f'<tr>'
             f'<td>{row["PAYMENT_DATE"]}</td>'
@@ -538,12 +370,10 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
       body {{ margin:0; padding:0; background:transparent; }}
-      .wrap {{ background:rgba(255,255,255,0.75);border:0.5px solid rgba(29,78,216,0.18);
-               border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
+      .wrap {{ background:rgba(255,255,255,0.75);border:0.5px solid rgba(29,78,216,0.18);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
       table {{ width:100%;border-collapse:collapse; }}
       thead tr {{ background:rgba(29,78,216,0.08); }}
-      th {{ padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;
-            text-transform:uppercase;font-weight:700;color:#1e40af;border-bottom:1.5px solid rgba(29,78,216,0.18); }}
+      th {{ padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:#1e40af;border-bottom:1.5px solid rgba(29,78,216,0.18); }}
       th:not(:first-child) {{ text-align:right; }}
       tbody td {{ padding:11px 16px;font-size:14px;color:#1e40af; }}
       tbody td:first-child {{ font-family:'DM Sans',sans-serif;color:#2d4a8a;font-size:14px; }}
@@ -554,7 +384,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
       tbody tr:nth-child(even) {{ background:rgba(29,78,216,0.025); }}
       tbody tr:nth-child(odd)  {{ background:rgba(255,255,255,0.6); }}
       tfoot tr.total {{ background:rgba(29,78,216,0.08);border-top:2px solid #f97316; }}
-      tfoot tr.sched {{ background:rgba(29,78,216,0.04);border-top:0.5px solid rgba(29,78,216,0.15); }}
       tfoot tr.owed  {{ background:rgba(220,38,38,0.04);border-top:0.5px solid rgba(220,38,38,0.2); }}
       tfoot td {{ padding:12px 16px;font-family:'DM Mono',monospace;font-weight:700;font-size:15px; }}
       .lbl {{ font-family:'DM Sans',sans-serif !important;font-size:11px;letter-spacing:2px;text-transform:uppercase; }}
@@ -621,16 +450,33 @@ def show_customer_page(app):
         "Rejected": "<span class='badge-rejected'>❌ Rejected</span>",
     }.get(app["status"], app["status"])
 
+    # ── Check thin file ──
+    is_thin = get_thin_flag(nic)
+    thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
+
     st.markdown(f"""
-    <div style='margin:1rem 0 2rem'>
+    <div style='margin:1rem 0 1.5rem'>
         <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;
                     margin-bottom:8px;font-weight:700'>
-            Application #{app['id']} &nbsp;·&nbsp; {badge}
+            Application #{app['id']} &nbsp;·&nbsp; {badge} &nbsp; {thin_badge}
         </div>
         <h1 style='font-size:28px;margin:0;color:#0c1a4e'>Customer Profile</h1>
         <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-top:8px'></div>
     </div>
     """, unsafe_allow_html=True)
+
+    # ── Thin file warning banner ──
+    if is_thin:
+        st.markdown("""
+        <div class="thin-file-banner">
+            <div class="thin-file-banner-icon">⚠️</div>
+            <div class="thin-file-banner-text">
+                <strong>Thin File Customer</strong> — This customer has limited or no financial 
+                history (no transactions, no repayment records, no overdue history). 
+                Additional verification and manual review is strongly recommended before approval.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
     if cust.empty:
@@ -659,9 +505,11 @@ def show_customer_page(app):
             <div class="metric-value">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
     with m3:
+        score_band = str(c.get('Score_Band', 'N/A'))
+        band_color = "#f97316" if score_band == "Unknown Risk" else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Score Band</div>
-            <div class="metric-value">{c.get('Score_Band', 'N/A')}</div>
+            <div class="metric-value" style="color:{band_color}">{score_band}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
         st.markdown(f"""<div class="metric-card">
@@ -676,20 +524,18 @@ def show_customer_page(app):
             <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
         </div>""", unsafe_allow_html=True)
     with m6:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-label">Active Accounts</div>
-            <div class="metric-value">{int(c.get('Number_of_Active_Accounts', 0))}</div>
+        thin_color = "#f97316" if is_thin else "#1d4ed8"
+        thin_label = "⚠️ Thin File" if is_thin else str(int(c.get('Number_of_Active_Accounts', 0)))
+        st.markdown(f"""<div class="metric-card" style="{'background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)' if is_thin else ''}">
+            <div class="metric-label">{'Thin File' if is_thin else 'Active Accounts'}</div>
+            <div class="metric-value" style="color:{thin_color}">{thin_label}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ══ THREE INFO CARDS — equal height via flex row ══════════
-    # Personal has 8 rows, Risk has 7 rows, Application has 9 rows
-    # We force all three to the same row count with a spacer row in Risk card
+    # ── Three info cards ──────────────────────────────────────
     st.markdown(f"""
     <div class="profile-row">
-
-      <!-- PERSONAL INFORMATION -->
       <div class="info-card">
         <div class="info-card-title">Personal Information</div>
         <div class="info-row"><span class="info-key">NIC</span><span class="info-val">{nic}</span></div>
@@ -702,7 +548,6 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
       </div>
 
-      <!-- RISK PROFILE — 7 rows, no monthly salary, salary band from cluster -->
       <div class="info-card">
         <div class="info-card-title">Risk Profile</div>
         <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
@@ -711,14 +556,13 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
-        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Salary_Band', c.get('salary_band', c.get('SALARY_BAND', c.get('Cluster_Name', 'N/A')))))}</span></div>
-        <div class="info-row"><span class="info-key">Score band</span><span class="info-val">{c.get('Score_Band', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Cluster_Name', 'N/A'))}</span></div>
+        <div class="info-row"><span class="info-key">Thin file</span><span class="info-val" style="color:{'#f97316' if is_thin else '#1d4ed8'}">{'⚠️ Yes' if is_thin else 'No'}</span></div>
       </div>
 
-      <!-- THIS APPLICATION (badge + 8 rows) -->
       <div class="info-card">
         <div class="info-card-title">This Application</div>
-        <div style='margin-bottom:12px'>{badge}</div>
+        <div style='margin-bottom:12px'>{badge} {thin_badge}</div>
         <div class="info-row"><span class="info-key">Product</span><span class="info-val" style="font-size:11px">{app['loan_product'].split('—')[0].strip()}</span></div>
         <div class="info-row"><span class="info-key">Amount</span><span class="info-val">{fmt(app['loan_amount'])}</span></div>
         <div class="info-row"><span class="info-key">Term</span><span class="info-val">{app['loan_term']} months</span></div>
@@ -728,11 +572,10 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Total repayment</span><span class="info-val">{fmt(app['total_repayment'])}</span></div>
         <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
       </div>
-
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Accounts Section ─────────────────────────────────────
+    # ── Accounts ─────────────────────────────────────────────
     st.markdown('<div class="section-header">Accounts</div>', unsafe_allow_html=True)
 
     if not cust_accounts.empty:
@@ -765,7 +608,7 @@ def show_customer_page(app):
     else:
         st.info("No account records found for this customer.")
 
-    # ── Average Monthly Balance ──────────────────────────────
+    # ── Monthly Balance Trend ─────────────────────────────────
     balance_cols  = ['JUN_25', 'JUL_25', 'AUG_25', 'SEP_25', 'OCT_25', 'NOV_25']
     existing_cols = [col for col in balance_cols if col in account_df.columns]
 
@@ -791,7 +634,7 @@ def show_customer_page(app):
         )
         st.plotly_chart(fig_bal, use_container_width=True)
 
-    # ── Transaction Activity ─────────────────────────────────
+    # ── Transaction Activity ──────────────────────────────────
     if not cust_transactions.empty and 'BOOKING_DATE' in cust_transactions.columns:
         st.markdown('<div class="section-header">Transaction Activity</div>', unsafe_allow_html=True)
         txn = cust_transactions.copy()
@@ -828,6 +671,8 @@ def show_customer_page(app):
     # ── Review Section ───────────────────────────────────────
     if app["status"] == "Pending":
         st.markdown('<div class="section-header">Review Decision</div>', unsafe_allow_html=True)
+        if is_thin:
+            st.info("ℹ️ This is a thin file customer. Please conduct additional due diligence before making a decision.")
         notes = st.text_area(
             "Officer notes",
             key=f"notes_detail_{app['id']}",
@@ -875,7 +720,6 @@ def show_dashboard():
 
     st.markdown("<hr style='border-color:rgba(30,64,175,0.15);margin:1rem 0'>", unsafe_allow_html=True)
 
-    # ── Refresh + Clear All buttons side by side ─────────────
     col_r, col_clear, _ = st.columns([1, 1, 4])
     with col_r:
         if st.button("↻ Refresh", use_container_width=True):
@@ -886,7 +730,6 @@ def show_dashboard():
                 st.session_state.confirm_clear = False
             st.session_state.confirm_clear = True
 
-    # ── Confirmation prompt ───────────────────────────────────
     if st.session_state.get("confirm_clear", False):
         st.warning("⚠️ Are you sure you want to delete ALL applications? This cannot be undone.")
         col_yes, col_no, _ = st.columns([1, 1, 4])
@@ -911,8 +754,9 @@ def show_dashboard():
     pending  = sum(1 for a in applications if a["status"] == "Pending")
     approved = sum(1 for a in applications if a["status"] == "Approved")
     rejected = sum(1 for a in applications if a["status"] == "Rejected")
+    thin     = sum(1 for a in applications if get_thin_flag(a["nic"]))
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Total Applications</div>
             <div class="metric-value">{total}</div></div>""", unsafe_allow_html=True)
@@ -925,32 +769,51 @@ def show_dashboard():
     with c4:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Rejected</div>
             <div class="metric-value" style="color:#7f1d1d">{rejected}</div></div>""", unsafe_allow_html=True)
+    with c5:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)">
+            <div class="metric-label" style="color:#92400e">Thin File</div>
+            <div class="metric-value" style="color:#f97316">{thin}</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    status_filter = st.selectbox("Filter by status", ["All", "Pending", "Approved", "Rejected"])
+    col_f1, col_f2 = st.columns([2, 4])
+    with col_f1:
+        status_filter = st.selectbox("Filter by status", ["All", "Pending", "Approved", "Rejected"])
+    with col_f2:
+        thin_filter = st.selectbox("Filter by file type", ["All", "Thin File Only", "Normal Only"])
+
     filtered = applications if status_filter == "All" else [
         a for a in applications if a["status"] == status_filter
     ]
+    if thin_filter == "Thin File Only":
+        filtered = [a for a in filtered if get_thin_flag(a["nic"])]
+    elif thin_filter == "Normal Only":
+        filtered = [a for a in filtered if not get_thin_flag(a["nic"])]
 
     st.markdown(f"<p style='color:#1e40af;font-size:12px;letter-spacing:1px;font-weight:600'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
 
     for app in filtered:
+        is_thin = get_thin_flag(app["nic"])
+
         badge = {
             "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
             "Approved": "<span class='badge-approved'>✅ Approved</span>",
             "Rejected": "<span class='badge-rejected'>❌ Rejected</span>",
         }.get(app["status"], app["status"])
 
+        thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
+        card_class = "app-card-thin" if is_thin else "app-card"
+
         col_info, col_btn = st.columns([6, 1])
         with col_info:
             st.markdown(f"""
-            <div class="app-card">
+            <div class="{card_class}">
                 <div style='display:flex;justify-content:space-between;align-items:center'>
-                    <div style='display:flex;align-items:center;gap:16px'>
+                    <div style='display:flex;align-items:center;gap:16px;flex-wrap:wrap'>
                         <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:700'>#{app['id']}</span>
                         <span style='color:#0c1a4e;font-weight:700'>{app['nic']}</span>
                         {badge}
+                        {thin_badge}
                     </div>
                     <div style='display:flex;gap:2rem;align-items:center'>
                         <span style='color:#2d4a8a;font-size:13px'>{app['loan_product'].split('—')[0].strip()}</span>

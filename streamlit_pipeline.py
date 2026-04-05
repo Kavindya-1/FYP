@@ -1100,14 +1100,6 @@ results["Score_Band"] = results["Score_Band"].astype(str)
 
 
 
-# ── Override thin file customers ──
-results.loc[
-    model_data['Thin_File_Flag'] == 1,
-    'Score_Band'
-] = 'Unknown Risk'
-
-
-
 
 final_table = model_data.merge(results, on="MASKED_ID", how="left")
 
