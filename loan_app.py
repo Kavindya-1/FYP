@@ -253,8 +253,6 @@ defaults = {
     "loan_term": None, "loan_rate": None, "loan_emi": None,
     "emi_details": {}, "loan_total_int": None, "loan_total_pay": None,
     "suggested_amount": None,
-    "show_emi_warning": False,
-    "pending_submission": {},
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -546,74 +544,6 @@ elif st.session_state.step == 4:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── EMI Warning Popup ─────────────────────────────────────────
-    if st.session_state.get("show_emi_warning"):
-        p        = st.session_state.pending_submission
-        rate_p   = p["loan_rate"]
-        term_p   = p["loan_term"]
-        emi_p    = p["loan_emi"]
-        amount_p = p["loan_amount"]
-        emi_pct  = (emi_p / salary * 100) if salary > 0 else 0
-
-        st.markdown(f"""
-        <div style="background:rgba(255,140,0,0.13);border:1.5px solid rgba(255,180,0,0.55);
-        border-radius:16px;padding:1.5rem 1.5rem 1.2rem 1.5rem;margin:1rem 0">
-            <div style="font-size:26px;margin-bottom:0.4rem">⚠️</div>
-            <div style="font-size:16px;font-weight:700;color:rgba(255,210,80,0.95);
-            margin-bottom:0.6rem">High Repayment Warning</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.80);line-height:1.7;margin-bottom:0.3rem">
-                Your monthly repayment of
-                <strong style="color:white">{fmt(emi_p)}</strong>
-                represents
-                <strong style="color:rgba(255,190,60,0.95)">{emi_pct:.1f}%</strong>
-                of your monthly salary — exceeding the recommended 40% threshold.
-                <br><br>
-                This application will be <strong style="color:rgba(255,210,80,0.95)">flagged for officer review</strong>.
-                Are you sure you want to proceed?
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        w1, w2 = st.columns([1, 1])
-        with w1:
-            if st.button("← Go back", key="popup_back"):
-                st.session_state.show_emi_warning   = False
-                st.session_state.pending_submission = {}
-                st.rerun()
-        with w2:
-            if st.button("Yes, proceed →", key="popup_confirm"):
-                p = st.session_state.pending_submission
-                save_result = save_application({
-                    "nic":             st.session_state.nic_value,
-                    "loan_product":    p["loan_product"],
-                    "loan_amount":     p["loan_amount"],
-                    "loan_term":       p["loan_term"],
-                    "loan_rate":       p["loan_rate"],
-                    "loan_emi":        p["loan_emi"],
-                    "total_interest":  p["total_interest"],
-                    "total_repayment": p["total_repayment"],
-                    "score_band":      dec["band"],
-                    "profile_score":   dec["profile_score"],
-                    "emi_flag":        True,
-                })
-                if save_result is None:
-                    st.error("❌ Failed to save your application. Please try again.")
-                    st.stop()
-
-                st.session_state.loan_product      = p["loan_product"]
-                st.session_state.loan_amount       = p["loan_amount"]
-                st.session_state.loan_term         = p["loan_term"]
-                st.session_state.loan_rate         = p["loan_rate"]
-                st.session_state.loan_emi          = p["loan_emi"]
-                st.session_state.loan_total_int    = p["total_interest"]
-                st.session_state.loan_total_pay    = p["total_repayment"]
-                st.session_state.show_emi_warning   = False
-                st.session_state.pending_submission = {}
-                st.session_state.step = 5
-                st.rerun()
-        st.stop()
-    # ─────────────────────────────────────────────────────────────
-
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("← Back"):
@@ -654,48 +584,37 @@ elif st.session_state.step == 4:
                     # Amount exceeds max eligible → suggest max eligible
                     st.session_state.step4_error      = "over"
                     st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
-                elif emi > max_emi:
-                    # EMI > 40% but amount is within eligible max → show warning popup
-                    _totpay = emi * term_months
-                    st.session_state.show_emi_warning  = True
-                    st.session_state.pending_submission = {
-                        "loan_product":    loan_product,
-                        "loan_amount":     entered_amount,
-                        "loan_term":       term_months,
-                        "loan_rate":       rate,
-                        "loan_emi":        round(emi, 2),
-                        "total_interest":  round(_totpay - entered_amount, 2),
-                        "total_repayment": round(_totpay, 2),
-                    }
-                    st.rerun()
                 else:
-                    # All clear — save normally
-                    _emi    = calc_emi(entered_amount, rate, term_months)
+                    # Cap final amount at max_eligible just in case, then save
+                    final_amount = min(entered_amount, max_eligible)
+                    final_amount = floor_to_nearest_1000(final_amount) if final_amount > 1000 else final_amount
+                    _emi    = calc_emi(final_amount, rate, term_months)
                     _totpay = _emi * term_months
+                    _emi_flag = _emi > (salary * 0.40)
 
                     save_result = save_application({
                         "nic":             st.session_state.nic_value,
                         "loan_product":    loan_product,
-                        "loan_amount":     entered_amount,
+                        "loan_amount":     final_amount,
                         "loan_term":       term_months,
                         "loan_rate":       rate,
                         "loan_emi":        round(_emi, 2),
-                        "total_interest":  round(_totpay - entered_amount, 2),
+                        "total_interest":  round(_totpay - final_amount, 2),
                         "total_repayment": round(_totpay, 2),
                         "score_band":      dec["band"],
                         "profile_score":   dec["profile_score"],
-                        "emi_flag":        False,
+                        "emi_flag":        _emi_flag,
                     })
                     if save_result is None:
                         st.error("❌ Failed to save your application. Please try again.")
                         st.stop()
 
                     st.session_state.loan_product      = loan_product
-                    st.session_state.loan_amount       = entered_amount
+                    st.session_state.loan_amount       = final_amount
                     st.session_state.loan_term         = term_months
                     st.session_state.loan_rate         = rate
                     st.session_state.loan_emi          = round(_emi, 2)
-                    st.session_state.loan_total_int    = round(_totpay - entered_amount, 2)
+                    st.session_state.loan_total_int    = round(_totpay - final_amount, 2)
                     st.session_state.loan_total_pay    = round(_totpay, 2)
                     st.session_state.step = 5
                     st.rerun()
