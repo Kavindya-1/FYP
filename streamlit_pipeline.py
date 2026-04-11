@@ -821,7 +821,7 @@ model_data["WORST_STATUS"] = model_data["WORST_STATUS"].fillna("OK")
 # ── Combined DEFAULT definition ──
 model_data["DEFAULT"] = (
     # Condition 1: 30+ days overdue
-    (model_data["MAX_OOD_RAW"] >= 30) |
+    (model_data["MAX_OOD_RAW"] >= 90) |
 
     # Condition 2: Bad account status
     (model_data["WORST_STATUS"] == "BAD") |
