@@ -253,8 +253,6 @@ defaults = {
     "loan_term": None, "loan_rate": None, "loan_emi": None,
     "emi_details": {}, "loan_total_int": None, "loan_total_pay": None,
     "suggested_amount": None,
-    "show_original_confirm": False,   # triggers the "proceed with original?" popup
-    "original_amount": None,          # stores the customer's original entered amount
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -474,80 +472,6 @@ elif st.session_state.step == 4:
             return max_emi * months
         return max_emi * ((1 + r)**months - 1) / (r * (1 + r)**months)
 
-    def do_save_and_advance(amount, product, term_months, rate, is_emi_flagged):
-        """Hard-cap at max_eligible, save, then advance to step 5."""
-        final_amount = max(min(amount, dec["max_eligible"]), 0)
-        _emi         = calc_emi(final_amount, rate, term_months)
-        _totpay      = _emi * term_months
-
-        save_result = save_application({
-            "nic":             st.session_state.nic_value,
-            "loan_product":    product,
-            "loan_amount":     final_amount,
-            "loan_term":       term_months,
-            "loan_rate":       rate,
-            "loan_emi":        round(_emi, 2),
-            "total_interest":  round(_totpay - final_amount, 2),
-            "total_repayment": round(_totpay, 2),
-            "score_band":      dec["band"],
-            "profile_score":   dec["profile_score"],
-            "emi_flag":        is_emi_flagged,
-        })
-        if save_result is None:
-            st.error("❌ Failed to save your application. Please try again.")
-            st.stop()
-
-        st.session_state.loan_product          = product
-        st.session_state.loan_amount           = final_amount
-        st.session_state.loan_term             = term_months
-        st.session_state.loan_rate             = rate
-        st.session_state.loan_emi              = round(_emi, 2)
-        st.session_state.loan_total_int        = round(_totpay - final_amount, 2)
-        st.session_state.loan_total_pay        = round(_totpay, 2)
-        st.session_state.step4_error           = ""
-        st.session_state.show_original_confirm = False
-        st.session_state.original_amount       = None
-        st.session_state.step = 5
-        st.rerun()
-
-    def breakdown_html(amount, emi, term_m, label="REPAYMENT BREAKDOWN"):
-        tot_pay = emi * term_m
-        tot_int = tot_pay - amount
-        cap     = amount / term_m
-        mint    = emi - cap
-        return f"""
-        <div style="background:rgba(255,255,255,0.05);border-radius:14px;
-        padding:1.2rem 1.4rem;margin:0.8rem 0 0.5rem 0">
-            <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);
-            margin-bottom:12px">{label}</div>
-            <div class="breakdown-row">
-                <span class="breakdown-key">Loan amount (capital)</span>
-                <span class="breakdown-val">{fmt(amount)}</span>
-            </div>
-            <div class="breakdown-row">
-                <span class="breakdown-key">Total interest payable</span>
-                <span class="breakdown-val">{fmt(tot_int)}</span>
-            </div>
-            <div class="breakdown-row" style="border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:10px;margin-bottom:10px">
-                <span class="breakdown-key" style="font-weight:600;color:white">Total repayment</span>
-                <span class="breakdown-val" style="font-weight:600;color:white">{fmt(tot_pay)}</span>
-            </div>
-            <div class="breakdown-row">
-                <span class="breakdown-key">Monthly capital repayment</span>
-                <span class="breakdown-val">{fmt(cap)}</span>
-            </div>
-            <div class="breakdown-row">
-                <span class="breakdown-key">Monthly interest</span>
-                <span class="breakdown-val">{fmt(mint)}</span>
-            </div>
-            <div class="breakdown-row" style="border-bottom:none;padding-bottom:0">
-                <span class="breakdown-key" style="font-weight:600;color:rgba(100,220,130,0.95)">Monthly repayment (EMI)</span>
-                <span class="breakdown-val" style="font-weight:600;color:rgba(100,220,130,0.95)">{fmt(emi)}</span>
-            </div>
-        </div>
-        """
-
-    # ── Header ────────────────────────────────────────────────
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
@@ -580,10 +504,11 @@ elif st.session_state.step == 4:
         """, unsafe_allow_html=True)
 
     if band == "Medium Risk":
+        loan_amount = st.session_state.suggested_amount
         st.markdown(f"""
         <div class="verified-card">
             <div class="verified-label">Approved loan amount</div>
-            <div class="verified-value">{fmt(st.session_state.suggested_amount)}</div>
+            <div class="verified-value">{fmt(loan_amount)}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -600,51 +525,36 @@ elif st.session_state.step == 4:
         options=["— Select a term —"] + [f"{t} months" for t in TERM_OPTIONS],
     )
 
-    # ── Live EMI preview ──────────────────────────────────────
-    preview_amount = (
-        st.session_state.get("typed_loan_amount", 0.0)
-        if band != "Medium Risk"
-        else st.session_state.get("suggested_amount", 0.0)
-    )
+    preview_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.get("suggested_amount", 0.0)
     if (selected_rate is not None and loan_term != "— Select a term —"
             and preview_amount and preview_amount > 0):
-        _prev_months = int(loan_term.split()[0])
-        _prev_emi    = calc_emi(preview_amount, selected_rate, _prev_months)
-        _max_emi     = salary * 0.40
-        _emi_ratio   = (_prev_emi / salary * 100) if salary > 0 else 0
-        _color       = "rgba(100,220,130,0.85)" if _prev_emi <= _max_emi else "rgba(255,100,100,0.85)"
+        term_months = int(loan_term.split()[0])
+        emi         = calc_emi(preview_amount, selected_rate, term_months)
+        max_emi     = salary * 0.40
+        emi_ratio   = (emi / salary * 100) if salary > 0 else 0
+        color       = "rgba(100,220,130,0.85)" if emi <= max_emi else "rgba(255,100,100,0.85)"
         st.markdown(f"""
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;
         padding:1rem 1.2rem;margin:0.8rem 0">
             <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);
             margin-bottom:6px">ESTIMATED MONTHLY REPAYMENT</div>
-            <div style="font-size:26px;font-weight:700;color:{_color}">{fmt(_prev_emi)}</div>
+            <div style="font-size:26px;font-weight:700;color:{color}">{fmt(emi)}</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:4px">
-            {_emi_ratio:.1f}% of your monthly salary &nbsp;·&nbsp; max recommended 40%</div>
+            {emi_ratio:.1f}% of your monthly salary &nbsp;·&nbsp; max allowed 40%</div>
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Back / Submit ─────────────────────────────────────────
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("← Back"):
-            st.session_state.step4_error          = ""
-            st.session_state.show_original_confirm = False
-            st.session_state.original_amount       = None
+            st.session_state.step4_error = ""
             st.session_state.step = 3
             st.rerun()
     with col2:
         if st.button("Submit Application"):
-            st.session_state.step4_error          = ""
-            st.session_state.show_original_confirm = False
-            st.session_state.original_amount       = None
-
-            entered_amount = (
-                st.session_state.get("typed_loan_amount", 0.0)
-                if band != "Medium Risk"
-                else st.session_state.suggested_amount
-            )
-            max_eligible = dec["max_eligible"]
+            st.session_state.step4_error = ""
+            entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
+            max_eligible   = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
 
             if loan_product == "— Select a loan product —" or not loan_product:
                 st.session_state.step4_error = "product"
@@ -653,173 +563,160 @@ elif st.session_state.step == 4:
             elif band != "Medium Risk" and (entered_amount is None or entered_amount <= 0):
                 st.session_state.step4_error = "amount"
             else:
-                term_months = int(loan_term.split()[0])
-                _, rate     = LOAN_PRODUCTS[loan_product]
-                emi         = calc_emi(entered_amount, rate, term_months)
-                max_emi     = salary * 0.40
-                max_afford  = round(max_affordable_principal(rate, term_months, max_emi), 2)
-                true_max    = floor_to_nearest_1000(min(max_eligible, max_afford))
-                true_max    = max(true_max, 0)
+                term_months  = int(loan_term.split()[0])
+                _, rate      = LOAN_PRODUCTS[loan_product]
+                emi          = calc_emi(entered_amount, rate, term_months)
+                max_emi      = salary * 0.40
+                max_afford   = round(max_affordable_principal(rate, term_months, max_emi), 2)
+                true_max     = floor_to_nearest_1000(min(max_eligible, max_afford))
+                true_max     = max(true_max, 0)
 
-                # CASE 1 — amount > max_eligible: hard block
-                if band != "Medium Risk" and entered_amount > max_eligible:
+                if emi > max_emi and entered_amount > max_afford:
+                    st.session_state.step4_error      = "emi"
+                    st.session_state.suggested_amount = true_max
+                    st.session_state.emi_details      = {
+                        "emi": emi, "max_emi": max_emi,
+                        "max_afford": max_afford, "true_max": true_max,
+                        "rate": rate, "term": term_months,
+                    }
+                elif band != "Medium Risk" and entered_amount > max_eligible:
                     st.session_state.step4_error      = "over"
                     st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
-                    st.session_state.emi_details      = {"rate": rate, "term": term_months}
-
-                # CASE 2 — EMI > 40% AND amount > max affordable: suggest affordable cap
-                elif emi > max_emi and entered_amount > max_afford:
-                    st.session_state.step4_error      = "emi_hard"
-                    st.session_state.suggested_amount = true_max
-                    st.session_state.emi_details      = {
-                        "emi": emi, "max_emi": max_emi,
-                        "max_afford": max_afford, "true_max": true_max,
-                        "rate": rate, "term": term_months,
-                    }
-
-                # CASE 3 — EMI > 40% but amount ≤ max_eligible: suggest lower, allow original via popup
-                elif emi > max_emi:
-                    st.session_state.step4_error      = "emi_soft"
-                    st.session_state.suggested_amount = true_max
-                    st.session_state.original_amount  = entered_amount
-                    st.session_state.emi_details      = {
-                        "emi": emi, "max_emi": max_emi,
-                        "max_afford": max_afford, "true_max": true_max,
-                        "rate": rate, "term": term_months,
-                    }
-
-                # CASE 4 — all clear
                 else:
-                    do_save_and_advance(entered_amount, loan_product, term_months, rate, False)
+                    _emi    = calc_emi(entered_amount, rate, term_months)
+                    _totpay = _emi * term_months
 
-    # ── Render error / suggestion states ─────────────────────
+                    # ── Save to Supabase ──────────────────────────────
+                    save_result = save_application({
+                        "nic":             st.session_state.nic_value,
+                        "loan_product":    loan_product,
+                        "loan_amount":     entered_amount,
+                        "loan_term":       term_months,
+                        "loan_rate":       rate,
+                        "loan_emi":        round(_emi, 2),
+                        "total_interest":  round(_totpay - entered_amount, 2),
+                        "total_repayment": round(_totpay, 2),
+                        "score_band":      dec["band"],
+                        "profile_score":   dec["profile_score"],
+                    })
+                    if save_result is None:
+                        st.error("❌ Failed to save your application. Please try again.")
+                        st.stop()
+                    # ─────────────────────────────────────────────────
+
+                    st.session_state.loan_product      = loan_product
+                    st.session_state.loan_amount       = entered_amount
+                    st.session_state.loan_term         = term_months
+                    st.session_state.loan_rate         = rate
+                    st.session_state.loan_emi          = round(_emi, 2)
+                    st.session_state.loan_total_int    = round(_totpay - entered_amount, 2)
+                    st.session_state.loan_total_pay    = round(_totpay, 2)
+                    st.session_state.step = 5
+                    st.rerun()
 
     if st.session_state.step4_error == "product":
         st.error("❌ Please select a loan product to continue.")
-
     elif st.session_state.step4_error == "term":
         st.error("❌ Please select a repayment term to continue.")
-
     elif st.session_state.step4_error == "amount":
         st.error("❌ Please enter a valid loan amount to continue.")
 
-    elif st.session_state.step4_error == "over":
-        # Amount > max_eligible — only the capped amount can proceed
-        ed     = st.session_state.get("emi_details", {})
-        sug    = st.session_state.suggested_amount
-        rate   = ed.get("rate", 0)
-        term_m = ed.get("term", 0)
-        sug_emi = calc_emi(sug, rate, term_m) if (sug and rate and term_m) else 0
-
-        st.warning(
-            f"⚠️ The amount you entered exceeds the maximum we can offer based on your profile. "
-            f"We'd be happy to proceed with **{fmt(sug)}** — would that work for you?"
-        )
-        if sug > 0 and rate > 0 and term_m > 0:
-            st.markdown(breakdown_html(sug, sug_emi, term_m), unsafe_allow_html=True)
-
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            if st.button("No thanks", key="over_no"):
-                start_over(); st.rerun()
-        with c2:
-            if st.button("Confirm & proceed →", key="over_yes"):
-                _, r2 = LOAN_PRODUCTS[loan_product]
-                do_save_and_advance(sug, loan_product, term_m, r2, False)
-
-    elif st.session_state.step4_error == "emi_hard":
-        # EMI > 40% AND amount > max affordable — only suggested can proceed
-        ed      = st.session_state.get("emi_details", {})
-        sug     = st.session_state.suggested_amount
-        rate    = ed.get("rate", 0)
-        term_m  = ed.get("term", 0)
-        sug_emi = calc_emi(sug, rate, term_m) if (sug and rate and term_m) else 0
-
-        st.warning(
-            f"⚠️ Based on your monthly income, we recommend **{fmt(sug)}** over {term_m} months, "
-            f"which brings your monthly repayment to **{fmt(sug_emi)}** — comfortably within your salary. "
-            f"Would you like to proceed with this instead?"
-        )
-        if sug > 0 and rate > 0 and term_m > 0:
-            st.markdown(breakdown_html(sug, sug_emi, term_m), unsafe_allow_html=True)
-
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            if st.button("No thanks", key="emi_hard_no"):
-                start_over(); st.rerun()
-        with c2:
-            if st.button("Confirm & proceed →", key="emi_hard_yes"):
-                _, r2 = LOAN_PRODUCTS[loan_product]
-                do_save_and_advance(sug, loan_product, term_m, r2, False)
-
-    elif st.session_state.step4_error == "emi_soft":
-        # EMI > 40% but amount ≤ max_eligible
-        # Show suggested card. "No thanks" → popup to confirm original amount.
+    elif st.session_state.step4_error in ("emi", "over"):
         ed       = st.session_state.get("emi_details", {})
         sug      = st.session_state.suggested_amount
-        orig     = st.session_state.original_amount
         rate     = ed.get("rate", 0)
         term_m   = ed.get("term", 0)
-        sug_emi  = calc_emi(sug, rate, term_m)  if (sug  and rate and term_m) else 0
-        orig_emi = calc_emi(orig, rate, term_m) if (orig and rate and term_m) else 0
-        orig_pct = (orig_emi / salary * 100) if salary > 0 else 0
+        sug_emi  = calc_emi(sug, rate, term_m) if (rate and term_m) else 0
+        tot_pay  = sug_emi * term_m
+        tot_int  = tot_pay - sug
 
-        if not st.session_state.show_original_confirm:
-            # ── Suggested amount card ──────────────────────────
-            st.warning(
-                f"⚠️ Based on your monthly income, we recommend **{fmt(sug)}** over {term_m} months, "
-                f"which brings your monthly repayment to **{fmt(sug_emi)}** — comfortably within your salary. "
-                f"Would you like to proceed with this?"
+        if st.session_state.step4_error == "emi":
+            msg = (
+                f"Based on your monthly income, we'd like to suggest a loan amount that keeps "
+                f"your repayments comfortable. We recommend **{fmt(sug)}** over {term_m} months, "
+                f"which brings your monthly repayment to **{fmt(sug_emi)}** — well within a "
+                f"manageable range for your salary. Would you like to proceed with this instead?"
             )
-            if sug > 0 and rate > 0 and term_m > 0:
-                st.markdown(breakdown_html(sug, sug_emi, term_m, "REPAYMENT BREAKDOWN — SUGGESTED AMOUNT"), unsafe_allow_html=True)
-
-            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-            c1, c2 = st.columns([1, 1])
-            with c1:
-                # "No thanks" → show the original-amount confirmation popup
-                if st.button("No thanks", key="soft_no"):
-                    st.session_state.show_original_confirm = True
-                    st.rerun()
-            with c2:
-                if st.button("Confirm & proceed →", key="soft_yes"):
-                    _, r2 = LOAN_PRODUCTS[loan_product]
-                    do_save_and_advance(sug, loan_product, term_m, r2, False)
-
         else:
-            # ── "Proceed with original amount?" popup ──────────
+            msg = (
+                f"The amount you entered is a little above what we can offer based on your profile. "
+                f"We'd be happy to proceed with **{fmt(sug)}** — would that work for you?"
+            )
+        st.warning(f"⚠️ {msg}")
+
+        if sug > 0 and rate > 0 and term_m > 0:
+            monthly_capital = sug / term_m
+            monthly_int     = sug_emi - monthly_capital
             st.markdown(f"""
-            <div style="background:rgba(255,140,0,0.13);border:1.5px solid rgba(255,180,0,0.55);
-            border-radius:16px;padding:1.5rem 1.5rem 1.2rem 1.5rem;margin:1rem 0">
-                <div style="font-size:26px;margin-bottom:0.4rem">⚠️</div>
-                <div style="font-size:16px;font-weight:700;color:rgba(255,210,80,0.95);
-                margin-bottom:0.6rem">Proceed with original amount?</div>
-                <div style="font-size:13px;color:rgba(255,255,255,0.80);line-height:1.7">
-                    Your requested amount of <strong style="color:white">{fmt(orig)}</strong>
-                    results in a monthly repayment of
-                    <strong style="color:rgba(255,190,60,0.95)">{fmt(orig_emi)}</strong>
-                    ({orig_pct:.1f}% of your salary), which exceeds the recommended 40% threshold.
-                    <br><br>
-                    Would you still like to proceed with
-                    <strong style="color:white">{fmt(orig)}</strong>?
-                    This application will be
-                    <strong style="color:rgba(255,210,80,0.95)">flagged for officer review</strong>.
+            <div style="background:rgba(255,255,255,0.05);border-radius:14px;
+            padding:1.2rem 1.4rem;margin:0.8rem 0 0.5rem 0">
+                <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);
+                margin-bottom:12px">REPAYMENT BREAKDOWN</div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Loan amount (capital)</span>
+                    <span class="breakdown-val">{fmt(sug)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Total interest payable</span>
+                    <span class="breakdown-val">{fmt(tot_int)}</span>
+                </div>
+                <div class="breakdown-row" style="border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:10px;margin-bottom:10px">
+                    <span class="breakdown-key" style="font-weight:600;color:white">Total repayment</span>
+                    <span class="breakdown-val" style="font-weight:600;color:white">{fmt(tot_pay)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly capital repayment</span>
+                    <span class="breakdown-val">{fmt(monthly_capital)}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-key">Monthly interest</span>
+                    <span class="breakdown-val">{fmt(monthly_int)}</span>
+                </div>
+                <div class="breakdown-row" style="border-bottom:none;padding-bottom:0">
+                    <span class="breakdown-key" style="font-weight:600;color:rgba(100,220,130,0.95)">Monthly repayment (EMI)</span>
+                    <span class="breakdown-val" style="font-weight:600;color:rgba(100,220,130,0.95)">{fmt(sug_emi)}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-            c1, c2 = st.columns([1, 1])
-            with c1:
-                if st.button("No, go back", key="orig_no"):
-                    st.session_state.show_original_confirm = False
-                    st.rerun()
-            with c2:
-                if st.button("Yes, proceed →", key="orig_yes"):
-                    _, r2 = LOAN_PRODUCTS[loan_product]
-                    # orig is already ≤ max_eligible (CASE 3 guarantee); hard-cap applied inside
-                    do_save_and_advance(orig, loan_product, term_m, r2, True)
+
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("No thanks", key="warn_no"):
+                start_over(); st.rerun()
+        with col2:
+            if st.button("Confirm & proceed →", key="warn_yes"):
+                _emi2    = calc_emi(sug, rate, term_m)
+                _totpay2 = _emi2 * term_m
+
+                # ── Save to Supabase ──────────────────────────────
+                save_result = save_application({
+                    "nic":             st.session_state.nic_value,
+                    "loan_product":    loan_product,
+                    "loan_amount":     sug,
+                    "loan_term":       term_m,
+                    "loan_rate":       rate,
+                    "loan_emi":        round(_emi2, 2),
+                    "total_interest":  round(_totpay2 - sug, 2),
+                    "total_repayment": round(_totpay2, 2),
+                    "score_band":      dec["band"],
+                    "profile_score":   dec["profile_score"],
+                })
+                if save_result is None:
+                    st.error("❌ Failed to save your application. Please try again.")
+                    st.stop()
+                # ─────────────────────────────────────────────────
+
+                st.session_state.loan_product      = loan_product
+                st.session_state.loan_amount       = sug
+                st.session_state.loan_term         = term_m
+                st.session_state.loan_rate         = rate
+                st.session_state.loan_emi          = round(sug_emi, 2)
+                st.session_state.loan_total_int    = round(tot_int, 2)
+                st.session_state.loan_total_pay    = round(tot_pay, 2)
+                st.session_state.step4_error       = ""
+                st.session_state.step = 5
+                st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # STEP 5 — Final Confirmation Summary
