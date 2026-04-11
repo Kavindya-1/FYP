@@ -235,6 +235,21 @@ div[data-testid="stAlert"] > div,
     color: #042C53 !important; border: 1px solid rgba(255,255,255,0.2) !important;
     font-size: 15px !important;
 }
+
+/* ── Popup overlay ── */
+.popup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+.popup-box {
+    background: #0C447C; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px; padding: 2rem 1.8rem; max-width: 340px; width: 90%;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.popup-icon { font-size: 36px; margin-bottom: 0.8rem; }
+.popup-title { font-size: 18px; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+.popup-body  { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 1.4rem; }
 </style>
 <div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;
 background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
@@ -253,6 +268,7 @@ defaults = {
     "loan_term": None, "loan_rate": None, "loan_emi": None,
     "emi_details": {}, "loan_total_int": None, "loan_total_pay": None,
     "suggested_amount": None,
+    "show_cancel_popup": False,   # NEW — controls the cancel confirmation popup
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -375,6 +391,10 @@ elif st.session_state.step == 3:
     dec     = compute_max_eligible(record)
     st.session_state.decision = dec
 
+    # ── Compute the AFFORDABLE max (salary-constrained) ──────
+    salary        = float(record.get('Avg_Monthly_Credit', 0))
+    max_emi_limit = salary * 0.40
+
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
@@ -399,7 +419,7 @@ elif st.session_state.step == 3:
     elif band == "Medium Risk":
         suggested = floor_to_nearest_1000(dec["max_eligible"] * 0.70)
         suggested = max(suggested, 0)
-        st.session_state.suggested_amount = (suggested/2)
+        st.session_state.suggested_amount = (suggested / 2)
         st.warning("⚠️ Based on your profile, you may qualify for a limited loan amount.")
         st.markdown(f"""
         <div class="verified-card" style="margin-top:1rem">
@@ -421,15 +441,22 @@ elif st.session_state.step == 3:
                 st.rerun()
 
     else:
+        # ── Show BOTH the credit-based max and the salary-constrained note ──
+        max_eligible = dec["max_eligible"]
         st.success("✅ You are eligible! Please proceed to select your loan product.")
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         st.markdown(f"""
         <div class="verified-card" style="margin-top:0.5rem">
             <div class="verified-label">Maximum loan you are eligible for</div>
             <div class="verified-value" style="font-size:32px;color:rgba(100,220,130,0.95);
-            font-weight:700;margin-bottom:6px">{fmt(dec['max_eligible'])}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.4)">
-            Based on your credit profile — you may request up to this amount in the next step.</div>
+            font-weight:700;margin-bottom:6px">{fmt(max_eligible)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px">
+            Based on your credit profile. Your final approved amount will also depend on
+            your monthly repayment capacity (max 40% of salary).</div>
+            <div style="font-size:12px;color:rgba(255,200,100,0.8)">
+            💡 Your maximum affordable monthly repayment is <strong style="color:rgba(255,220,120,0.95)">{fmt(max_emi_limit)}</strong>
+            — the actual loan offered will be calculated based on this in the next step.
+            </div>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -471,6 +498,31 @@ elif st.session_state.step == 4:
         if r == 0:
             return max_emi * months
         return max_emi * ((1 + r)**months - 1) / (r * (1 + r)**months)
+
+    # ── Cancel confirmation popup ─────────────────────────────
+    if st.session_state.get("show_cancel_popup", False):
+        st.markdown("""
+        <div class="popup-overlay">
+          <div class="popup-box">
+            <div class="popup-icon">⚠️</div>
+            <div class="popup-title">Cancel application?</div>
+            <div class="popup-body">
+              Are you sure you want to cancel? Your progress will be lost
+              and you will be returned to the start.
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            if st.button("Yes, cancel", key="popup_yes", use_container_width=True):
+                start_over()
+                st.rerun()
+        with col_no:
+            if st.button("No, go back", key="popup_no", use_container_width=True):
+                st.session_state.show_cancel_popup = False
+                st.rerun()
+        st.stop()
 
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
@@ -586,7 +638,6 @@ elif st.session_state.step == 4:
                     _emi    = calc_emi(entered_amount, rate, term_months)
                     _totpay = _emi * term_months
 
-                    # ── Save to Supabase ──────────────────────────────
                     save_result = save_application({
                         "nic":             st.session_state.nic_value,
                         "loan_product":    loan_product,
@@ -598,11 +649,11 @@ elif st.session_state.step == 4:
                         "total_repayment": round(_totpay, 2),
                         "score_band":      dec["band"],
                         "profile_score":   dec["profile_score"],
+                        "emi_exceeded":    False,   # within limits — no flag
                     })
                     if save_result is None:
                         st.error("❌ Failed to save your application. Please try again.")
                         st.stop()
-                    # ─────────────────────────────────────────────────
 
                     st.session_state.loan_product      = loan_product
                     st.session_state.loan_amount       = entered_amount
@@ -682,14 +733,16 @@ elif st.session_state.step == 4:
         st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
+            # ── "No thanks" now triggers the popup ──────────
             if st.button("No thanks", key="warn_no"):
-                start_over(); st.rerun()
+                st.session_state.show_cancel_popup = True
+                st.rerun()
         with col2:
             if st.button("Confirm & proceed →", key="warn_yes"):
                 _emi2    = calc_emi(sug, rate, term_m)
                 _totpay2 = _emi2 * term_m
 
-                # ── Save to Supabase ──────────────────────────────
+                # ── Save with emi_exceeded = True flag ───────
                 save_result = save_application({
                     "nic":             st.session_state.nic_value,
                     "loan_product":    loan_product,
@@ -701,17 +754,17 @@ elif st.session_state.step == 4:
                     "total_repayment": round(_totpay2, 2),
                     "score_band":      dec["band"],
                     "profile_score":   dec["profile_score"],
+                    "emi_exceeded":    True,   # ← officer flag
                 })
                 if save_result is None:
                     st.error("❌ Failed to save your application. Please try again.")
                     st.stop()
-                # ─────────────────────────────────────────────────
 
                 st.session_state.loan_product      = loan_product
                 st.session_state.loan_amount       = sug
                 st.session_state.loan_term         = term_m
                 st.session_state.loan_rate         = rate
-                st.session_state.loan_emi          = round(sug_emi, 2)
+                st.session_state.loan_emi          = round(_emi2, 2)
                 st.session_state.loan_total_int    = round(tot_int, 2)
                 st.session_state.loan_total_pay    = round(tot_pay, 2)
                 st.session_state.step4_error       = ""
