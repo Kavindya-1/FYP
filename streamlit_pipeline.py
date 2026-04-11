@@ -858,20 +858,12 @@ trackable_loans = account_df[
 
 customers_with_trackable_loans = trackable_loans['MASKED_ID'].unique()
 
-model_data['Has_Trackable_Loan'] = model_data['MASKED_ID'].isin(
-    customers_with_trackable_loans
-).astype(int)
-
-
+model_data['Has_Trackable_Loan'] = model_data['MASKED_ID'].isin(customers_with_trackable_loans).astype(int)
 
 # ── Step 2: Thin File Flag ──
-# Thin file = no transactions AND no trackable loan obligations
-model_data['Thin_File_Flag'] = (
-    (model_data['TXN_COUNT'] == 0) &
-    (model_data['TOTAL_PAID'] == 0) &
-    (model_data['MAX_OOD'] == 0) &
-    (model_data['Has_Trackable_Loan'] == 0)  # no trackable loans
-).astype(int)
+# Thin file = never had a loan OR all loans closed before 2025-05-01
+model_data['Thin_File_Flag'] = (model_data['Has_Trackable_Loan'] == 0).astype(int)
+
 
 
 features = [
@@ -951,31 +943,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y           # preserves the default/non-default ratio
 )
 
-
-# # Chosing the monotone_constraints
-# With Monotone Constraint
-# 
-# If we add a monotone constraint on TOTAL_INTEREST_DUE:
-# 
-# CatBoost/XGBoost is told: “predicted risk should increase or stay the same as TOTAL_INTEREST_DUE increases.”
-# 
-# After training, the predictions might look like:
-# 
-# Customer	TOTAL_INTEREST_DUE	Predicted Default Probability (with constraint)
-# A	500	0.10
-# B	2000	0.15
-# C	5000	0.25
-# 
-# ✅ Now the predictions align with business intuition: higher debt → higher default risk.
-# Why it matters in credit scoring
-# 
-# Regulatory compliance – Credit models are often audited. Monotone constraints make the model more interpretable.
-# 
-# Trust for business users – Relationship managers or credit officers can trust the model outputs.
-# 
-# Reduces nonsensical predictions – Without constraints, extreme or sparse values could create anomalies where a customer with very high debt gets a lower predicted risk.
-
-# ## Chking the model data table count and the eligible data count
 
 
 
