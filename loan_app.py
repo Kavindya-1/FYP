@@ -235,6 +235,13 @@ div[data-testid="stAlert"] > div,
     color: #042C53 !important; border: 1px solid rgba(255,255,255,0.2) !important;
     font-size: 15px !important;
 }
+.popup-overlay {
+    background: rgba(180, 40, 40, 0.25);
+    border: 1px solid rgba(220, 80, 80, 0.55);
+    border-radius: 16px;
+    padding: 1.4rem 1.6rem;
+    margin-top: 1rem;
+}
 </style>
 <div style="position:fixed;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;
 background:rgba(255,255,255,0.05);pointer-events:none;z-index:0"></div>
@@ -253,6 +260,7 @@ defaults = {
     "loan_term": None, "loan_rate": None, "loan_emi": None,
     "emi_details": {}, "loan_total_int": None, "loan_total_pay": None,
     "suggested_amount": None,
+    "warn_no_confirm": False,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -514,10 +522,14 @@ elif st.session_state.step == 4:
     else:
         if "typed_loan_amount" not in st.session_state:
             st.session_state.typed_loan_amount = 0.0
+        # ── Capped to max_eligible so user cannot enter above their limit ──
         st.number_input(
             "REQUIRED LOAN AMOUNT (LKR)",
-            min_value=0.0, step=10000.0, format="%.2f",
-            key="typed_loan_amount"
+            min_value=0.0,
+            max_value=float(dec["max_eligible"]),
+            step=10000.0,
+            format="%.2f",
+            key="typed_loan_amount",
         )
 
     loan_term = st.selectbox(
@@ -548,11 +560,13 @@ elif st.session_state.step == 4:
     with col1:
         if st.button("← Back"):
             st.session_state.step4_error = ""
+            st.session_state.warn_no_confirm = False
             st.session_state.step = 3
             st.rerun()
     with col2:
         if st.button("Submit Application"):
             st.session_state.step4_error = ""
+            st.session_state.warn_no_confirm = False
             entered_amount = st.session_state.get("typed_loan_amount", 0.0) if band != "Medium Risk" else st.session_state.suggested_amount
             max_eligible   = compute_max_eligible(st.session_state.customer_record)["max_eligible"]
 
@@ -586,7 +600,6 @@ elif st.session_state.step == 4:
                     _emi    = calc_emi(entered_amount, rate, term_months)
                     _totpay = _emi * term_months
 
-                    # ── Save to Supabase ──────────────────────────────
                     save_result = save_application({
                         "nic":             st.session_state.nic_value,
                         "loan_product":    loan_product,
@@ -598,11 +611,11 @@ elif st.session_state.step == 4:
                         "total_repayment": round(_totpay, 2),
                         "score_band":      dec["band"],
                         "profile_score":   dec["profile_score"],
+                        "high_emi_flag":   False,
                     })
                     if save_result is None:
                         st.error("❌ Failed to save your application. Please try again.")
                         st.stop()
-                    # ─────────────────────────────────────────────────
 
                     st.session_state.loan_product      = loan_product
                     st.session_state.loan_amount       = entered_amount
@@ -682,14 +695,15 @@ elif st.session_state.step == 4:
         st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 1])
         with col1:
+            # ── "No thanks" triggers the warning popup ──────────
             if st.button("No thanks", key="warn_no"):
-                start_over(); st.rerun()
+                st.session_state.warn_no_confirm = True
+                st.rerun()
         with col2:
             if st.button("Confirm & proceed →", key="warn_yes"):
                 _emi2    = calc_emi(sug, rate, term_m)
                 _totpay2 = _emi2 * term_m
 
-                # ── Save to Supabase ──────────────────────────────
                 save_result = save_application({
                     "nic":             st.session_state.nic_value,
                     "loan_product":    loan_product,
@@ -701,11 +715,11 @@ elif st.session_state.step == 4:
                     "total_repayment": round(_totpay2, 2),
                     "score_band":      dec["band"],
                     "profile_score":   dec["profile_score"],
+                    "high_emi_flag":   False,
                 })
                 if save_result is None:
                     st.error("❌ Failed to save your application. Please try again.")
                     st.stop()
-                # ─────────────────────────────────────────────────
 
                 st.session_state.loan_product      = loan_product
                 st.session_state.loan_amount       = sug
@@ -717,6 +731,52 @@ elif st.session_state.step == 4:
                 st.session_state.step4_error       = ""
                 st.session_state.step = 5
                 st.rerun()
+
+        # ══════════════════════════════════════════════════════
+        # WARNING POPUP — shown after "No thanks" is clicked
+        # ══════════════════════════════════════════════════════
+        if st.session_state.warn_no_confirm:
+            st.markdown("""
+            <div class="popup-overlay">
+                <div style="font-size:17px;font-weight:700;color:white;margin-bottom:8px">
+                ⚠️ Warning!</div>
+                <div style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.7">
+                Your repayment amount is higher than your salary.<br>
+                Do you still want to proceed?
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+            pc1, pc2 = st.columns([1, 1])
+            with pc1:
+                # No → exit to Step 1, nothing saved
+                if st.button("No", key="warn_popup_no"):
+                    st.session_state.warn_no_confirm = False
+                    start_over()
+                    st.rerun()
+            with pc2:
+                # Yes → save with high_emi_flag=True then exit to Step 1
+                if st.button("Yes", key="warn_popup_yes"):
+                    entered_amount = st.session_state.get("typed_loan_amount", 0.0)
+                    _emi3    = calc_emi(entered_amount, rate, term_m)
+                    _totpay3 = _emi3 * term_m
+
+                    save_application({
+                        "nic":             st.session_state.nic_value,
+                        "loan_product":    loan_product,
+                        "loan_amount":     entered_amount,
+                        "loan_term":       term_m,
+                        "loan_rate":       rate,
+                        "loan_emi":        round(_emi3, 2),
+                        "total_interest":  round(_totpay3 - entered_amount, 2),
+                        "total_repayment": round(_totpay3, 2),
+                        "score_band":      dec["band"],
+                        "profile_score":   dec["profile_score"],
+                        "high_emi_flag":   True,   # ← flagged for review in next app
+                    })
+                    st.session_state.warn_no_confirm = False
+                    start_over()
+                    st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # STEP 5 — Final Confirmation Summary
