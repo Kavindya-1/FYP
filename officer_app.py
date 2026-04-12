@@ -35,6 +35,107 @@ def format_date(d):
     except:
         return str(d)
 
+# ══════════════════════════════════════════════════════════════
+# INSUFFICIENT INFORMATION DETECTION
+# Returns a dict with:
+#   - has_issues: bool
+#   - flags: list of (label, detail) tuples
+#   - severity: "critical" | "warning" | "info"
+# ══════════════════════════════════════════════════════════════
+def get_data_quality_flags(nic, app=None):
+    flags = []
+
+    row = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
+    if row.empty:
+        return {"has_issues": True, "flags": [("Customer record not found", "NIC not in eligible_customers")], "severity": "critical"}
+
+    c = row.iloc[0]
+
+    # 1. Thin File
+    if int(c.get("Thin_File_Flag", 0)) == 1:
+        flags.append(("Thin File", "Customer has limited or no financial history"))
+
+    # 2. Missing / Unknown Financial Capacity
+    fin_cap = str(c.get("Financial_Capacity", "")).strip()
+    if fin_cap in ("Unknown / Missing Balance Data", "", "nan"):
+        flags.append(("Unknown Financial Capacity", "No balance data available to assess financial capacity"))
+
+    # 3. Unknown Customer Risk
+    cust_risk = str(c.get("CUSTOMER_RISK_NAME", "")).strip()
+    if cust_risk in ("Unknown", "", "nan"):
+        flags.append(("Unknown Customer Risk", "Customer risk rating could not be determined"))
+
+    # 4. Unknown Target Tier
+    target = str(c.get("TARGET_DESC", "")).strip()
+    if target in ("Unknown", "", "nan"):
+        flags.append(("Unknown Target Tier", "Customer has not been assigned a target/tier segment"))
+
+    # 5. Invalid / Weak Employment Segment
+    emp_seg = str(c.get("Employment_Segment", "")).strip()
+    if emp_seg in ("Not valid segment", "", "nan"):
+        flags.append(("Invalid Employment Segment", "Employment segment could not be validated"))
+    elif emp_seg == "Other":
+        flags.append(("Unclassified Employment Segment", "Employment segment is 'Other' — reduced scoring factor (0.6x)"))
+
+    # 6. Missing / zero NET_RATIO (no transaction data)
+    net_ratio = c.get("NET_RATIO", None)
+    avg_credit = float(c.get("Avg_Monthly_Credit", 0))
+    try:
+        net_ratio_val = float(net_ratio)
+    except (TypeError, ValueError):
+        net_ratio_val = None
+
+    if net_ratio_val is None or (net_ratio_val == 0.0 and avg_credit == 0.0):
+        flags.append(("No Transaction Data", "NET_RATIO and Avg_Monthly_Credit are both zero or missing — income unverifiable"))
+    elif net_ratio_val < 0:
+        flags.append(("Negative Net Ratio", f"Customer spending exceeds income (NET_RATIO = {net_ratio_val:.3f}) — 0.80x penalty applied"))
+
+    # 7. Missing internal score
+    try:
+        score = float(c.get("Internal_Bank_Default_Score", 0))
+    except (TypeError, ValueError):
+        score = 0
+    if score == 0 or pd.isna(score):
+        flags.append(("Missing Credit Score", "Internal bank default score is zero or missing"))
+
+    # 8. High EMI Flag — customer overrode the EMI warning
+    if app and app.get("high_emi_flag", False):
+        flags.append(("EMI Exceeds Salary", "Customer proceeded despite monthly repayment exceeding 40% of salary threshold"))
+
+    # 9. Overdue history present
+    try:
+        max_ood = float(c.get("MAX_OOD", 0))
+    except (TypeError, ValueError):
+        max_ood = 0
+    if max_ood >= 30:
+        flags.append(("Overdue History", f"Customer has {int(max_ood)} days max overdue — penalty applied in eligibility calculation"))
+
+    # 10. No active accounts (should not normally reach officer, but guard anyway)
+    try:
+        active_accounts = int(c.get("Number_of_Active_Accounts", 0))
+    except (TypeError, ValueError):
+        active_accounts = 0
+    if active_accounts == 0:
+        flags.append(("No Active Accounts", "Customer has no active accounts linked to NIC"))
+
+    # Determine overall severity
+    critical_labels = {"Thin File", "No Transaction Data", "Missing Credit Score",
+                       "Customer record not found", "No Active Accounts", "EMI Exceeds Salary"}
+    warning_labels  = {"Unknown Financial Capacity", "Unknown Customer Risk",
+                       "Unknown Target Tier", "Invalid Employment Segment",
+                       "Overdue History", "Negative Net Ratio"}
+
+    has_critical = any(label in critical_labels for label, _ in flags)
+    has_warning  = any(label in warning_labels  for label, _ in flags)
+
+    severity = "critical" if has_critical else ("warning" if has_warning else "info")
+
+    return {
+        "has_issues": len(flags) > 0,
+        "flags":      flags,
+        "severity":   severity,
+    }
+
 def get_thin_flag(nic):
     row = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
     if row.empty:
@@ -148,10 +249,12 @@ h1, h2, h3 { font-family: 'DM Serif Display', serif !important; color: #0c1a4e !
 .info-key { color: #2d4a8a; font-weight: 400; }
 .info-val { color: #0c1a4e; font-weight: 700; font-family: 'DM Mono', monospace; font-size: 14px; text-align: right; }
 
-.badge-pending  { background:rgba(251,191,36,0.18); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(251,191,36,0.5); font-weight:600; }
-.badge-approved { background:rgba(34,197,94,0.14);  color:#14532d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(34,197,94,0.4);  font-weight:600; }
-.badge-rejected { background:rgba(239,68,68,0.12);  color:#7f1d1d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(239,68,68,0.35); font-weight:600; }
-.badge-thin     { background:rgba(249,115,22,0.15); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(249,115,22,0.5); font-weight:600; }
+.badge-pending   { background:rgba(251,191,36,0.18); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(251,191,36,0.5); font-weight:600; }
+.badge-approved  { background:rgba(34,197,94,0.14);  color:#14532d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(34,197,94,0.4);  font-weight:600; }
+.badge-rejected  { background:rgba(239,68,68,0.12);  color:#7f1d1d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(239,68,68,0.35); font-weight:600; }
+.badge-thin      { background:rgba(249,115,22,0.15); color:#92400e; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(249,115,22,0.5); font-weight:600; }
+.badge-critical  { background:rgba(220,38,38,0.15);  color:#7f1d1d; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(220,38,38,0.45); font-weight:600; }
+.badge-warning   { background:rgba(251,191,36,0.18); color:#78350f; padding:4px 14px; border-radius:20px; font-size:11px; border:1px solid rgba(251,191,36,0.5); font-weight:600; }
 
 .section-header { font-size: 10px; color: #1e40af; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin: 1.8rem 0 1rem 0; padding-bottom: 8px; border-bottom: 1.5px solid #f97316; display: inline-block; width: 100%; }
 
@@ -172,8 +275,10 @@ label { color: #1e40af !important; font-size: 11px !important; text-transform: u
 
 .app-card { background: rgba(255,255,255,0.62); border: 0.5px solid rgba(30,64,175,0.14); border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(30,64,175,0.05); }
 .app-card:hover { border-color: rgba(30,64,175,0.38); background: rgba(255,255,255,0.85); }
-.app-card-thin { background: rgba(255,247,237,0.75); border: 0.5px solid rgba(249,115,22,0.35); border-left: 3px solid #f97316 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(249,115,22,0.08); }
-.app-card-thin:hover { background: rgba(255,247,237,0.95); border-color: rgba(249,115,22,0.6); }
+.app-card-warn { background: rgba(255,247,237,0.75); border: 0.5px solid rgba(249,115,22,0.35); border-left: 3px solid #f97316 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(249,115,22,0.08); }
+.app-card-warn:hover { background: rgba(255,247,237,0.95); }
+.app-card-critical { background: rgba(254,242,242,0.8); border: 0.5px solid rgba(220,38,38,0.35); border-left: 3px solid #dc2626 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(220,38,38,0.08); }
+.app-card-critical:hover { background: rgba(254,242,242,0.95); }
 
 div[data-testid="stAlert"] { border-radius: 12px !important; }
 .deco { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
@@ -183,19 +288,36 @@ div[data-testid="stAlert"] { border-radius: 12px !important; }
 .login-sub { color: #374151; font-size: 14px; margin-bottom: 1.8rem; }
 .orange-accent { width: 40px; height: 3px; background: #f97316; border-radius: 2px; margin: 0.5rem auto 1.2rem; }
 
-.thin-file-banner {
-    background: rgba(249,115,22,0.1);
+/* Data quality banner */
+.dq-banner-critical {
+    background: rgba(220,38,38,0.07);
+    border: 1px solid rgba(220,38,38,0.4);
+    border-left: 4px solid #dc2626;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+}
+.dq-banner-warning {
+    background: rgba(249,115,22,0.07);
     border: 1px solid rgba(249,115,22,0.4);
     border-left: 4px solid #f97316;
     border-radius: 10px;
     padding: 1rem 1.2rem;
     margin-bottom: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
 }
-.thin-file-banner-icon { font-size: 20px; }
-.thin-file-banner-text { color: #92400e; font-size: 14px; font-weight: 500; line-height: 1.5; }
+.dq-banner-info {
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-left: 4px solid #3b82f6;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+}
+.dq-banner-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.dq-flag-row { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.dq-flag-row:last-child { border-bottom: none; }
+.dq-flag-label { font-weight: 700; min-width: 200px; }
+.dq-flag-detail { opacity: 0.8; line-height: 1.5; }
 </style>
 
 <div class="deco" style="top:-140px;right:-140px;width:520px;height:520px;background:radial-gradient(circle,rgba(147,197,253,0.3) 0%,transparent 70%)"></div>
@@ -225,25 +347,39 @@ LEGEND_BG = 'rgba(255,255,255,0.65)'
 LEGEND_BD = 'rgba(30,64,175,0.2)'
 
 # ══════════════════════════════════════════════════════════════
-# LOGIN
+# DATA QUALITY BANNER RENDERER
 # ══════════════════════════════════════════════════════════════
-if not st.session_state.officer_name:
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        st.markdown(f"""
-        <div class="login-card">
-            <div style="display:flex;justify-content:center">{BANK_SVG}</div>
-            <div class="orange-accent"></div>
-            <div class="login-title">Officer Portal</div>
-            <div class="login-sub" style="color:#2d4a8a">Internal loan management system</div>
+def render_dq_banner(dq):
+    if not dq["has_issues"]:
+        return
+
+    sev = dq["severity"]
+    colors = {
+        "critical": {"cls": "dq-banner-critical", "icon": "🔴", "title_color": "#7f1d1d", "label_color": "#b91c1c", "detail_color": "#991b1b"},
+        "warning":  {"cls": "dq-banner-warning",  "icon": "🟠", "title_color": "#92400e", "label_color": "#c2410c", "detail_color": "#9a3412"},
+        "info":     {"cls": "dq-banner-info",      "icon": "🔵", "title_color": "#1e40af", "label_color": "#1d4ed8", "detail_color": "#2563eb"},
+    }
+    c = colors.get(sev, colors["warning"])
+    sev_label = {"critical": "Critical — Manual Review Required", "warning": "Warning — Additional Verification Needed", "info": "Notice — Minor Data Gaps Detected"}.get(sev, "")
+
+    flag_rows_html = ""
+    for label, detail in dq["flags"]:
+        flag_rows_html += f"""
+        <div class="dq-flag-row">
+            <span style="font-size:13px">⚠️</span>
+            <span class="dq-flag-label" style="color:{c['label_color']}">{label}</span>
+            <span class="dq-flag-detail" style="color:{c['detail_color']}">{detail}</span>
+        </div>"""
+
+    st.markdown(f"""
+    <div class="{c['cls']}">
+        <div class="dq-banner-title" style="color:{c['title_color']}">
+            {c['icon']} &nbsp; Insufficient Information Detected &nbsp;·&nbsp; {sev_label}
         </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
-        name = st.text_input("Officer name", placeholder="Enter your full name")
-        if st.button("Sign in →", use_container_width=True) and name.strip():
-            st.session_state.officer_name = name.strip()
-            st.rerun()
-    st.stop()
+        {flag_rows_html}
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════
 # LOAN REPAYMENT DETAIL PAGE
@@ -444,39 +580,38 @@ def show_customer_page(app):
         st.session_state.selected_app = None
         st.rerun()
 
+    # ── Compute data quality flags for this customer/application ──
+    dq = get_data_quality_flags(nic, app)
+
     badge = {
         "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
         "Approved": "<span class='badge-approved'>✅ Approved</span>",
         "Rejected": "<span class='badge-rejected'>❌ Rejected</span>",
     }.get(app["status"], app["status"])
 
-    # ── Check thin file ──
-    is_thin = get_thin_flag(nic)
+    is_thin  = get_thin_flag(nic)
     thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
+
+    dq_badge = ""
+    if dq["has_issues"]:
+        if dq["severity"] == "critical":
+            dq_badge = "<span class='badge-critical'>🔴 Critical Data Gaps</span>"
+        elif dq["severity"] == "warning":
+            dq_badge = "<span class='badge-warning'>🟠 Insufficient Info</span>"
 
     st.markdown(f"""
     <div style='margin:1rem 0 1.5rem'>
         <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;
                     margin-bottom:8px;font-weight:700'>
-            Application #{app['id']} &nbsp;·&nbsp; {badge} &nbsp; {thin_badge}
+            Application #{app['id']} &nbsp;·&nbsp; {badge} &nbsp; {thin_badge} &nbsp; {dq_badge}
         </div>
         <h1 style='font-size:28px;margin:0;color:#0c1a4e'>Customer Profile</h1>
         <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-top:8px'></div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Thin file warning banner ──
-    if is_thin:
-        st.markdown("""
-        <div class="thin-file-banner">
-            <div class="thin-file-banner-icon">⚠️</div>
-            <div class="thin-file-banner-text">
-                <strong>Thin File Customer</strong> — This customer has limited or no financial 
-                history (no transactions, no repayment records, no overdue history). 
-                Additional verification and manual review is strongly recommended before approval.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # ── Render the data quality banner (THE KEY ADDITION) ──
+    render_dq_banner(dq)
 
     cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
     if cust.empty:
@@ -496,7 +631,7 @@ def show_customer_page(app):
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
-            <div class="metric-value" style="color:{score_color}">{score_val}</div>
+            <div class="metric-value" style="color:{score_color}">{score_val if score_val > 0 else '—'}</div>
         </div>""", unsafe_allow_html=True)
     with m2:
         cluster_raw = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
@@ -506,15 +641,17 @@ def show_customer_page(app):
         </div>""", unsafe_allow_html=True)
     with m3:
         score_band = str(c.get('Score_Band', 'N/A'))
-        band_color = "#f97316" if score_band == "Unknown Risk" else "#1d4ed8"
+        band_color = "#f97316" if score_band in ("Unknown Risk", "N/A") else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Score Band</div>
             <div class="metric-value" style="color:{band_color}">{score_band}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
+        avg_credit = float(c.get('Avg_Monthly_Credit', 0))
+        income_color = "#dc2626" if avg_credit == 0 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
-            <div class="metric-value">{fmt(c.get('Avg_Monthly_Credit', 0))}</div>
+            <div class="metric-value" style="color:{income_color}">{fmt(avg_credit) if avg_credit > 0 else '—'}</div>
         </div>""", unsafe_allow_html=True)
     with m5:
         ood_val   = int(float(c.get('MAX_OOD', 0)))
@@ -524,16 +661,41 @@ def show_customer_page(app):
             <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
         </div>""", unsafe_allow_html=True)
     with m6:
-        thin_color = "#f97316" if is_thin else "#1d4ed8"
-        thin_label = "⚠️ Thin File" if is_thin else str(int(c.get('Number_of_Active_Accounts', 0)))
-        st.markdown(f"""<div class="metric-card" style="{'background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)' if is_thin else ''}">
-            <div class="metric-label">{'Thin File' if is_thin else 'Active Accounts'}</div>
-            <div class="metric-value" style="color:{thin_color}">{thin_label}</div>
+        dq_count = len(dq["flags"])
+        dq_col   = "#dc2626" if dq["severity"] == "critical" else ("#f97316" if dq["severity"] == "warning" else "#1d4ed8")
+        dq_bg    = "background:rgba(220,38,38,0.07);border-color:rgba(220,38,38,0.3)" if dq["severity"] == "critical" else ("background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)" if dq["severity"] == "warning" else "")
+        st.markdown(f"""<div class="metric-card" style="{dq_bg}">
+            <div class="metric-label" style="color:{dq_col}">Data Quality Flags</div>
+            <div class="metric-value" style="color:{dq_col}">{dq_count if dq_count > 0 else '✓ Clean'}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Three info cards ──────────────────────────────────────
+    # ── Derive display values for risk profile card ───────────
+    fin_cap      = str(c.get('Financial_Capacity', 'N/A'))
+    cust_risk    = str(c.get('CUSTOMER_RISK_NAME', 'N/A'))
+    target_desc  = str(c.get('TARGET_DESC', 'N/A'))
+    emp_seg      = str(c.get('Employment_Segment', 'N/A'))
+    net_ratio    = c.get('NET_RATIO', 'N/A')
+
+    def flag_val(val, bad_values=("Unknown", "", "nan", "N/A", "Not valid segment")):
+        v = str(val).strip()
+        is_bad = v in bad_values
+        color  = "#dc2626" if is_bad else "#0c1a4e"
+        label  = f"⚠️ {v}" if is_bad else v
+        return f'<span style="color:{color};font-weight:700;font-family:DM Mono,monospace;font-size:14px">{label}</span>'
+
+    try:
+        net_ratio_display = f"{float(net_ratio):.3f}"
+        net_ratio_color   = "#dc2626" if float(net_ratio) < 0 else "#0c1a4e"
+        net_ratio_html    = f'<span style="color:{net_ratio_color};font-weight:700;font-family:DM Mono,monospace;font-size:14px">{net_ratio_display}</span>'
+    except:
+        net_ratio_html    = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Missing</span>'
+
+    # high_emi_flag display
+    emi_flag = app.get("high_emi_flag", False)
+    emi_flag_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Yes — EMI Overridden</span>' if emi_flag else '<span style="color:#0c1a4e;font-weight:700;font-family:DM Mono,monospace;font-size:14px">No</span>'
+
     st.markdown(f"""
     <div class="profile-row">
       <div class="info-card">
@@ -545,24 +707,24 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT', 'N/A')).title()}</span></div>
         <div class="info-row"><span class="info-key">Occupation</span><span class="info-val">{str(c.get('OCCUPATION', 'N/A')).title()}</span></div>
         <div class="info-row"><span class="info-key">Employment</span><span class="info-val">{str(c.get('EMPLOYMENT_STATUS', 'N/A')).title()}</span></div>
-        <div class="info-row"><span class="info-key">Segment</span><span class="info-val">{str(c.get('Employment_Segment', 'N/A'))}</span></div>
+        <div class="info-row"><span class="info-key">Segment</span>{flag_val(emp_seg, ("Not valid segment", "", "nan", "N/A"))}</div>
       </div>
 
       <div class="info-card">
         <div class="info-card-title">Risk Profile</div>
-        <div class="info-row"><span class="info-key">Customer risk</span><span class="info-val">{str(c.get('CUSTOMER_RISK_NAME', 'N/A')).title()}</span></div>
-        <div class="info-row"><span class="info-key">Target tier</span><span class="info-val">{c.get('TARGET_DESC', 'N/A')}</span></div>
-        <div class="info-row"><span class="info-key">Financial capacity</span><span class="info-val">{c.get('Financial_Capacity', 'N/A')}</span></div>
+        <div class="info-row"><span class="info-key">Customer risk</span>{flag_val(cust_risk)}</div>
+        <div class="info-row"><span class="info-key">Target tier</span>{flag_val(target_desc)}</div>
+        <div class="info-row"><span class="info-key">Financial capacity</span>{flag_val(fin_cap, ("Unknown / Missing Balance Data", "", "nan", "N/A"))}</div>
         <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
-        <div class="info-row"><span class="info-key">Salary band</span><span class="info-val">{str(c.get('Cluster_Name', 'N/A'))}</span></div>
+        <div class="info-row"><span class="info-key">Net ratio</span>{net_ratio_html}</div>
         <div class="info-row"><span class="info-key">Thin file</span><span class="info-val" style="color:{'#f97316' if is_thin else '#1d4ed8'}">{'⚠️ Yes' if is_thin else 'No'}</span></div>
       </div>
 
       <div class="info-card">
         <div class="info-card-title">This Application</div>
-        <div style='margin-bottom:12px'>{badge} {thin_badge}</div>
+        <div style='margin-bottom:12px'>{badge} {thin_badge} {dq_badge}</div>
         <div class="info-row"><span class="info-key">Product</span><span class="info-val" style="font-size:11px">{app['loan_product'].split('—')[0].strip()}</span></div>
         <div class="info-row"><span class="info-key">Amount</span><span class="info-val">{fmt(app['loan_amount'])}</span></div>
         <div class="info-row"><span class="info-key">Term</span><span class="info-val">{app['loan_term']} months</span></div>
@@ -570,6 +732,7 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Monthly EMI</span><span class="info-val">{fmt(app['loan_emi'])}</span></div>
         <div class="info-row"><span class="info-key">Total interest</span><span class="info-val">{fmt(app['total_interest'])}</span></div>
         <div class="info-row"><span class="info-key">Total repayment</span><span class="info-val">{fmt(app['total_repayment'])}</span></div>
+        <div class="info-row"><span class="info-key">EMI overridden</span>{emi_flag_html}</div>
         <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
       </div>
     </div>
@@ -671,8 +834,13 @@ def show_customer_page(app):
     # ── Review Section ───────────────────────────────────────
     if app["status"] == "Pending":
         st.markdown('<div class="section-header">Review Decision</div>', unsafe_allow_html=True)
-        if is_thin:
-            st.info("ℹ️ This is a thin file customer. Please conduct additional due diligence before making a decision.")
+        if dq["has_issues"]:
+            sev_msg = {
+                "critical": "🔴 This application has **critical data gaps**. Manual verification is mandatory before any decision.",
+                "warning":  "🟠 This application has **insufficient information** in one or more areas. Please verify before proceeding.",
+                "info":     "🔵 Minor data gaps detected. Review flags above before deciding.",
+            }.get(dq["severity"], "")
+            st.warning(sev_msg)
         notes = st.text_area(
             "Officer notes",
             key=f"notes_detail_{app['id']}",
@@ -699,6 +867,28 @@ def show_customer_page(app):
             <div class="info-row"><span class="info-key">Reviewed at</span><span class="info-val">{app.get('reviewed_at', 'N/A')}</span></div>
             <div class="info-row"><span class="info-key">Notes</span><span class="info-val">{app.get('officer_notes', 'N/A')}</span></div>
         </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════
+# LOGIN
+# ══════════════════════════════════════════════════════════════
+if not st.session_state.officer_name:
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.markdown(f"""
+        <div class="login-card">
+            <div style="display:flex;justify-content:center">{BANK_SVG}</div>
+            <div class="orange-accent"></div>
+            <div class="login-title">Officer Portal</div>
+            <div class="login-sub" style="color:#2d4a8a">Internal loan management system</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
+        name = st.text_input("Officer name", placeholder="Enter your full name")
+        if st.button("Sign in →", use_container_width=True) and name.strip():
+            st.session_state.officer_name = name.strip()
+            st.rerun()
+    st.stop()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -750,18 +940,24 @@ def show_dashboard():
         st.info("No applications received yet.")
         return
 
+    # Pre-compute DQ for all apps
+    app_dq = {app["id"]: get_data_quality_flags(app["nic"], app) for app in applications}
+
     total    = len(applications)
     pending  = sum(1 for a in applications if a["status"] == "Pending")
     approved = sum(1 for a in applications if a["status"] == "Approved")
     rejected = sum(1 for a in applications if a["status"] == "Rejected")
     thin     = sum(1 for a in applications if get_thin_flag(a["nic"]))
+    insuff   = sum(1 for a in applications if app_dq[a["id"]]["has_issues"])
+    critical = sum(1 for a in applications if app_dq[a["id"]]["severity"] == "critical")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    # ── Summary metric cards ────────────────────────────────
+    c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
     with c1:
-        st.markdown(f"""<div class="metric-card"><div class="metric-label">Total Applications</div>
+        st.markdown(f"""<div class="metric-card"><div class="metric-label">Total</div>
             <div class="metric-value">{total}</div></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown(f"""<div class="metric-card"><div class="metric-label">Pending Review</div>
+        st.markdown(f"""<div class="metric-card"><div class="metric-label">Pending</div>
             <div class="metric-value" style="color:#92400e">{pending}</div></div>""", unsafe_allow_html=True)
     with c3:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Approved</div>
@@ -773,14 +969,25 @@ def show_dashboard():
         st.markdown(f"""<div class="metric-card" style="background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)">
             <div class="metric-label" style="color:#92400e">Thin File</div>
             <div class="metric-value" style="color:#f97316">{thin}</div></div>""", unsafe_allow_html=True)
+    with c6:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(251,191,36,0.07);border-color:rgba(251,191,36,0.4)">
+            <div class="metric-label" style="color:#78350f">Insuff. Info</div>
+            <div class="metric-value" style="color:#d97706">{insuff}</div></div>""", unsafe_allow_html=True)
+    with c7:
+        st.markdown(f"""<div class="metric-card" style="background:rgba(220,38,38,0.07);border-color:rgba(220,38,38,0.3)">
+            <div class="metric-label" style="color:#7f1d1d">Critical Gaps</div>
+            <div class="metric-value" style="color:#dc2626">{critical}</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    col_f1, col_f2 = st.columns([2, 4])
+    # ── Filters ────────────────────────────────────────────
+    col_f1, col_f2, col_f3 = st.columns([2, 2, 2])
     with col_f1:
         status_filter = st.selectbox("Filter by status", ["All", "Pending", "Approved", "Rejected"])
     with col_f2:
         thin_filter = st.selectbox("Filter by file type", ["All", "Thin File Only", "Normal Only"])
+    with col_f3:
+        dq_filter = st.selectbox("Filter by data quality", ["All", "Insufficient Info", "Critical Gaps Only", "Clean Only"])
 
     filtered = applications if status_filter == "All" else [
         a for a in applications if a["status"] == status_filter
@@ -790,10 +997,18 @@ def show_dashboard():
     elif thin_filter == "Normal Only":
         filtered = [a for a in filtered if not get_thin_flag(a["nic"])]
 
+    if dq_filter == "Insufficient Info":
+        filtered = [a for a in filtered if app_dq[a["id"]]["has_issues"]]
+    elif dq_filter == "Critical Gaps Only":
+        filtered = [a for a in filtered if app_dq[a["id"]]["severity"] == "critical"]
+    elif dq_filter == "Clean Only":
+        filtered = [a for a in filtered if not app_dq[a["id"]]["has_issues"]]
+
     st.markdown(f"<p style='color:#1e40af;font-size:12px;letter-spacing:1px;font-weight:600'>{len(filtered)} APPLICATION(S)</p>", unsafe_allow_html=True)
 
     for app in filtered:
-        is_thin = get_thin_flag(app["nic"])
+        dq       = app_dq[app["id"]]
+        is_thin  = get_thin_flag(app["nic"])
 
         badge = {
             "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
@@ -802,18 +1017,41 @@ def show_dashboard():
         }.get(app["status"], app["status"])
 
         thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
-        card_class = "app-card-thin" if is_thin else "app-card"
+
+        dq_badge = ""
+        if dq["severity"] == "critical":
+            dq_badge    = "<span class='badge-critical'>🔴 Critical Gaps</span>"
+            card_class  = "app-card-critical"
+        elif dq["has_issues"]:
+            dq_badge    = "<span class='badge-warning'>🟠 Insuff. Info</span>"
+            card_class  = "app-card-warn"
+        else:
+            card_class  = "app-card"
+
+        # Flag count indicator
+        flag_count_html = ""
+        if dq["has_issues"]:
+            fc = len(dq["flags"])
+            fc_color = "#dc2626" if dq["severity"] == "critical" else "#d97706"
+            flag_count_html = f'<span style="font-size:12px;color:{fc_color};font-weight:600">{fc} flag{"s" if fc != 1 else ""}</span>'
+
+        emi_flag_html = ""
+        if app.get("high_emi_flag", False):
+            emi_flag_html = "<span class='badge-critical' style='font-size:10px;padding:2px 10px'>💸 EMI Override</span>"
 
         col_info, col_btn = st.columns([6, 1])
         with col_info:
             st.markdown(f"""
             <div class="{card_class}">
                 <div style='display:flex;justify-content:space-between;align-items:center'>
-                    <div style='display:flex;align-items:center;gap:16px;flex-wrap:wrap'>
+                    <div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap'>
                         <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:700'>#{app['id']}</span>
                         <span style='color:#0c1a4e;font-weight:700'>{app['nic']}</span>
                         {badge}
                         {thin_badge}
+                        {dq_badge}
+                        {emi_flag_html}
+                        {flag_count_html}
                     </div>
                     <div style='display:flex;gap:2rem;align-items:center'>
                         <span style='color:#2d4a8a;font-size:13px'>{app['loan_product'].split('—')[0].strip()}</span>
