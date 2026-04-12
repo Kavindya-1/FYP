@@ -99,9 +99,28 @@ def get_data_quality_flags(nic, app=None):
     if score == 0 or pd.isna(score):
         flags.append(("Missing Credit Score", "Internal bank default score is zero or missing"))
 
-    # 8. High EMI Flag — customer overrode the EMI warning
+    # 8. High EMI Flag — customer overrode the EMI warning, compute exact % of salary
     if app and app.get("high_emi_flag", False):
-        flags.append(("EMI Exceeds Salary", "Customer proceeded despite monthly repayment exceeding 40% of salary threshold"))
+        try:
+            emi_val    = float(app.get("loan_emi", 0))
+            salary_val = float(c.get("Avg_Monthly_Credit", 0))
+            if salary_val > 0:
+                emi_pct = round((emi_val / salary_val) * 100, 1)
+                flags.append((
+                    "EMI Exceeds Salary Threshold",
+                    f"Customer's monthly repayment is {emi_pct}% of salary — exceeds the 40% threshold. "
+                    f"Customer was warned but chose to proceed. High-risk repayment commitment."
+                ))
+            else:
+                flags.append((
+                    "EMI Exceeds Salary Threshold",
+                    "Customer proceeded despite monthly repayment exceeding 40% of salary. Salary data unavailable for exact percentage."
+                ))
+        except (TypeError, ValueError):
+            flags.append((
+                "EMI Exceeds Salary Threshold",
+                "Customer proceeded despite monthly repayment exceeding 40% of salary threshold."
+            ))
 
     # 9. Overdue history present
     try:
@@ -121,10 +140,10 @@ def get_data_quality_flags(nic, app=None):
 
     # Determine overall severity
     critical_labels = {"Thin File", "No Transaction Data", "Missing Credit Score",
-                       "Customer record not found", "No Active Accounts", "EMI Exceeds Salary"}
+                       "Customer record not found", "No Active Accounts", "EMI Exceeds Salary Threshold"}
     warning_labels  = {"Unknown Financial Capacity", "Unknown Customer Risk",
                        "Unknown Target Tier", "Invalid Employment Segment",
-                       "Overdue History", "Negative Net Ratio"}
+                       "Overdue History", "Negative Net Ratio", "Unclassified Employment Segment"}
 
     has_critical = any(label in critical_labels for label, _ in flags)
     has_warning  = any(label in warning_labels  for label, _ in flags)
@@ -355,31 +374,60 @@ def render_dq_banner(dq):
         return
 
     sev = dq["severity"]
-    colors = {
-        "critical": {"cls": "dq-banner-critical", "icon": "🔴", "title_color": "#7f1d1d", "label_color": "#b91c1c", "detail_color": "#991b1b"},
-        "warning":  {"cls": "dq-banner-warning",  "icon": "🟠", "title_color": "#92400e", "label_color": "#c2410c", "detail_color": "#9a3412"},
-        "info":     {"cls": "dq-banner-info",      "icon": "🔵", "title_color": "#1e40af", "label_color": "#1d4ed8", "detail_color": "#2563eb"},
-    }
-    c = colors.get(sev, colors["warning"])
-    sev_label = {"critical": "Critical — Manual Review Required", "warning": "Warning — Additional Verification Needed", "info": "Notice — Minor Data Gaps Detected"}.get(sev, "")
 
-    flag_rows_html = ""
+    sev_cfg = {
+        "critical": {
+            "border_left": "#dc2626", "bg": "rgba(220,38,38,0.07)", "border": "rgba(220,38,38,0.4)",
+            "icon": "🔴", "title": "Critical — Manual Review Required",
+            "title_color": "#7f1d1d", "label_color": "#b91c1c", "detail_color": "#991b1b",
+            "row_border": "rgba(220,38,38,0.1)",
+        },
+        "warning": {
+            "border_left": "#f97316", "bg": "rgba(249,115,22,0.07)", "border": "rgba(249,115,22,0.4)",
+            "icon": "🟠", "title": "Warning — Additional Verification Needed",
+            "title_color": "#92400e", "label_color": "#c2410c", "detail_color": "#9a3412",
+            "row_border": "rgba(249,115,22,0.1)",
+        },
+        "info": {
+            "border_left": "#3b82f6", "bg": "rgba(59,130,246,0.06)", "border": "rgba(59,130,246,0.3)",
+            "icon": "🔵", "title": "Notice — Minor Data Gaps Detected",
+            "title_color": "#1e40af", "label_color": "#1d4ed8", "detail_color": "#2563eb",
+            "row_border": "rgba(59,130,246,0.1)",
+        },
+    }
+    cfg = sev_cfg.get(sev, sev_cfg["warning"])
+
+    flag_rows = ""
     for label, detail in dq["flags"]:
-        flag_rows_html += f"""
-        <div class="dq-flag-row">
-            <span style="font-size:13px">⚠️</span>
-            <span class="dq-flag-label" style="color:{c['label_color']}">{label}</span>
-            <span class="dq-flag-detail" style="color:{c['detail_color']}">{detail}</span>
+        flag_rows += f"""
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+                    border-bottom:0.5px solid {cfg['row_border']};">
+            <span style="font-size:13px;flex-shrink:0;">⚠️</span>
+            <span style="font-weight:700;min-width:220px;flex-shrink:0;
+                         color:{cfg['label_color']};font-size:13px;">{label}</span>
+            <span style="color:{cfg['detail_color']};font-size:13px;line-height:1.5;">{detail}</span>
         </div>"""
 
-    st.markdown(f"""
-    <div class="{c['cls']}">
-        <div class="dq-banner-title" style="color:{c['title_color']}">
-            {c['icon']} &nbsp; Insufficient Information Detected &nbsp;·&nbsp; {sev_label}
+    n_flags   = len(dq["flags"])
+    row_h     = 42   # px per flag row
+    header_h  = 48   # px for title + padding
+    banner_h  = header_h + n_flags * row_h + 24  # 24px bottom padding
+
+    html = f"""<!DOCTYPE html><html><head>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>body{{margin:0;padding:0;background:transparent;font-family:'DM Sans',sans-serif;}}</style>
+    </head><body>
+    <div style="background:{cfg['bg']};border:1px solid {cfg['border']};
+                border-left:4px solid {cfg['border_left']};border-radius:10px;
+                padding:14px 18px;">
+        <div style="font-size:14px;font-weight:700;color:{cfg['title_color']};margin-bottom:10px;">
+            {cfg['icon']} &nbsp; Requires Officer Attention &nbsp;·&nbsp; {cfg['title']}
         </div>
-        {flag_rows_html}
+        {flag_rows}
     </div>
-    """, unsafe_allow_html=True)
+    </body></html>"""
+
+    components.html(html, height=banner_h, scrolling=False)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -590,27 +638,43 @@ def show_customer_page(app):
     }.get(app["status"], app["status"])
 
     is_thin  = get_thin_flag(nic)
-    thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
 
-    dq_badge = ""
+    thin_badge_inline = (
+        "<span style='background:rgba(249,115,22,0.15);color:#92400e;padding:3px 12px;"
+        "border-radius:20px;font-size:11px;border:1px solid rgba(249,115,22,0.5);font-weight:600;'>"
+        "⚠️ Thin File</span>"
+    ) if is_thin else ""
+
+    dq_badge_inline = ""
     if dq["has_issues"]:
         if dq["severity"] == "critical":
-            dq_badge = "<span class='badge-critical'>🔴 Critical Data Gaps</span>"
+            dq_badge_inline = (
+                "<span style='background:rgba(220,38,38,0.15);color:#7f1d1d;padding:3px 12px;"
+                "border-radius:20px;font-size:11px;border:1px solid rgba(220,38,38,0.45);font-weight:600;'>"
+                "🔴 Critical Data Gaps</span>"
+            )
         elif dq["severity"] == "warning":
-            dq_badge = "<span class='badge-warning'>🟠 Insufficient Info</span>"
+            dq_badge_inline = (
+                "<span style='background:rgba(251,191,36,0.18);color:#78350f;padding:3px 12px;"
+                "border-radius:20px;font-size:11px;border:1px solid rgba(251,191,36,0.5);font-weight:600;'>"
+                "🟠 Insufficient Info</span>"
+            )
+
+    # also set dq_badge for the info card (used later)
+    dq_badge = dq_badge_inline
 
     st.markdown(f"""
     <div style='margin:1rem 0 1.5rem'>
         <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;
                     margin-bottom:8px;font-weight:700'>
-            Application #{app['id']} &nbsp;·&nbsp; {badge} &nbsp; {thin_badge} &nbsp; {dq_badge}
+            Application #{app['id']} &nbsp;·&nbsp; {badge} &nbsp; {thin_badge_inline} &nbsp; {dq_badge_inline}
         </div>
         <h1 style='font-size:28px;margin:0;color:#0c1a4e'>Customer Profile</h1>
         <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-top:8px'></div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Render the data quality banner (THE KEY ADDITION) ──
+    # ── Render the data quality banner ──
     render_dq_banner(dq)
 
     cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
@@ -692,9 +756,22 @@ def show_customer_page(app):
     except:
         net_ratio_html    = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Missing</span>'
 
-    # high_emi_flag display
+    # high_emi_flag display — compute actual % of salary
     emi_flag = app.get("high_emi_flag", False)
-    emi_flag_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Yes — EMI Overridden</span>' if emi_flag else '<span style="color:#0c1a4e;font-weight:700;font-family:DM Mono,monospace;font-size:14px">No</span>'
+    if emi_flag:
+        try:
+            emi_val    = float(app.get("loan_emi", 0))
+            salary_val = float(c.get("Avg_Monthly_Credit", 0))
+            emi_pct    = round((emi_val / salary_val) * 100, 1) if salary_val > 0 else None
+            pct_label  = f"{emi_pct}% of salary" if emi_pct else "% unknown"
+            emi_flag_html = (
+                f'<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:13px">'
+                f'⚠️ {pct_label} — exceeds 40% cap</span>'
+            )
+        except (TypeError, ValueError):
+            emi_flag_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Exceeds 40% cap</span>'
+    else:
+        emi_flag_html = '<span style="color:#0c1a4e;font-weight:700;font-family:DM Mono,monospace;font-size:14px">No</span>'
 
     st.markdown(f"""
     <div class="profile-row">
@@ -724,7 +801,7 @@ def show_customer_page(app):
 
       <div class="info-card">
         <div class="info-card-title">This Application</div>
-        <div style='margin-bottom:12px'>{badge} {thin_badge} {dq_badge}</div>
+        <div style='margin-bottom:12px'>{badge} {thin_badge_inline} {dq_badge}</div>
         <div class="info-row"><span class="info-key">Product</span><span class="info-val" style="font-size:11px">{app['loan_product'].split('—')[0].strip()}</span></div>
         <div class="info-row"><span class="info-key">Amount</span><span class="info-val">{fmt(app['loan_amount'])}</span></div>
         <div class="info-row"><span class="info-key">Term</span><span class="info-val">{app['loan_term']} months</span></div>
@@ -732,7 +809,7 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Monthly EMI</span><span class="info-val">{fmt(app['loan_emi'])}</span></div>
         <div class="info-row"><span class="info-key">Total interest</span><span class="info-val">{fmt(app['total_interest'])}</span></div>
         <div class="info-row"><span class="info-key">Total repayment</span><span class="info-val">{fmt(app['total_repayment'])}</span></div>
-        <div class="info-row"><span class="info-key">EMI overridden</span>{emi_flag_html}</div>
+        <div class="info-row"><span class="info-key">EMI vs salary</span>{emi_flag_html}</div>
         <div class="info-row"><span class="info-key">Submitted</span><span class="info-val">{app['submitted_at']}</span></div>
       </div>
     </div>
