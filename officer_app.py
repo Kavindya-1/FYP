@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
+import streamlit.components.v1 as components
 from db_utils import get_all_applications, update_application_status
 
 st.set_page_config(
@@ -554,7 +555,6 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     </body></html>
     """
 
-    import streamlit.components.v1 as components
     table_height = min(80 + len(display_df) * 42 + 90, 800)
     components.html(table_html, height=table_height, scrolling=True)
 
@@ -1010,57 +1010,89 @@ def show_dashboard():
         dq       = app_dq[app["id"]]
         is_thin  = get_thin_flag(app["nic"])
 
-        badge = {
-            "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
-            "Approved": "<span class='badge-approved'>✅ Approved</span>",
-            "Rejected": "<span class='badge-rejected'>❌ Rejected</span>",
-        }.get(app["status"], app["status"])
-
-        thin_badge = "<span class='badge-thin'>⚠️ Thin File</span>" if is_thin else ""
-
-        dq_badge = ""
         if dq["severity"] == "critical":
-            dq_badge    = "<span class='badge-critical'>🔴 Critical Gaps</span>"
             card_class  = "app-card-critical"
         elif dq["has_issues"]:
-            dq_badge    = "<span class='badge-warning'>🟠 Insuff. Info</span>"
             card_class  = "app-card-warn"
         else:
             card_class  = "app-card"
 
-        # Flag count indicator
-        flag_count_html = ""
-        if dq["has_issues"]:
-            fc = len(dq["flags"])
-            fc_color = "#dc2626" if dq["severity"] == "critical" else "#d97706"
-            flag_count_html = f'<span style="font-size:12px;color:{fc_color};font-weight:600">{fc} flag{"s" if fc != 1 else ""}</span>'
+        # card_styles maps class names to inline CSS so we don't rely on
+        # injected <style> blocks (which components.html can't see)
+        card_styles = {
+            "app-card": "background:rgba(255,255,255,0.62);border:0.5px solid rgba(30,64,175,0.14);border-radius:12px;padding:12px 18px;backdrop-filter:blur(8px);",
+            "app-card-warn": "background:rgba(255,247,237,0.82);border:0.5px solid rgba(249,115,22,0.35);border-left:3px solid #f97316;border-radius:12px;padding:12px 18px;",
+            "app-card-critical": "background:rgba(254,242,242,0.88);border:0.5px solid rgba(220,38,38,0.35);border-left:3px solid #dc2626;border-radius:12px;padding:12px 18px;",
+        }
+        card_inline = card_styles.get(card_class, card_styles["app-card"])
 
-        emi_flag_html = ""
+        badge_styles = {
+            "pending":  "background:rgba(251,191,36,0.18);color:#92400e;padding:3px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(251,191,36,0.5);font-weight:600;",
+            "approved": "background:rgba(34,197,94,0.14);color:#14532d;padding:3px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(34,197,94,0.4);font-weight:600;",
+            "rejected": "background:rgba(239,68,68,0.12);color:#7f1d1d;padding:3px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(239,68,68,0.35);font-weight:600;",
+        }
+        badge_s   = badge_styles.get(app["status"].lower(), "")
+        badge_html_inline = f"<span style='{badge_s}'>{app['status']}</span>"
+
+        thin_html_inline = (
+            "<span style='background:rgba(249,115,22,0.15);color:#92400e;padding:3px 12px;"
+            "border-radius:20px;font-size:11px;border:1px solid rgba(249,115,22,0.5);font-weight:600;'>"
+            "⚠️ Thin File</span>"
+        ) if is_thin else ""
+
+        dq_html_inline = ""
+        if dq["severity"] == "critical":
+            dq_html_inline = ("<span style='background:rgba(220,38,38,0.15);color:#7f1d1d;padding:3px 12px;"
+                              "border-radius:20px;font-size:11px;border:1px solid rgba(220,38,38,0.45);font-weight:600;'>"
+                              "🔴 Critical Gaps</span>")
+        elif dq["has_issues"]:
+            dq_html_inline = ("<span style='background:rgba(251,191,36,0.18);color:#78350f;padding:3px 12px;"
+                              "border-radius:20px;font-size:11px;border:1px solid rgba(251,191,36,0.5);font-weight:600;'>"
+                              "🟠 Insuff. Info</span>")
+
+        emi_inline = ""
         if app.get("high_emi_flag", False):
-            emi_flag_html = "<span class='badge-critical' style='font-size:10px;padding:2px 10px'>💸 EMI Override</span>"
+            emi_inline = ("<span style='background:rgba(220,38,38,0.15);color:#7f1d1d;padding:3px 10px;"
+                          "border-radius:20px;font-size:10px;border:1px solid rgba(220,38,38,0.45);font-weight:600;'>"
+                          "💸 EMI Override</span>")
+
+        fc_inline = ""
+        if dq["has_issues"]:
+            fc       = len(dq["flags"])
+            fc_color = "#dc2626" if dq["severity"] == "critical" else "#d97706"
+            fc_inline = f'<span style="font-size:12px;color:{fc_color};font-weight:600">{fc} flag{"s" if fc != 1 else ""}</span>'
+
+        product_label = app['loan_product'].split('—')[0].strip()
+
+        card_html = f"""
+        <!DOCTYPE html><html><head>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+        <style>body{{margin:0;padding:0;background:transparent;}}</style>
+        </head><body>
+        <div style="{card_inline}">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="color:#1e40af;font-size:11px;font-family:'DM Mono',monospace;font-weight:700;">#{app['id']}</span>
+                    <span style="color:#0c1a4e;font-weight:700;font-family:'DM Sans',sans-serif;">{app['nic']}</span>
+                    {badge_html_inline}
+                    {thin_html_inline}
+                    {dq_html_inline}
+                    {emi_inline}
+                    {fc_inline}
+                </div>
+                <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+                    <span style="color:#2d4a8a;font-size:13px;font-family:'DM Sans',sans-serif;">{product_label}</span>
+                    <span style="color:#0c1a4e;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;">{fmt(app['loan_amount'])}</span>
+                    <span style="color:#3b5fad;font-size:12px;font-family:'DM Sans',sans-serif;">{app['submitted_at']}</span>
+                </div>
+            </div>
+        </div>
+        </body></html>
+        """
 
         col_info, col_btn = st.columns([6, 1])
         with col_info:
-            st.markdown(f"""
-            <div class="{card_class}">
-                <div style='display:flex;justify-content:space-between;align-items:center'>
-                    <div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap'>
-                        <span style='color:#1e40af;font-size:11px;font-family:DM Mono;font-weight:700'>#{app['id']}</span>
-                        <span style='color:#0c1a4e;font-weight:700'>{app['nic']}</span>
-                        {badge}
-                        {thin_badge}
-                        {dq_badge}
-                        {emi_flag_html}
-                        {flag_count_html}
-                    </div>
-                    <div style='display:flex;gap:2rem;align-items:center'>
-                        <span style='color:#2d4a8a;font-size:13px'>{app['loan_product'].split('—')[0].strip()}</span>
-                        <span style='color:#0c1a4e;font-family:DM Mono;font-size:14px;font-weight:700'>{fmt(app['loan_amount'])}</span>
-                        <span style='color:#3b5fad;font-size:12px'>{app['submitted_at']}</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            components.html(card_html, height=68, scrolling=False)
         with col_btn:
             st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
             if st.button("View →", key=f"view_{app['id']}", use_container_width=True):
