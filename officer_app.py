@@ -37,12 +37,13 @@ def format_date(d):
         return str(d)
 
 # ══════════════════════════════════════════════════════════════
-# EMI RATIO HELPER — always computed from live data
+# EMI RATIO HELPER
 # ══════════════════════════════════════════════════════════════
 def compute_emi_ratio(app, customer_row):
     """
-    Returns (emi_pct: float|None, exceeds: bool).
-    emi_pct is None when salary is zero/missing.
+    Returns (emi_pct: float, exceeds: bool).
+    EMI > 40% can only happen when high_emi_flag=True —
+    the only code path in the loan app that saves an unaffordable amount.
     """
     try:
         emi_val    = float(app.get("loan_emi", 0))
@@ -50,19 +51,13 @@ def compute_emi_ratio(app, customer_row):
         if emi_val > 0 and salary_val > 0:
             pct = round((emi_val / salary_val) * 100, 1)
             return pct, pct > 40.0
-        elif emi_val > 0 and salary_val == 0:
-            return None, True   # can't confirm affordability
         return 0.0, False
     except (TypeError, ValueError):
-        return None, False
+        return 0.0, False
 
 
 # ══════════════════════════════════════════════════════════════
-# INSUFFICIENT INFORMATION DETECTION
-# Returns a dict with:
-#   - has_issues: bool
-#   - flags: list of (label, detail) tuples
-#   - severity: "critical" | "warning" | "info"
+# DATA QUALITY FLAGS
 # ══════════════════════════════════════════════════════════════
 def get_data_quality_flags(nic, app=None):
     flags = []
@@ -99,8 +94,8 @@ def get_data_quality_flags(nic, app=None):
     elif emp_seg == "Other":
         flags.append(("Unclassified Employment Segment", "Employment segment is 'Other' — reduced scoring factor (0.6x)"))
 
-    # 6. Missing / zero NET_RATIO (no transaction data)
-    net_ratio = c.get("NET_RATIO", None)
+    # 6. Missing / zero NET_RATIO
+    net_ratio  = c.get("NET_RATIO", None)
     avg_credit = float(c.get("Avg_Monthly_Credit", 0))
     try:
         net_ratio_val = float(net_ratio)
@@ -120,29 +115,21 @@ def get_data_quality_flags(nic, app=None):
     if score == 0 or pd.isna(score):
         flags.append(("Missing Credit Score", "Internal bank default score is zero or missing"))
 
-    # 8. EMI vs salary — ALWAYS computed from live data, never just from stored flag
-    if app:
+    # 8. EMI exceeds 40% of salary
+    # This only happens when high_emi_flag=True — the customer was warned
+    # twice (suggestion screen + popup) and still chose to proceed with
+    # an amount whose EMI exceeds the 40% salary threshold.
+    if app and app.get("high_emi_flag", False):
         emi_pct, emi_exceeds = compute_emi_ratio(app, c)
         if emi_exceeds:
-            high_emi_stored = app.get("high_emi_flag", False)
-            if emi_pct is None:
-                detail = (
-                    "Monthly repayment cannot be confirmed — no salary on record. "
-                    "Affordability cannot be assessed. Manual verification required."
-                )
-            elif high_emi_stored:
-                detail = (
-                    f"Monthly repayment is {emi_pct}% of salary — far exceeds the 40% cap. "
-                    f"Customer was warned at submission and chose to proceed anyway. Extreme repayment risk."
-                )
-            else:
-                detail = (
-                    f"Monthly repayment is {emi_pct}% of salary — exceeds the 40% threshold. "
-                    f"This was not caught at submission. Immediate manual review required."
-                )
-            flags.append(("EMI Exceeds Salary Threshold", detail))
+            flags.append((
+                "EMI Exceeds Salary Threshold",
+                f"Monthly repayment is {emi_pct}% of salary — exceeds the 40% cap. "
+                f"Customer was warned at submission and chose to proceed anyway. "
+                f"Extreme repayment risk — manual review required."
+            ))
 
-    # 9. Overdue history present
+    # 9. Overdue history
     try:
         max_ood = float(c.get("MAX_OOD", 0))
     except (TypeError, ValueError):
@@ -158,7 +145,7 @@ def get_data_quality_flags(nic, app=None):
     if active_accounts == 0:
         flags.append(("No Active Accounts", "Customer has no active accounts linked to NIC"))
 
-    # ── Determine overall severity ──────────────────────────
+    # ── Severity ────────────────────────────────────────────
     critical_labels = {
         "Thin File", "No Transaction Data", "Missing Credit Score",
         "Customer record not found", "No Active Accounts",
@@ -172,8 +159,7 @@ def get_data_quality_flags(nic, app=None):
 
     has_critical = any(label in critical_labels for label, _ in flags)
     has_warning  = any(label in warning_labels  for label, _ in flags)
-
-    severity = "critical" if has_critical else ("warning" if has_warning else "info")
+    severity     = "critical" if has_critical else ("warning" if has_warning else "info")
 
     return {
         "has_issues": len(flags) > 0,
@@ -190,16 +176,9 @@ def get_thin_flag(nic):
 
 
 # ══════════════════════════════════════════════════════════════
-# BADGE BUILDER — shows the right combination of badges
-# depending on thin file + data quality flags
+# BADGE BUILDER
 # ══════════════════════════════════════════════════════════════
-def build_alert_badges(is_thin, dq, inline=True):
-    """
-    Returns HTML badge string.
-    - If thin file AND EMI → show both separately (not merged)
-    - Critical severity   → red badge listing specific reasons
-    - Warning severity    → orange badge
-    """
+def build_alert_badges(is_thin, dq):
     badges = []
 
     if is_thin:
@@ -210,7 +189,6 @@ def build_alert_badges(is_thin, dq, inline=True):
         )
 
     if dq["has_issues"]:
-        # Collect specific critical reasons for the badge label
         critical_labels = {
             "Thin File", "No Transaction Data", "Missing Credit Score",
             "Customer record not found", "No Active Accounts",
@@ -219,9 +197,8 @@ def build_alert_badges(is_thin, dq, inline=True):
         critical_reasons = [label for label, _ in dq["flags"] if label in critical_labels]
 
         if dq["severity"] == "critical":
-            # Build a concise reason string
             reason_parts = []
-            if "Thin File" in critical_reasons:
+            if "Thin File" in critical_reasons and not is_thin:
                 reason_parts.append("Thin File")
             if "EMI Exceeds Salary Threshold" in critical_reasons:
                 reason_parts.append("EMI Exceeds 40%")
@@ -233,10 +210,6 @@ def build_alert_badges(is_thin, dq, inline=True):
                 reason_parts.append("No Active Accounts")
             if "Customer record not found" in critical_reasons:
                 reason_parts.append("Record Not Found")
-
-            # Remove "Thin File" from reason_parts if already shown as separate badge
-            if is_thin and "Thin File" in reason_parts:
-                reason_parts.remove("Thin File")
 
             label = "🔴 Critical" + (f": {' · '.join(reason_parts)}" if reason_parts else "")
             badges.append(
@@ -255,7 +228,7 @@ def build_alert_badges(is_thin, dq, inline=True):
 
 
 # ══════════════════════════════════════════════════════════════
-# SVG Bank Building Illustration
+# SVG Bank Building
 # ══════════════════════════════════════════════════════════════
 BANK_SVG = """
 <svg width="160" height="140" viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
@@ -383,11 +356,8 @@ label { color: #1e40af !important; font-size: 11px !important; text-transform: u
 [data-testid="stMetricLabel"] { color: #1e40af !important; font-weight: 600 !important; font-size: 11px !important; }
 
 .app-card { background: rgba(255,255,255,0.62); border: 0.5px solid rgba(30,64,175,0.14); border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(30,64,175,0.05); }
-.app-card:hover { border-color: rgba(30,64,175,0.38); background: rgba(255,255,255,0.85); }
-.app-card-warn { background: rgba(255,247,237,0.75); border: 0.5px solid rgba(249,115,22,0.35); border-left: 3px solid #f97316 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(249,115,22,0.08); }
-.app-card-warn:hover { background: rgba(255,247,237,0.95); }
-.app-card-critical { background: rgba(254,242,242,0.8); border: 0.5px solid rgba(220,38,38,0.35); border-left: 3px solid #dc2626 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; transition: border-color 0.2s; backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(220,38,38,0.08); }
-.app-card-critical:hover { background: rgba(254,242,242,0.95); }
+.app-card-warn { background: rgba(255,247,237,0.75); border: 0.5px solid rgba(249,115,22,0.35); border-left: 3px solid #f97316 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; backdrop-filter: blur(8px); }
+.app-card-critical { background: rgba(254,242,242,0.8); border: 0.5px solid rgba(220,38,38,0.35); border-left: 3px solid #dc2626 !important; border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 0.5rem; backdrop-filter: blur(8px); }
 
 div[data-testid="stAlert"] { border-radius: 12px !important; }
 .deco { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
@@ -418,7 +388,6 @@ GRID_COL  = 'rgba(30,64,175,0.1)'
 FONT_COL  = '#374151'
 LINE_A    = '#1d4ed8'
 LINE_B    = '#f97316'
-LINE_C    = '#60a5fa'
 FILL_A    = 'rgba(29,78,216,0.08)'
 FILL_B    = 'rgba(249,115,22,0.08)'
 LEGEND_BG = 'rgba(255,255,255,0.65)'
@@ -431,8 +400,7 @@ def render_dq_banner(dq):
     if not dq["has_issues"]:
         return
 
-    sev = dq["severity"]
-
+    sev     = dq["severity"]
     sev_cfg = {
         "critical": {
             "border_left": "#dc2626", "bg": "rgba(220,38,38,0.07)", "border": "rgba(220,38,38,0.4)",
@@ -466,18 +434,14 @@ def render_dq_banner(dq):
             <span style="color:{cfg['detail_color']};font-size:13px;line-height:1.5;">{detail}</span>
         </div>"""
 
-    n_flags   = len(dq["flags"])
-    row_h     = 42
-    header_h  = 48
-    banner_h  = header_h + n_flags * row_h + 24
+    banner_h = 48 + len(dq["flags"]) * 42 + 24
 
     html = f"""<!DOCTYPE html><html><head>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>body{{margin:0;padding:0;background:transparent;font-family:'DM Sans',sans-serif;}}</style>
     </head><body>
     <div style="background:{cfg['bg']};border:1px solid {cfg['border']};
-                border-left:4px solid {cfg['border_left']};border-radius:10px;
-                padding:14px 18px;">
+                border-left:4px solid {cfg['border_left']};border-radius:10px;padding:14px 18px;">
         <div style="font-size:14px;font-weight:700;color:{cfg['title_color']};margin-bottom:10px;">
             {cfg['icon']} &nbsp; Requires Officer Attention &nbsp;·&nbsp; {cfg['title']}
         </div>
@@ -506,9 +470,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
             Loan Repayment Detail
         </div>
         <h1 style='font-size:26px;margin:0;color:#0c1a4e'>{product}</h1>
-        <p style='color:#2d4a8a;font-size:13px;margin-top:4px'>
-            Opened: {opened} &nbsp;·&nbsp; Term: {term}
-        </p>
+        <p style='color:#2d4a8a;font-size:13px;margin-top:4px'>Opened: {opened} &nbsp;·&nbsp; Term: {term}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -557,11 +519,11 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     st.markdown('<div class="section-header">Repayment Records</div>', unsafe_allow_html=True)
 
-    total_capital_paid   = acc_rep['CAPITAL_PAIED'].sum()
-    total_interest_paid  = acc_rep['INTEREST_PAIED'].sum()
-    total_paid           = acc_rep['TOTAL_PAID'].sum()
-    acc_balance          = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
-    remaining_capital    = max(acc_balance, 0)
+    total_capital_paid  = acc_rep['CAPITAL_PAIED'].sum()
+    total_interest_paid = acc_rep['INTEREST_PAIED'].sum()
+    total_paid          = acc_rep['TOTAL_PAID'].sum()
+    acc_balance         = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
+    remaining_capital   = max(acc_balance, 0)
 
     s1, s2, s3, s4, s5 = st.columns(5)
     with s1:
@@ -594,7 +556,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 
     display_df = acc_rep[['PAYMENT_DATE', 'CAPITAL_PAIED', 'INTEREST_PAIED', 'TOTAL_PAID']].copy()
     display_df['PAYMENT_DATE'] = display_df['PAYMENT_DATE'].dt.strftime('%Y-%m-%d')
-    display_df['SCHEDULED'] = display_df['CAPITAL_PAIED'] + display_df['INTEREST_PAIED']
+    display_df['SCHEDULED']    = display_df['CAPITAL_PAIED'] + display_df['INTEREST_PAIED']
 
     rows_html = ""
     for _, row in display_df.iterrows():
@@ -612,7 +574,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     <!DOCTYPE html><html><head>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      body {{ margin:0; padding:0; background:transparent; }}
+      body {{ margin:0;padding:0;background:transparent; }}
       .wrap {{ background:rgba(255,255,255,0.75);border:0.5px solid rgba(29,78,216,0.18);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(29,78,216,0.07); }}
       table {{ width:100%;border-collapse:collapse; }}
       thead tr {{ background:rgba(29,78,216,0.08); }}
@@ -661,8 +623,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     </body></html>
     """
 
-    table_height = min(80 + len(display_df) * 42 + 90, 800)
-    components.html(table_html, height=table_height, scrolling=True)
+    components.html(table_html, height=min(80 + len(display_df) * 42 + 90, 800), scrolling=True)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -670,10 +631,10 @@ def show_loan_repayment_page(acc_row, cust_repayments):
 # ══════════════════════════════════════════════════════════════
 def show_customer_page(app):
     if st.session_state.loan_detail_acc is not None:
-        nic = app["nic"]
+        nic  = app["nic"]
         cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
         if not cust.empty:
-            masked_id = cust.iloc[0].get("MASKED_ID", "")
+            masked_id       = cust.iloc[0].get("MASKED_ID", "")
             cust_repayments = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
         else:
             cust_repayments = pd.DataFrame()
@@ -686,9 +647,8 @@ def show_customer_page(app):
         st.session_state.selected_app = None
         st.rerun()
 
-    # ── Compute DQ flags ─────────────────────────────────────
-    dq       = get_data_quality_flags(nic, app)
-    is_thin  = get_thin_flag(nic)
+    dq      = get_data_quality_flags(nic, app)
+    is_thin = get_thin_flag(nic)
 
     status_badge = {
         "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
@@ -709,18 +669,17 @@ def show_customer_page(app):
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Data quality banner ───────────────────────────────────
     render_dq_banner(dq)
 
     cust = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
     if cust.empty:
         st.error("Customer record not found.")
         return
-    c = cust.iloc[0]
+    c         = cust.iloc[0]
     masked_id = c.get("MASKED_ID", "")
 
-    cust_accounts     = account_df[account_df["MASKED_ID"] == masked_id] if masked_id else pd.DataFrame()
-    cust_repayments   = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
+    cust_accounts     = account_df[account_df["MASKED_ID"] == masked_id]          if masked_id else pd.DataFrame()
+    cust_repayments   = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy()   if masked_id else pd.DataFrame()
     cust_transactions = transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
 
     # ── Top metric cards ─────────────────────────────────────
@@ -746,7 +705,7 @@ def show_customer_page(app):
             <div class="metric-value" style="color:{band_color}">{score_band}</div>
         </div>""", unsafe_allow_html=True)
     with m4:
-        avg_credit  = float(c.get('Avg_Monthly_Credit', 0))
+        avg_credit   = float(c.get('Avg_Monthly_Credit', 0))
         income_color = "#dc2626" if avg_credit == 0 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
@@ -770,7 +729,7 @@ def show_customer_page(app):
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Derive display values ─────────────────────────────────
+    # ── Derived display values ────────────────────────────────
     fin_cap     = str(c.get('Financial_Capacity', 'N/A'))
     cust_risk   = str(c.get('CUSTOMER_RISK_NAME', 'N/A'))
     target_desc = str(c.get('TARGET_DESC', 'N/A'))
@@ -791,24 +750,18 @@ def show_customer_page(app):
     except:
         net_ratio_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Missing</span>'
 
-    # ── EMI vs salary — always compute live ──────────────────
+    # ── EMI vs salary
+    # high_emi_flag=True is the only path that produces EMI > 40%
     emi_pct, emi_exceeds = compute_emi_ratio(app, c)
-    if emi_exceeds:
-        if emi_pct is None:
-            emi_flag_html = (
-                '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:13px">'
-                '⚠️ Cannot verify — no salary data</span>'
-            )
-        else:
-            emi_flag_html = (
-                f'<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:13px">'
-                f'⚠️ {emi_pct}% of salary — exceeds 40% cap</span>'
-            )
+    if app.get("high_emi_flag", False) and emi_exceeds:
+        emi_flag_html = (
+            f'<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:13px">'
+            f'⚠️ {emi_pct}% of salary — exceeds 40% cap</span>'
+        )
     else:
-        pct_label     = f"{emi_pct}% of salary" if emi_pct is not None else "Within limit"
         emi_flag_html = (
             f'<span style="color:#14532d;font-weight:700;font-family:DM Mono,monospace;font-size:14px">'
-            f'✓ {pct_label}</span>'
+            f'✓ {emi_pct}% of salary</span>'
         )
 
     st.markdown(f"""
@@ -899,8 +852,7 @@ def show_customer_page(app):
         fig_bal.add_trace(go.Scatter(
             x=month_labels, y=monthly_avg.values,
             mode='lines+markers', name='Avg Balance',
-            line=dict(color=LINE_A, width=3),
-            marker=dict(size=8, color=LINE_A),
+            line=dict(color=LINE_A, width=3), marker=dict(size=8, color=LINE_A),
             fill='tozeroy', fillcolor=FILL_A
         ))
         fig_bal.update_layout(
@@ -1055,7 +1007,6 @@ def show_dashboard():
         st.info("No applications received yet.")
         return
 
-    # Pre-compute DQ for all apps
     app_dq = {app["id"]: get_data_quality_flags(app["nic"], app) for app in applications}
 
     total    = len(applications)
@@ -1066,7 +1017,6 @@ def show_dashboard():
     insuff   = sum(1 for a in applications if app_dq[a["id"]]["has_issues"])
     critical = sum(1 for a in applications if app_dq[a["id"]]["severity"] == "critical")
 
-    # ── Summary metric cards ────────────────────────────────
     c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
     with c1:
         st.markdown(f"""<div class="metric-card"><div class="metric-label">Total</div>
@@ -1095,7 +1045,6 @@ def show_dashboard():
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Filters ────────────────────────────────────────────
     col_f1, col_f2, col_f3 = st.columns([2, 2, 2])
     with col_f1:
         status_filter = st.selectbox("Filter by status", ["All", "Pending", "Approved", "Rejected"])
@@ -1139,15 +1088,12 @@ def show_dashboard():
         }
         badge_s           = badge_styles.get(app["status"].lower(), "")
         badge_html_inline = f"<span style='{badge_s}'>{app['status']}</span>"
+        alert_html        = build_alert_badges(is_thin, dq)
 
-        # ── Build alert badges for the list card ─────────────
-        alert_html = build_alert_badges(is_thin, dq)
-
-        # ── Flag count pill ───────────────────────────────────
         fc_inline = ""
         if dq["has_issues"]:
-            fc       = len(dq["flags"])
-            fc_color = "#dc2626" if dq["severity"] == "critical" else "#d97706"
+            fc        = len(dq["flags"])
+            fc_color  = "#dc2626" if dq["severity"] == "critical" else "#d97706"
             fc_inline = f'<span style="font-size:12px;color:{fc_color};font-weight:600">{fc} flag{"s" if fc != 1 else ""}</span>'
 
         product_label = app['loan_product'].split('—')[0].strip()
@@ -1182,7 +1128,7 @@ def show_dashboard():
         with col_btn:
             st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
             if st.button("View →", key=f"view_{app['id']}", use_container_width=True):
-                st.session_state.selected_app = app
+                st.session_state.selected_app    = app
                 st.session_state.loan_detail_acc = None
                 st.rerun()
 
