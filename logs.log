@@ -9297,3 +9297,41 @@ Parameters: { "use_label_encoder" } are not used.
 2026-04-13 21:02:05,463:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_37684\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
   loan_cashflow_df.describe()
 
+2026-04-13 21:09:52,982:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-04-13 21:09:52,983:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-04-13 21:09:52,983:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-04-13 21:09:52,983:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2026-04-13 21:09:55,983:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:09:56,059:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:09:56,198:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:09:58,024:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:09:58,087:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:09:59,060:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_20304\4086773308.py:1: FutureWarning: Treating datetime data as categorical rather than numeric in `.describe` is deprecated and will be removed in a future version of pandas. Specify `datetime_is_numeric=True` to silence this warning and adopt the future behavior now.
+  loan_cashflow_df.describe()
+
+2026-04-13 21:10:04,951:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_20304\2607634850.py:51: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+  plt.tight_layout()
+
+2026-04-13 21:10:06,032:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\IPython\core\pylabtools.py:151: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+  fig.canvas.print_figure(bytes_io, **kw)
+
+2026-04-13 21:10:14,573:WARNING:c:\ProgramData\Anaconda3\lib\site-packages\pandas\io\sql.py:762: UserWarning: pandas only support SQLAlchemy connectable(engine/connection) ordatabase string URI or sqlite3 DBAPI2 connectionother DBAPI2 objects are not tested, please consider using SQLAlchemy
+  warnings.warn(
+
+2026-04-13 21:18:43,645:WARNING:C:\Users\savan\AppData\Local\Temp\ipykernel_20304\912277280.py:7: ClusterWarning: scipy.cluster: The symmetric non-negative hollow observation matrix looks suspiciously like an uncondensed distance matrix
+  Z = linkage(gower_sample, method='average')
+
