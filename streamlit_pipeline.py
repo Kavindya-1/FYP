@@ -10,6 +10,7 @@ import pandas as pd
 from pycaret.classification import setup, compare_models
 import numpy as np
 import xgboost as xgb
+from sklearn.preprocessing import RobustScaler
 
 
 
@@ -1121,7 +1122,7 @@ eligible_final = final_table.copy()
 # Define features
 numeric_feats_final = ['Monthly_Avg_Balance', 'Avg_Monthly_Credit','AGE']
 categorical_feats_final = ['OCCUPATION','CUSTOMER_RISK_NAME','GENDER', 
-                           'EMPLOYMENT_STATUS', 'MARITAL_STATUS','TARGET_DESC','Score_Band']
+                           'EMPLOYMENT_STATUS', 'MARITAL_STATUS','TARGET_DESC']
 
 
 # In[203]:
@@ -1131,6 +1132,9 @@ categorical_feats_final = ['OCCUPATION','CUSTOMER_RISK_NAME','GENDER',
 eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
 for col in categorical_feats_final:
     eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
+
+scaler = RobustScaler()
+eligible_final[numeric_feats_final] = scaler.fit_transform(eligible_final[numeric_feats_final])
 
 
 
