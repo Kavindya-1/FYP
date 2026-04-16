@@ -36,6 +36,24 @@ def format_date(d):
     except:
         return str(d)
 
+def safe_float(val, default=0.0):
+    """Safely convert any value to float, returning default on failure."""
+    try:
+        if val is None or (isinstance(val, float) and pd.isna(val)):
+            return default
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
+def safe_int(val, default=0):
+    """Safely convert any value to int, returning default on failure."""
+    try:
+        if val is None or (isinstance(val, float) and pd.isna(val)):
+            return default
+        return int(float(val))
+    except (TypeError, ValueError):
+        return default
+
 # ══════════════════════════════════════════════════════════════
 # EMI RATIO HELPER — always computed from live data
 # ══════════════════════════════════════════════════════════════
@@ -45,8 +63,8 @@ def compute_emi_ratio(app, customer_row):
     emi_pct is None when salary is zero/missing.
     """
     try:
-        emi_val    = float(app.get("loan_emi", 0))
-        salary_val = float(customer_row.get("Avg_Monthly_Credit", 0))
+        emi_val    = safe_float(app.get("loan_emi"))
+        salary_val = safe_float(customer_row.get("Avg_Monthly_Credit"))
         if emi_val > 0 and salary_val > 0:
             pct = round((emi_val / salary_val) * 100, 1)
             return pct, pct > 40.0
@@ -59,10 +77,6 @@ def compute_emi_ratio(app, customer_row):
 
 # ══════════════════════════════════════════════════════════════
 # INSUFFICIENT INFORMATION DETECTION
-# Returns a dict with:
-#   - has_issues: bool
-#   - flags: list of (label, detail) tuples
-#   - severity: "critical" | "warning" | "info"
 # ══════════════════════════════════════════════════════════════
 def get_data_quality_flags(nic, app=None):
     flags = []
@@ -74,7 +88,7 @@ def get_data_quality_flags(nic, app=None):
     c = row.iloc[0]
 
     # 1. Thin File
-    if int(c.get("Thin_File_Flag", 0)) == 1:
+    if safe_int(c.get("Thin_File_Flag")) == 1:
         flags.append(("Thin File", "Customer has limited or no financial history"))
 
     # 2. Missing / Unknown Financial Capacity
@@ -100,8 +114,8 @@ def get_data_quality_flags(nic, app=None):
         flags.append(("Unclassified Employment Segment", "Employment segment is 'Other' — reduced scoring factor (0.6x)"))
 
     # 6. Missing / zero NET_RATIO (no transaction data)
-    net_ratio = c.get("NET_RATIO", None)
-    avg_credit = float(c.get("Avg_Monthly_Credit", 0))
+    net_ratio  = c.get("NET_RATIO", None)
+    avg_credit = safe_float(c.get("Avg_Monthly_Credit"))
     try:
         net_ratio_val = float(net_ratio)
     except (TypeError, ValueError):
@@ -113,10 +127,7 @@ def get_data_quality_flags(nic, app=None):
         flags.append(("Negative Net Ratio", f"Customer spending exceeds income (NET_RATIO = {net_ratio_val:.3f}) — 0.80x penalty applied"))
 
     # 7. Missing internal score
-    try:
-        score = float(c.get("Internal_Bank_Default_Score", 0))
-    except (TypeError, ValueError):
-        score = 0
+    score = safe_float(c.get("Internal_Bank_Default_Score"))
     if score == 0 or pd.isna(score):
         flags.append(("Missing Credit Score", "Internal bank default score is zero or missing"))
 
@@ -143,18 +154,12 @@ def get_data_quality_flags(nic, app=None):
             flags.append(("EMI Exceeds Salary Threshold", detail))
 
     # 9. Overdue history present
-    try:
-        max_ood = float(c.get("MAX_OOD", 0))
-    except (TypeError, ValueError):
-        max_ood = 0
+    max_ood = safe_float(c.get("MAX_OOD"))
     if max_ood >= 30:
         flags.append(("Overdue History", f"Customer has {int(max_ood)} days max overdue — penalty applied in eligibility calculation"))
 
     # 10. No active accounts
-    try:
-        active_accounts = int(c.get("Number_of_Active_Accounts", 0))
-    except (TypeError, ValueError):
-        active_accounts = 0
+    active_accounts = safe_int(c.get("Number_of_Active_Accounts"))
     if active_accounts == 0:
         flags.append(("No Active Accounts", "Customer has no active accounts linked to NIC"))
 
@@ -186,20 +191,13 @@ def get_thin_flag(nic):
     row = eligible_customers[eligible_customers["MASKED_LEGAL_ID"] == nic]
     if row.empty:
         return False
-    return int(row.iloc[0].get("Thin_File_Flag", 0)) == 1
+    return safe_int(row.iloc[0].get("Thin_File_Flag")) == 1
 
 
 # ══════════════════════════════════════════════════════════════
-# BADGE BUILDER — shows the right combination of badges
-# depending on thin file + data quality flags
+# BADGE BUILDER
 # ══════════════════════════════════════════════════════════════
 def build_alert_badges(is_thin, dq, inline=True):
-    """
-    Returns HTML badge string.
-    - If thin file AND EMI → show both separately (not merged)
-    - Critical severity   → red badge listing specific reasons
-    - Warning severity    → orange badge
-    """
     badges = []
 
     if is_thin:
@@ -210,7 +208,6 @@ def build_alert_badges(is_thin, dq, inline=True):
         )
 
     if dq["has_issues"]:
-        # Collect specific critical reasons for the badge label
         critical_labels = {
             "Thin File", "No Transaction Data", "Missing Credit Score",
             "Customer record not found", "No Active Accounts",
@@ -219,7 +216,6 @@ def build_alert_badges(is_thin, dq, inline=True):
         critical_reasons = [label for label, _ in dq["flags"] if label in critical_labels]
 
         if dq["severity"] == "critical":
-            # Build a concise reason string
             reason_parts = []
             if "Thin File" in critical_reasons:
                 reason_parts.append("Thin File")
@@ -234,7 +230,6 @@ def build_alert_badges(is_thin, dq, inline=True):
             if "Customer record not found" in critical_reasons:
                 reason_parts.append("Record Not Found")
 
-            # Remove "Thin File" from reason_parts if already shown as separate badge
             if is_thin and "Thin File" in reason_parts:
                 reason_parts.remove("Thin File")
 
@@ -560,7 +555,7 @@ def show_loan_repayment_page(acc_row, cust_repayments):
     total_capital_paid   = acc_rep['CAPITAL_PAIED'].sum()
     total_interest_paid  = acc_rep['INTEREST_PAIED'].sum()
     total_paid           = acc_rep['TOTAL_PAID'].sum()
-    acc_balance          = float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE', 0))
+    acc_balance          = safe_float(st.session_state.loan_detail_acc.get('MONTHEND_CONVERTED_BALANCE'))
     remaining_capital    = max(acc_balance, 0)
 
     s1, s2, s3, s4, s5 = st.columns(5)
@@ -725,19 +720,23 @@ def show_customer_page(app):
 
     # ── Top metric cards ─────────────────────────────────────
     m1, m2, m3, m4, m5, m6 = st.columns(6)
+
     with m1:
-        score_val   = int(float(c.get('Internal_Bank_Default_Score', 0)))
+        # ── FIX: safe cast for internal score ──
+        score_val   = safe_int(c.get('Internal_Bank_Default_Score'))
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Internal Score</div>
             <div class="metric-value" style="color:{score_color}">{score_val if score_val > 0 else '—'}</div>
         </div>""", unsafe_allow_html=True)
+
     with m2:
         cluster_raw = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Cluster</div>
             <div class="metric-value">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
+
     with m3:
         score_band = str(c.get('Score_Band', 'N/A'))
         band_color = "#f97316" if score_band in ("Unknown Risk", "N/A") else "#1d4ed8"
@@ -745,20 +744,26 @@ def show_customer_page(app):
             <div class="metric-label">Score Band</div>
             <div class="metric-value" style="color:{band_color}">{score_band}</div>
         </div>""", unsafe_allow_html=True)
+
     with m4:
-        avg_credit  = float(c.get('Avg_Monthly_Credit', 0))
+        # ── FIX: safe_float so None/NaN → 0.0, never crashes ──
+        avg_credit   = safe_float(c.get('Avg_Monthly_Credit'))
         income_color = "#dc2626" if avg_credit == 0 else "#1d4ed8"
+        income_label = fmt(avg_credit) if avg_credit > 0 else "— No data"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Monthly Income</div>
-            <div class="metric-value" style="color:{income_color}">{fmt(avg_credit) if avg_credit > 0 else '—'}</div>
+            <div class="metric-value" style="color:{income_color}">{income_label}</div>
         </div>""", unsafe_allow_html=True)
+
     with m5:
-        ood_val   = int(float(c.get('MAX_OOD', 0)))
+        # ── FIX: safe_float for OOD ──
+        ood_val   = safe_float(c.get('MAX_OOD'))
         ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
-            <div class="metric-value" style="color:{ood_color}">{ood_val}</div>
+            <div class="metric-value" style="color:{ood_color}">{int(ood_val)}</div>
         </div>""", unsafe_allow_html=True)
+
     with m6:
         dq_count = len(dq["flags"])
         dq_col   = "#dc2626" if dq["severity"] == "critical" else ("#f97316" if dq["severity"] == "warning" else "#1d4ed8")
@@ -775,7 +780,10 @@ def show_customer_page(app):
     cust_risk   = str(c.get('CUSTOMER_RISK_NAME', 'N/A'))
     target_desc = str(c.get('TARGET_DESC', 'N/A'))
     emp_seg     = str(c.get('Employment_Segment', 'N/A'))
-    net_ratio   = c.get('NET_RATIO', 'N/A')
+    net_ratio   = c.get('NET_RATIO', None)
+
+    # ── FIX: safe age display ──
+    age_display = safe_int(c.get('AGE'))
 
     def flag_val(val, bad_values=("Unknown", "", "nan", "N/A", "Not valid segment")):
         v      = str(val).strip()
@@ -785,13 +793,14 @@ def show_customer_page(app):
         return f'<span style="color:{color};font-weight:700;font-family:DM Mono,monospace;font-size:14px">{label}</span>'
 
     try:
-        net_ratio_display = f"{float(net_ratio):.3f}"
-        net_ratio_color   = "#dc2626" if float(net_ratio) < 0 else "#0c1a4e"
+        net_ratio_val     = safe_float(net_ratio)
+        net_ratio_display = f"{net_ratio_val:.3f}"
+        net_ratio_color   = "#dc2626" if net_ratio_val < 0 else "#0c1a4e"
         net_ratio_html    = f'<span style="color:{net_ratio_color};font-weight:700;font-family:DM Mono,monospace;font-size:14px">{net_ratio_display}</span>'
     except:
         net_ratio_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Missing</span>'
 
-    # ── EMI vs salary — always compute live ──────────────────
+    # ── FIX: EMI vs salary — always compute live with safe helpers ──
     emi_pct, emi_exceeds = compute_emi_ratio(app, c)
     if emi_exceeds:
         if emi_pct is None:
@@ -811,12 +820,15 @@ def show_customer_page(app):
             f'✓ {pct_label}</span>'
         )
 
+    # ── FIX: safe existing debt display ──
+    total_capital_due = safe_float(c.get('TOTAL_CAPITAL_DUE'))
+
     st.markdown(f"""
     <div class="profile-row">
       <div class="info-card">
         <div class="info-card-title">Personal Information</div>
         <div class="info-row"><span class="info-key">NIC</span><span class="info-val">{nic}</span></div>
-        <div class="info-row"><span class="info-key">Age</span><span class="info-val">{int(c.get('AGE', 0))}</span></div>
+        <div class="info-row"><span class="info-key">Age</span><span class="info-val">{age_display}</span></div>
         <div class="info-row"><span class="info-key">Gender</span><span class="info-val">{str(c.get('GENDER', 'N/A')).title()}</span></div>
         <div class="info-row"><span class="info-key">Marital status</span><span class="info-val">{str(c.get('MARITAL_STATUS', 'N/A')).title()}</span></div>
         <div class="info-row"><span class="info-key">District</span><span class="info-val">{str(c.get('DISTRICT', 'N/A')).title()}</span></div>
@@ -832,7 +844,7 @@ def show_customer_page(app):
         <div class="info-row"><span class="info-key">Financial capacity</span>{flag_val(fin_cap, ("Unknown / Missing Balance Data", "", "nan", "N/A"))}</div>
         <div class="info-row"><span class="info-key">Cluster</span><span class="info-val">{c.get('Cluster_Name', 'N/A')}</span></div>
         <div class="info-row"><span class="info-key">Age bucket</span><span class="info-val">{c.get('Age_Bucket', 'N/A')}</span></div>
-        <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(c.get('TOTAL_CAPITAL_DUE', 0))}</span></div>
+        <div class="info-row"><span class="info-key">Existing debt</span><span class="info-val">{fmt(total_capital_due)}</span></div>
         <div class="info-row"><span class="info-key">Net ratio</span>{net_ratio_html}</div>
         <div class="info-row"><span class="info-key">Thin file</span><span class="info-val" style="color:{'#f97316' if is_thin else '#1d4ed8'}">{'⚠️ Yes' if is_thin else 'No'}</span></div>
       </div>
@@ -861,7 +873,7 @@ def show_customer_page(app):
             product = str(acc.get('ACTIVE_PRODUCT', 'N/A'))
             status  = str(acc.get('ACCT_STATUS', 'N/A')).title()
             opened  = format_date(acc.get('ORIG_CONTRACT_DATE', ''))
-            balance = float(acc.get('MONTHEND_CONVERTED_BALANCE', 0))
+            balance = safe_float(acc.get('MONTHEND_CONVERTED_BALANCE'))
             term    = acc.get('TERM', 'N/A')
             is_loan = is_loan_product(product)
 
@@ -1140,10 +1152,8 @@ def show_dashboard():
         badge_s           = badge_styles.get(app["status"].lower(), "")
         badge_html_inline = f"<span style='{badge_s}'>{app['status']}</span>"
 
-        # ── Build alert badges for the list card ─────────────
         alert_html = build_alert_badges(is_thin, dq)
 
-        # ── Flag count pill ───────────────────────────────────
         fc_inline = ""
         if dq["has_issues"]:
             fc       = len(dq["flags"])
