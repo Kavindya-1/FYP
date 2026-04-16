@@ -1133,8 +1133,9 @@ eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna
 for col in categorical_feats_final:
     eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
 
-scaler = RobustScaler()
-eligible_final[numeric_feats_final] = scaler.fit_transform(eligible_final[numeric_feats_final])
+# #scaler = RobustScaler()
+# scaler =StandardScaler()
+# eligible_final[numeric_feats_final] = scaler.fit_transform(eligible_final[numeric_feats_final])
 
 
 
