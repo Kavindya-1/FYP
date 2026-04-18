@@ -1102,42 +1102,156 @@ import pandas as pd
 # X_scaled = scaler.fit_transform(X_imputed)
 
 
-# # Use a separate copy for final clustering
+# Use a separate copy for final clustering
 # eligible_final = final_table.copy()
 
-# Define features
-numeric_feats_final = ['Internal_Bank_Default_Score', 'Monthly_Avg_Balance', 'Avg_Monthly_Credit', 'Number_of_Active_Accounts', 'AVG_MONTHLY_INFLOW', 'MAX_OOD']
-categorical_feats_final = ['CUSTOMER_RISK_NAME']
+# # Define features
+# numeric_feats_final = ['Internal_Bank_Default_Score', 'Monthly_Avg_Balance', 'Avg_Monthly_Credit', 'Number_of_Active_Accounts', 'AVG_MONTHLY_INFLOW', 'MAX_OOD']
+# categorical_feats_final = ['CUSTOMER_RISK_NAME']
 
-# Fill missing values
-eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
-for col in categorical_feats_final:
-    eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
+# # Fill missing values
+# eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
+# for col in categorical_feats_final:
+#     eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
 
-eligible_final[categorical_feats_final] = eligible_final[categorical_feats_final].fillna('Unknown').astype(str)
+# eligible_final[categorical_feats_final] = eligible_final[categorical_feats_final].fillna('Unknown').astype(str)
 
-# Prepare cluster data (copy — eligible_final is never touched)
-cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
+# # Prepare cluster data (copy — eligible_final is never touched)
+# cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
 
-# ✅ Scale only the copy
-cluster_scaler = RobustScaler()
-cluster_data_final[numeric_feats_final] = cluster_scaler.fit_transform(cluster_data_final[numeric_feats_final])
+# # ✅ Scale only the copy
+# cluster_scaler = RobustScaler()
+# cluster_data_final[numeric_feats_final] = cluster_scaler.fit_transform(cluster_data_final[numeric_feats_final])
 
-# Weight Internal_Bank_Default_Score higher (applied AFTER scaling)
+# # Weight Internal_Bank_Default_Score higher (applied AFTER scaling)
+# weight_factor = 5
+# cluster_data_final['Internal_Bank_Default_Score'] = cluster_data_final['Internal_Bank_Default_Score'] * weight_factor
+
+# # Categorical indices
+# cat_idx_final = [cluster_data_final.columns.get_loc(col) for col in categorical_feats_final]
+
+# # Fit K-Prototypes with k = 4
+# kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
+# cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
+
+# # ✅ Only cluster label is added to eligible_final — nothing else changed
+# eligible_final['Cluster_KProto'] = cluster_labels_final
+
+# eligible_final.to_excel("eligible_final.xlsx", index=False)
+
+from kmodes.kprototypes import KPrototypes
+from sklearn.preprocessing import RobustScaler
+import numpy as np
+import pandas as pd
+
+# ── Keep ALL selected features ────────────────────────────────────────────────
+numeric_features     = [
+    'Internal_Bank_Default_Score',
+    'Monthly_Avg_Balance',
+    'Avg_Monthly_Credit',
+    'Number_of_Active_Accounts',
+    'AVG_MONTHLY_INFLOW',
+    'MAX_OOD'
+]
+categorical_features = ['CUSTOMER_RISK_NAME']
+
+# ── 1. Filter eligible records ────────────────────────────────────────────────
+eligible_final = final_table[
+    final_table['Eligibility_Flag'].str.upper() == 'ELIGIBLE'
+].copy().reset_index(drop=True)
+
+
+# ── 2. Fill missing numeric with median ───────────────────────────────────────
+eligible_final[numeric_features] = eligible_final[numeric_features].fillna(
+    eligible_final[numeric_features].median()
+)
+
+# ── 3. Apply weight to Internal_Bank_Default_Score BEFORE scaling ─────────────
 weight_factor = 5
-cluster_data_final['Internal_Bank_Default_Score'] = cluster_data_final['Internal_Bank_Default_Score'] * weight_factor
+eligible_final['Internal_Bank_Default_Score'] = (
+    eligible_final['Internal_Bank_Default_Score'] * weight_factor
+)
 
-# Categorical indices
-cat_idx_final = [cluster_data_final.columns.get_loc(col) for col in categorical_feats_final]
+# ── 4. Fill missing categorical ───────────────────────────────────────────────
+for col in categorical_features:
+    eligible_final[col] = eligible_final[col].astype('category')
+    if 'Unknown' not in eligible_final[col].cat.categories:
+        eligible_final[col] = eligible_final[col].cat.add_categories('Unknown')
+    eligible_final[col] = eligible_final[col].fillna('Unknown').astype(str)
 
-# Fit K-Prototypes with k = 4
-kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
-cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
+# # ── 5. Collapse rare categories ───────────────────────────────────────────────
+# eligible_final['CUSTOMER_RISK_NAME'] = eligible_final['CUSTOMER_RISK_NAME'].replace({
+#     'HIGH'    : 'MEDIUM',
+#     'CRITICAL': 'MEDIUM',
+#     'UNKNOWN' : 'MEDIUM'
+# })
 
-# ✅ Only cluster label is added to eligible_final — nothing else changed
-eligible_final['Cluster_KProto'] = cluster_labels_final
 
-eligible_final.to_excel("eligible_final.xlsx", index=False)
+# ── 6. Correct transformations per feature ────────────────────────────────────
+
+# Monthly_Avg_Balance — has NEGATIVE values, use signed log
+# signed log preserves direction: log1p(|x|) × sign(x)
+eligible_final['Monthly_Avg_Balance'] = (
+    np.sign(eligible_final['Monthly_Avg_Balance']) *
+    np.log1p(np.abs(eligible_final['Monthly_Avg_Balance']))
+)
+
+# Avg_Monthly_Credit — all positive, standard log1p
+eligible_final['Avg_Monthly_Credit'] = np.log1p(
+    eligible_final['Avg_Monthly_Credit']
+)
+
+# AVG_MONTHLY_INFLOW — all positive, standard log1p
+eligible_final['AVG_MONTHLY_INFLOW'] = np.log1p(
+    eligible_final['AVG_MONTHLY_INFLOW']
+)
+
+# MAX_OOD — 75% zeros, use binary + magnitude split
+# Instead of transforming, create a meaningful representation:
+# log1p is fine here since all values >= 0
+eligible_final['MAX_OOD'] = np.log1p(eligible_final['MAX_OOD'])
+
+# Internal_Bank_Default_Score — already well distributed, no transform needed
+# Number_of_Active_Accounts  — discrete, no transform needed
+
+# ── 7. Check distributions after transformation ───────────────────────────────
+
+
+# ── 8. Scale with RobustScaler ────────────────────────────────────────────────
+scaler = RobustScaler()
+eligible_final[numeric_features] = scaler.fit_transform(
+    eligible_final[numeric_features]
+)
+
+# ── 9. Build input array ──────────────────────────────────────────────────────
+cluster_data_final = eligible_final[
+    numeric_features + categorical_features
+].copy()
+
+for col in categorical_features:
+    cluster_data_final[col] = cluster_data_final[col].astype(str)
+
+numeric_array_final = cluster_data_final[numeric_features].values.astype(float)
+cat_array_final     = cluster_data_final[categorical_features].values.astype(str)
+X_final             = np.concatenate([numeric_array_final, cat_array_final], axis=1)
+
+cat_idx_final = [cluster_data_final.columns.get_loc(col)
+                 for col in categorical_features]
+
+
+# ── 10. Fit K-Prototypes with k=3 ─────────────────────────────────────────────
+
+kproto_final = KPrototypes(
+    n_clusters=3,
+    init='Huang',
+    n_init=10,
+    random_state=42,
+    verbose=0
+)
+
+eligible_final['Cluster_KProto'] = kproto_final.fit_predict(
+    X_final, categorical=cat_idx_final
+)
 
 
 # from sklearn.preprocessing import StandardScaler
@@ -1296,3 +1410,4 @@ print(f"✅ transaction_history.pkl saved — {len(transaction_df)} rows")
 
 import os
 size = os.path.getsize("transaction_history.pkl") / (1024*1024)
+# %%
