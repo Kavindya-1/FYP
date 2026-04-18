@@ -1079,103 +1079,162 @@ score_summary = final_table.groupby("Score_Band").size().reset_index(name="Custo
 
 
 # # Start - Defining clusters
-
-
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.impute import SimpleImputer
-
-features = [
-    'AGE',
-    'Monthly_Avg_Balance',
-    'Avg_Monthly_Credit',
-    'Number_of_Active_Accounts'
-]
-
-X = eligible_cus_df[features]
-
-# Handle missing values
-imputer = SimpleImputer(strategy='median')
-X_imputed = imputer.fit_transform(X)
-
-# Scale
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X_imputed)
-
-
-# # Chosing K prototype
-
-# In[200]:
-
-
 from kmodes.kprototypes import KPrototypes
 import pandas as pd
 
-# Use a separate copy for final clustering
-eligible_final = final_table.copy()
+# features = [
+#     'AGE',
+#     'Monthly_Avg_Balance',
+#     'Avg_Monthly_Credit',
+#     'Number_of_Active_Accounts'
+# ]
+
+# X = eligible_cus_df[features]
+
+# # Handle missing values
+# imputer = SimpleImputer(strategy='median')
+# X_imputed = imputer.fit_transform(X)
+
+# # Scale
+# scaler = RobustScaler()
+# X_scaled = scaler.fit_transform(X_imputed)
 
 
-
-
-# In[202]:
-
+# # Use a separate copy for final clustering
+# eligible_final = final_table.copy()
 
 # Define features
-numeric_feats_final = ['Monthly_Avg_Balance', 'Avg_Monthly_Credit','AGE']
-categorical_feats_final = ['OCCUPATION','CUSTOMER_RISK_NAME','GENDER', 
-                           'EMPLOYMENT_STATUS', 'MARITAL_STATUS','TARGET_DESC']
-
-
-# In[203]:
-
+numeric_feats_final = ['Internal_Bank_Default_Score', 'Monthly_Avg_Balance', 'Avg_Monthly_Credit', 'Number_of_Active_Accounts', 'AVG_MONTHLY_INFLOW', 'MAX_OOD']
+categorical_feats_final = ['CUSTOMER_RISK_NAME']
 
 # Fill missing values
 eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
 for col in categorical_feats_final:
     eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
 
-# #scaler = RobustScaler()
-# scaler =StandardScaler()
-# eligible_final[numeric_feats_final] = scaler.fit_transform(eligible_final[numeric_feats_final])
-
-
-
-# Prepare cluster data
-cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
-# Weight Internal_Bank_Default_Score higher
-weight_factor = 5  # you can tune this
-cluster_data_final['Internal_Bank_Default_Score'] = eligible_final['Internal_Bank_Default_Score'] * weight_factor
-
-
-
 eligible_final[categorical_feats_final] = eligible_final[categorical_feats_final].fillna('Unknown').astype(str)
 
+# Prepare cluster data (copy — eligible_final is never touched)
+cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
 
-# In[206]:
+# ✅ Scale only the copy
+cluster_scaler = RobustScaler()
+cluster_data_final[numeric_feats_final] = cluster_scaler.fit_transform(cluster_data_final[numeric_feats_final])
 
+# Weight Internal_Bank_Default_Score higher (applied AFTER scaling)
+weight_factor = 5
+cluster_data_final['Internal_Bank_Default_Score'] = cluster_data_final['Internal_Bank_Default_Score'] * weight_factor
 
-
+# Categorical indices
 cat_idx_final = [cluster_data_final.columns.get_loc(col) for col in categorical_feats_final]
-
-
-# In[207]:
-
 
 # Fit K-Prototypes with k = 4
 kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
 cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
 
-
-# In[208]:
-
-
-# Assign cluster labels to dataframe
+# ✅ Only cluster label is added to eligible_final — nothing else changed
 eligible_final['Cluster_KProto'] = cluster_labels_final
 
-
-
-
-
 eligible_final.to_excel("eligible_final.xlsx", index=False)
+
+
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.impute import SimpleImputer
+
+# features = [
+#     'AGE',
+#     'Monthly_Avg_Balance',
+#     'Avg_Monthly_Credit',
+#     'Number_of_Active_Accounts'
+# ]
+
+# X = eligible_cus_df[features]
+
+# # Handle missing values
+# imputer = SimpleImputer(strategy='median')
+# X_imputed = imputer.fit_transform(X)
+
+# # Scale
+# scaler = StandardScaler()
+# X_scaled = scaler.fit_transform(X_imputed)
+
+
+# # # Chosing K prototype
+
+# # In[200]:
+
+
+# from kmodes.kprototypes import KPrototypes
+# import pandas as pd
+
+# # Use a separate copy for final clustering
+# eligible_final = final_table.copy()
+
+
+
+
+# # In[202]:
+
+
+# # Define features
+# numeric_feats_final = ['Internal_Bank_Default_Score', 'Monthly_Avg_Balance', 'Avg_Monthly_Credit', 'Number_of_Active_Accounts', 'AVG_MONTHLY_INFLOW', 'MAX_OOD']
+# categorical_feats_final = ['OCCUPATION','CUSTOMER_RISK_NAME','GENDER', 
+#                            'EMPLOYMENT_STATUS', 'MARITAL_STATUS','TARGET_DESC']
+
+
+# # In[203]:
+
+
+# # Fill missing values
+# eligible_final[numeric_feats_final] = eligible_final[numeric_feats_final].fillna(0)
+# for col in categorical_feats_final:
+#     eligible_final[col] = eligible_final[col].astype(str).fillna('Unknown')
+
+# # #scaler = RobustScaler()
+# # scaler =StandardScaler()
+# # eligible_final[numeric_feats_final] = scaler.fit_transform(eligible_final[numeric_feats_final])
+
+
+
+# # Prepare cluster data
+# cluster_data_final = eligible_final[numeric_feats_final + categorical_feats_final].copy()
+# # Weight Internal_Bank_Default_Score higher
+# weight_factor = 5  # you can tune this
+# cluster_data_final['Internal_Bank_Default_Score'] = eligible_final['Internal_Bank_Default_Score'] * weight_factor
+
+
+
+# eligible_final[categorical_feats_final] = eligible_final[categorical_feats_final].fillna('Unknown').astype(str)
+
+
+# # In[206]:
+
+
+
+# cat_idx_final = [cluster_data_final.columns.get_loc(col) for col in categorical_feats_final]
+
+
+# # In[207]:
+
+
+# # Fit K-Prototypes with k = 4
+# kproto_final = KPrototypes(n_clusters=4, init='Cao', random_state=42)
+# cluster_labels_final = kproto_final.fit_predict(cluster_data_final.values, categorical=cat_idx_final)
+
+
+# # In[208]:
+
+
+# # Assign cluster labels to dataframe
+# eligible_final['Cluster_KProto'] = cluster_labels_final
+
+
+
+
+
+# eligible_final.to_excel("eligible_final.xlsx", index=False)
 
 
 import joblib
