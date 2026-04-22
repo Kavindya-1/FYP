@@ -358,8 +358,8 @@ elif st.session_state.step == 2:
                     st.session_state.step2_error = "age"
                 else:
                     stored_salary = float(record['Avg_Monthly_Credit'])
-                    lower = stored_salary * 0.80
-                    upper = stored_salary * 1.20
+                    lower = stored_salary * 0.90
+                    upper = stored_salary * 1.10
                     if not (lower <= float(salary_input) <= upper):
                         st.session_state.step2_error = "salary"
                     else:
