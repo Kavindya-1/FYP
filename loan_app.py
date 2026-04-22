@@ -921,6 +921,16 @@ elif st.session_state.step == 5:
     record = st.session_state.customer_record
     dec    = st.session_state.decision
 
+    # Recalculate breakdown from stored values
+    _amount  = st.session_state.loan_amount
+    _term    = st.session_state.loan_term
+    _rate    = st.session_state.loan_rate
+    _emi     = st.session_state.loan_emi
+    _totpay  = st.session_state.loan_total_pay
+    _totint  = st.session_state.loan_total_int
+    _monthly_cap = _amount / _term
+    _monthly_int = _emi - _monthly_cap
+
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);
     border-radius:20px;padding:2rem;margin-bottom:1.5rem">
@@ -928,55 +938,84 @@ elif st.session_state.step == 5:
         <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:white;
         line-height:1.2;margin-bottom:0.5rem">Application submitted</h1>
         <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0">
-        Here is a summary of your loan request.</p>
-    </div>
-    <div class="verified-card">
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">NIC</div>
-            <div class="verified-value">{st.session_state.nic_value}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Loan Product</div>
-            <div class="verified-value">{st.session_state.loan_product}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Loan Amount</div>
-            <div class="verified-value">{fmt(st.session_state.loan_amount)}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Repayment Term</div>
-            <div class="verified-value">{st.session_state.loan_term} months</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Interest Rate</div>
-            <div class="verified-value">{st.session_state.loan_rate}% p.a.</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Total Interest Payable</div>
-            <div class="verified-value">{fmt(st.session_state.loan_total_int)}</div>
-        </div>
-        <div style="margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(255,255,255,0.1)">
-            <div class="verified-label">Total Repayment</div>
-            <div class="verified-value" style="font-weight:700">{fmt(st.session_state.loan_total_pay)}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Monthly Capital Repayment</div>
-            <div class="verified-value">{fmt(st.session_state.loan_amount / st.session_state.loan_term)}</div>
-        </div>
-        <div style="margin-bottom:1rem">
-            <div class="verified-label">Monthly Interest</div>
-            <div class="verified-value">{fmt(st.session_state.loan_emi - (st.session_state.loan_amount / st.session_state.loan_term))}</div>
-        </div>
-        <div style="margin-bottom:0">
-            <div class="verified-label">Monthly Repayment (EMI)</div>
-            <div class="verified-value" style="color:rgba(100,220,130,0.95);font-weight:700">{fmt(st.session_state.loan_emi)}</div>
-        </div>
+        Your application has been received. Here is your full repayment summary.</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.success("✅ Your application has been received. A loan officer will be in touch within 2 business days.")
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
+    # ── Loan details card ──────────────────────────────────────
+    st.markdown(f"""
+    <div class="verified-card">
+        <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.45);
+        text-transform:uppercase;margin-bottom:1rem">Loan Details</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.75rem">
+            <div>
+                <div class="verified-label">NIC</div>
+                <div class="verified-value">{st.session_state.nic_value}</div>
+            </div>
+            <div style="text-align:right">
+                <div class="verified-label">Interest Rate</div>
+                <div class="verified-value">{_rate}% p.a.</div>
+            </div>
+        </div>
+        <div style="margin-bottom:0.75rem">
+            <div class="verified-label">Loan Product</div>
+            <div class="verified-value" style="font-size:14px">{st.session_state.loan_product}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0">
+            <div>
+                <div class="verified-label">Loan Amount</div>
+                <div class="verified-value" style="font-size:20px;font-weight:700">{fmt(_amount)}</div>
+            </div>
+            <div style="text-align:right">
+                <div class="verified-label">Repayment Term</div>
+                <div class="verified-value">{_term} months</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Repayment breakdown card ───────────────────────────────
+    st.markdown(f"""
+    <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.12);
+    border-radius:20px;padding:1.4rem 1.5rem;margin-bottom:1rem">
+        <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.45);
+        text-transform:uppercase;margin-bottom:1rem">Repayment Breakdown</div>
+
+        <div class="breakdown-row">
+            <span class="breakdown-key">Loan amount (capital)</span>
+            <span class="breakdown-val">{fmt(_amount)}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Total interest payable</span>
+            <span class="breakdown-val">{fmt(_totint)}</span>
+        </div>
+        <div class="breakdown-row" style="border-bottom:1px solid rgba(255,255,255,0.18);
+        padding-bottom:10px;margin-bottom:10px">
+            <span class="breakdown-key" style="font-weight:600;color:white">Total repayment</span>
+            <span class="breakdown-val" style="font-weight:600;color:white">{fmt(_totpay)}</span>
+        </div>
+
+        <div class="breakdown-row">
+            <span class="breakdown-key">Monthly capital repayment</span>
+            <span class="breakdown-val">{fmt(_monthly_cap)}</span>
+        </div>
+        <div class="breakdown-row">
+            <span class="breakdown-key">Monthly interest</span>
+            <span class="breakdown-val">{fmt(_monthly_int)}</span>
+        </div>
+        <div class="breakdown-row" style="border-bottom:none;padding-bottom:0;margin-top:4px">
+            <span class="breakdown-key" style="font-weight:600;color:rgba(100,220,130,0.95);
+            font-size:14px">Monthly repayment (EMI)</span>
+            <span class="breakdown-val" style="font-weight:700;color:rgba(100,220,130,0.95);
+            font-size:18px">{fmt(_emi)}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
     if st.button("← Start Over"):
         start_over(); st.rerun()
 
