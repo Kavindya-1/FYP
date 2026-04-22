@@ -37,7 +37,6 @@ def format_date(d):
         return str(d)
 
 def safe_float(val, default=0.0):
-    """Safely convert any value to float, returning default on failure."""
     try:
         if val is None or (isinstance(val, float) and pd.isna(val)):
             return default
@@ -46,7 +45,6 @@ def safe_float(val, default=0.0):
         return default
 
 def safe_int(val, default=0):
-    """Safely convert any value to int, returning default on failure."""
     try:
         if val is None or (isinstance(val, float) and pd.isna(val)):
             return default
@@ -55,13 +53,9 @@ def safe_int(val, default=0):
         return default
 
 # ══════════════════════════════════════════════════════════════
-# EMI RATIO HELPER — always computed from live data
+# EMI RATIO HELPER
 # ══════════════════════════════════════════════════════════════
 def compute_emi_ratio(app, customer_row):
-    """
-    Returns (emi_pct: float|None, exceeds: bool).
-    emi_pct is None when salary is zero/missing.
-    """
     try:
         emi_val    = safe_float(app.get("loan_emi"))
         salary_val = safe_float(customer_row.get("Avg_Monthly_Credit"))
@@ -69,14 +63,14 @@ def compute_emi_ratio(app, customer_row):
             pct = round((emi_val / salary_val) * 100, 1)
             return pct, pct > 40.0
         elif emi_val > 0 and salary_val == 0:
-            return None, True   # can't confirm affordability
+            return None, True
         return 0.0, False
     except (TypeError, ValueError):
         return None, False
 
 
 # ══════════════════════════════════════════════════════════════
-# INSUFFICIENT INFORMATION DETECTION
+# DATA QUALITY FLAGS
 # ══════════════════════════════════════════════════════════════
 def get_data_quality_flags(nic, app=None):
     flags = []
@@ -87,33 +81,27 @@ def get_data_quality_flags(nic, app=None):
 
     c = row.iloc[0]
 
-    # 1. Thin File
     if safe_int(c.get("Thin_File_Flag")) == 1:
         flags.append(("Thin File", "Customer has limited or no financial history"))
 
-    # 2. Missing / Unknown Financial Capacity
     fin_cap = str(c.get("Financial_Capacity", "")).strip()
     if fin_cap in ("Unknown / Missing Balance Data", "", "nan"):
         flags.append(("Unknown Financial Capacity", "No balance data available to assess financial capacity"))
 
-    # 3. Unknown Customer Risk
     cust_risk = str(c.get("CUSTOMER_RISK_NAME", "")).strip()
     if cust_risk in ("Unknown", "", "nan"):
         flags.append(("Unknown Customer Risk", "Customer risk rating could not be determined"))
 
-    # 4. Unknown Target Tier
     target = str(c.get("TARGET_DESC", "")).strip()
     if target in ("Unknown", "", "nan"):
         flags.append(("Unknown Target Tier", "Customer has not been assigned a target/tier segment"))
 
-    # 5. Invalid / Weak Employment Segment
     emp_seg = str(c.get("Employment_Segment", "")).strip()
     if emp_seg in ("Not valid segment", "", "nan"):
         flags.append(("Invalid Employment Segment", "Employment segment could not be validated"))
     elif emp_seg == "Other":
         flags.append(("Unclassified Employment Segment", "Employment segment is 'Other' — reduced scoring factor (0.6x)"))
 
-    # 6. Missing / zero NET_RATIO (no transaction data)
     net_ratio  = c.get("NET_RATIO", None)
     avg_credit = safe_float(c.get("Avg_Monthly_Credit"))
     try:
@@ -126,12 +114,10 @@ def get_data_quality_flags(nic, app=None):
     elif net_ratio_val < 0:
         flags.append(("Negative Net Ratio", f"Customer spending exceeds income (NET_RATIO = {net_ratio_val:.3f}) — 0.80x penalty applied"))
 
-    # 7. Missing internal score
     score = safe_float(c.get("Internal_Bank_Default_Score"))
     if score == 0 or pd.isna(score):
         flags.append(("Missing Credit Score", "Internal bank default score is zero or missing"))
 
-    # 8. EMI vs salary — ALWAYS computed from live data, never just from stored flag
     if app:
         emi_pct, emi_exceeds = compute_emi_ratio(app, c)
         if emi_exceeds:
@@ -153,17 +139,14 @@ def get_data_quality_flags(nic, app=None):
                 )
             flags.append(("EMI Exceeds Salary Threshold", detail))
 
-    # 9. Overdue history present
     max_ood = safe_float(c.get("MAX_OOD"))
     if max_ood >= 30:
         flags.append(("Overdue History", f"Customer has {int(max_ood)} days max overdue — penalty applied in eligibility calculation"))
 
-    # 10. No active accounts
     active_accounts = safe_int(c.get("Number_of_Active_Accounts"))
     if active_accounts == 0:
         flags.append(("No Active Accounts", "Customer has no active accounts linked to NIC"))
 
-    # ── Determine overall severity ──────────────────────────
     critical_labels = {
         "Thin File", "No Transaction Data", "Missing Credit Score",
         "Customer record not found", "No Active Accounts",
@@ -217,8 +200,6 @@ def build_alert_badges(is_thin, dq, inline=True):
 
         if dq["severity"] == "critical":
             reason_parts = []
-            if "Thin File" in critical_reasons:
-                reason_parts.append("Thin File")
             if "EMI Exceeds Salary Threshold" in critical_reasons:
                 reason_parts.append("EMI Exceeds 40%")
             if "No Transaction Data" in critical_reasons:
@@ -230,15 +211,14 @@ def build_alert_badges(is_thin, dq, inline=True):
             if "Customer record not found" in critical_reasons:
                 reason_parts.append("Record Not Found")
 
-            if is_thin and "Thin File" in reason_parts:
-                reason_parts.remove("Thin File")
-
-            label = "🔴 Critical" + (f": {' · '.join(reason_parts)}" if reason_parts else "")
-            badges.append(
-                f"<span style='background:rgba(220,38,38,0.15);color:#7f1d1d;padding:3px 12px;"
-                f"border-radius:20px;font-size:11px;border:1px solid rgba(220,38,38,0.45);font-weight:600;'>"
-                f"{label}</span>"
-            )
+            # Only show Critical badge if there are non-ThinFile critical reasons
+            if reason_parts:
+                label = "🔴 Critical" + (f": {' · '.join(reason_parts)}")
+                badges.append(
+                    f"<span style='background:rgba(220,38,38,0.15);color:#7f1d1d;padding:3px 12px;"
+                    f"border-radius:20px;font-size:11px;border:1px solid rgba(220,38,38,0.45);font-weight:600;'>"
+                    f"{label}</span>"
+                )
         elif dq["severity"] == "warning":
             badges.append(
                 "<span style='background:rgba(251,191,36,0.18);color:#78350f;padding:3px 12px;"
@@ -682,8 +662,8 @@ def show_customer_page(app):
         st.rerun()
 
     # ── Compute DQ flags ─────────────────────────────────────
-    dq       = get_data_quality_flags(nic, app)
-    is_thin  = get_thin_flag(nic)
+    dq      = get_data_quality_flags(nic, app)
+    is_thin = get_thin_flag(nic)
 
     status_badge = {
         "Pending":  "<span class='badge-pending'>⏳ Pending</span>",
@@ -691,13 +671,16 @@ def show_customer_page(app):
         "Rejected": "<span class='badge-rejected'>❌ Rejected</span>",
     }.get(app["status"], app["status"])
 
-    alert_badges = build_alert_badges(is_thin, dq)
+    # FIX 1: Only show Thin File badge in header — no Critical badge
+    header_badges = ""
+    if is_thin:
+        header_badges = "<span style='background:rgba(249,115,22,0.15);color:#92400e;padding:3px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(249,115,22,0.5);font-weight:600;'>⚠️ Thin File</span>"
 
     st.markdown(f"""
     <div style='margin:1rem 0 1.5rem'>
         <div style='font-size:10px;color:#1e40af;letter-spacing:3px;text-transform:uppercase;
                     margin-bottom:8px;font-weight:700'>
-            Application #{app['id']} &nbsp;·&nbsp; {status_badge} &nbsp; {alert_badges}
+            Application #{app['id']} &nbsp;·&nbsp; {status_badge} &nbsp; {header_badges}
         </div>
         <h1 style='font-size:28px;margin:0;color:#0c1a4e'>Customer Profile</h1>
         <div style='width:48px;height:3px;background:#f97316;border-radius:2px;margin-top:8px'></div>
@@ -718,11 +701,10 @@ def show_customer_page(app):
     cust_repayments   = repayment_df[repayment_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
     cust_transactions = transaction_df[transaction_df["MASKED_ID"] == masked_id].copy() if masked_id else pd.DataFrame()
 
-    # ── Top metric cards ─────────────────────────────────────
-    m1, m2, m3, m4, m5, m6 = st.columns(6)
+    # FIX 2: Removed Data Quality Flags card — now only 5 metric cards
+    m1, m2, m3, m4, m5 = st.columns(5)
 
     with m1:
-        # ── FIX: safe cast for internal score ──
         score_val   = safe_int(c.get('Internal_Bank_Default_Score'))
         score_color = "#1d4ed8" if score_val >= 650 else "#dc2626"
         st.markdown(f"""<div class="metric-card">
@@ -731,10 +713,11 @@ def show_customer_page(app):
         </div>""", unsafe_allow_html=True)
 
     with m2:
+        # FIX 3: Cluster name — smaller font, wrapping allowed so full name is visible
         cluster_raw = str(c.get('Cluster_Name', c.get('Cluster_KProto', 'N/A')))
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Cluster</div>
-            <div class="metric-value">{cluster_raw}</div>
+            <div class="metric-value" style="font-size:13px;white-space:normal;line-height:1.3;word-break:break-word;">{cluster_raw}</div>
         </div>""", unsafe_allow_html=True)
 
     with m3:
@@ -746,7 +729,6 @@ def show_customer_page(app):
         </div>""", unsafe_allow_html=True)
 
     with m4:
-        # ── FIX: safe_float so None/NaN → 0.0, never crashes ──
         avg_credit   = safe_float(c.get('Avg_Monthly_Credit'))
         income_color = "#dc2626" if avg_credit == 0 else "#1d4ed8"
         income_label = fmt(avg_credit) if avg_credit > 0 else "— No data"
@@ -756,21 +738,11 @@ def show_customer_page(app):
         </div>""", unsafe_allow_html=True)
 
     with m5:
-        # ── FIX: safe_float for OOD ──
         ood_val   = safe_float(c.get('MAX_OOD'))
         ood_color = "#dc2626" if ood_val >= 30 else "#1d4ed8"
         st.markdown(f"""<div class="metric-card">
             <div class="metric-label">Max Days Overdue</div>
             <div class="metric-value" style="color:{ood_color}">{int(ood_val)}</div>
-        </div>""", unsafe_allow_html=True)
-
-    with m6:
-        dq_count = len(dq["flags"])
-        dq_col   = "#dc2626" if dq["severity"] == "critical" else ("#f97316" if dq["severity"] == "warning" else "#1d4ed8")
-        dq_bg    = "background:rgba(220,38,38,0.07);border-color:rgba(220,38,38,0.3)" if dq["severity"] == "critical" else ("background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.3)" if dq["severity"] == "warning" else "")
-        st.markdown(f"""<div class="metric-card" style="{dq_bg}">
-            <div class="metric-label" style="color:{dq_col}">Data Quality Flags</div>
-            <div class="metric-value" style="color:{dq_col}">{dq_count if dq_count > 0 else '✓ Clean'}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
@@ -781,8 +753,6 @@ def show_customer_page(app):
     target_desc = str(c.get('TARGET_DESC', 'N/A'))
     emp_seg     = str(c.get('Employment_Segment', 'N/A'))
     net_ratio   = c.get('NET_RATIO', None)
-
-    # ── FIX: safe age display ──
     age_display = safe_int(c.get('AGE'))
 
     def flag_val(val, bad_values=("Unknown", "", "nan", "N/A", "Not valid segment")):
@@ -800,7 +770,6 @@ def show_customer_page(app):
     except:
         net_ratio_html = '<span style="color:#dc2626;font-weight:700;font-family:DM Mono,monospace;font-size:14px">⚠️ Missing</span>'
 
-    # ── FIX: EMI vs salary — always compute live with safe helpers ──
     emi_pct, emi_exceeds = compute_emi_ratio(app, c)
     if emi_exceeds:
         if emi_pct is None:
@@ -820,8 +789,10 @@ def show_customer_page(app):
             f'✓ {pct_label}</span>'
         )
 
-    # ── FIX: safe existing debt display ──
     total_capital_due = safe_float(c.get('TOTAL_CAPITAL_DUE'))
+
+    # Use build_alert_badges for the info card (shows full badge set)
+    alert_badges = build_alert_badges(is_thin, dq)
 
     st.markdown(f"""
     <div class="profile-row">
@@ -1070,13 +1041,24 @@ def show_dashboard():
     # Pre-compute DQ for all apps
     app_dq = {app["id"]: get_data_quality_flags(app["nic"], app) for app in applications}
 
+    critical_labels_set = {
+        "No Transaction Data", "Missing Credit Score",
+        "Customer record not found", "No Active Accounts",
+        "EMI Exceeds Salary Threshold",
+    }
+
     total    = len(applications)
     pending  = sum(1 for a in applications if a["status"] == "Pending")
     approved = sum(1 for a in applications if a["status"] == "Approved")
     rejected = sum(1 for a in applications if a["status"] == "Rejected")
     thin     = sum(1 for a in applications if get_thin_flag(a["nic"]))
-    insuff   = sum(1 for a in applications if app_dq[a["id"]]["has_issues"])
-    critical = sum(1 for a in applications if app_dq[a["id"]]["severity"] == "critical")
+    # Insuff Info: has issues beyond just Thin File
+    insuff   = sum(1 for a in applications
+                   if app_dq[a["id"]]["has_issues"]
+                   and any(label != "Thin File" for label, _ in app_dq[a["id"]]["flags"]))
+    # Critical Gaps: has a non-ThinFile critical flag
+    critical = sum(1 for a in applications
+                   if any(label in critical_labels_set for label, _ in app_dq[a["id"]]["flags"]))
 
     # ── Summary metric cards ────────────────────────────────
     c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
@@ -1125,9 +1107,11 @@ def show_dashboard():
         filtered = [a for a in filtered if not get_thin_flag(a["nic"])]
 
     if dq_filter == "Insufficient Info":
-        filtered = [a for a in filtered if app_dq[a["id"]]["has_issues"]]
+        filtered = [a for a in filtered if app_dq[a["id"]]["has_issues"]
+                    and any(label != "Thin File" for label, _ in app_dq[a["id"]]["flags"])]
     elif dq_filter == "Critical Gaps Only":
-        filtered = [a for a in filtered if app_dq[a["id"]]["severity"] == "critical"]
+        filtered = [a for a in filtered
+                    if any(label in critical_labels_set for label, _ in app_dq[a["id"]]["flags"])]
     elif dq_filter == "Clean Only":
         filtered = [a for a in filtered if not app_dq[a["id"]]["has_issues"]]
 
