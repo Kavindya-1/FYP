@@ -592,8 +592,19 @@ elif st.session_state.step == 4:
 
                 # ── Case A: amount > max_eligible (shouldn't happen due to UI cap, but guard) ──
                 if band != "Medium Risk" and entered_amount > max_eligible:
+                    sug_over = floor_to_nearest_1000(min(max_eligible, max_afford))
+                    sug_over = max(sug_over, 0)
                     st.session_state.step4_error      = "over"
-                    st.session_state.suggested_amount = floor_to_nearest_1000(min(max_eligible, max_afford))
+                    st.session_state.suggested_amount = sug_over
+                    st.session_state.emi_details      = {
+                        "loan_product": loan_product,
+                        "rate":         rate,
+                        "term":         term_months,
+                        "true_max":     sug_over,
+                        "max_afford":   max_afford,
+                        "emi":          emi,
+                        "max_emi":      max_emi,
+                    }
 
                 # ── Case B: EMI > 40% AND amount also > what they can afford
                 #    (i.e. entered_amount > max_afford) → suggest lower amount ──
@@ -601,9 +612,13 @@ elif st.session_state.step == 4:
                     st.session_state.step4_error      = "emi"
                     st.session_state.suggested_amount = true_max
                     st.session_state.emi_details      = {
-                        "emi": emi, "max_emi": max_emi,
-                        "max_afford": max_afford, "true_max": true_max,
-                        "rate": rate, "term": term_months,
+                        "loan_product": loan_product,
+                        "emi":          emi,
+                        "max_emi":      max_emi,
+                        "max_afford":   max_afford,
+                        "true_max":     true_max,
+                        "rate":         rate,
+                        "term":         term_months,
                     }
 
                 # ── Case C: EMI > 40% but amount is within eligible limit
@@ -759,6 +774,7 @@ elif st.session_state.step == 4:
         sug      = st.session_state.suggested_amount
         rate     = ed.get("rate", 0)
         term_m   = ed.get("term", 0)
+        saved_product = ed.get("loan_product", "")
         sug_emi  = calc_emi(sug, rate, term_m) if (rate and term_m) else 0
         tot_pay  = sug_emi * term_m
         tot_int  = tot_pay - sug
@@ -826,7 +842,7 @@ elif st.session_state.step == 4:
 
                 save_result = save_application({
                     "nic":             st.session_state.nic_value,
-                    "loan_product":    loan_product,
+                    "loan_product":    saved_product,
                     "loan_amount":     sug,
                     "loan_term":       term_m,
                     "loan_rate":       rate,
@@ -841,7 +857,7 @@ elif st.session_state.step == 4:
                     st.error("❌ Failed to save your application. Please try again.")
                     st.stop()
 
-                st.session_state.loan_product      = loan_product
+                st.session_state.loan_product      = saved_product
                 st.session_state.loan_amount       = sug
                 st.session_state.loan_term         = term_m
                 st.session_state.loan_rate         = rate
@@ -883,7 +899,7 @@ elif st.session_state.step == 4:
 
                     save_application({
                         "nic":             st.session_state.nic_value,
-                        "loan_product":    loan_product,
+                        "loan_product":    saved_product,
                         "loan_amount":     entered_amount,
                         "loan_term":       term_m,
                         "loan_rate":       rate,
